@@ -152,4 +152,10 @@ public class Fx {
 	public static com.badlogic.gdx.graphics.g2d.TextureRegion[] orbFrames(int kind) {
 		return orbFrames[kind];
 	}
+
+	/** Plays the orb's energy loop on a sprite (counter icons); phase shifts the start so icons do not pulse in sync. */
+	public static void animateOrb(com.badlogic.gdx.graphics.g2d.Sprite sprite, int kind, float phase) {
+		com.badlogic.gdx.graphics.g2d.TextureRegion[] frames = orbFrames[kind];
+		sprite.setRegion(frames[(int) ((time*1.3f + phase)*ORB_FRAMES) % ORB_FRAMES]);
+	}
 }

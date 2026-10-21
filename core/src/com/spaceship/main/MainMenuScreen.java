@@ -1298,7 +1298,6 @@ public class MainMenuScreen implements Screen {
 		if(startTrace && drawTrace){
 			Fx.init(game.assetManager);
 			Fx.additiveOn(game.batch);
-			Fx.update(Gdx.graphics.getDeltaTime());
 			menuPlume.draw(game.batch, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f, true);
 			Fx.draw(game.batch);
 			Fx.additiveOff(game.batch);
@@ -1335,6 +1334,7 @@ public class MainMenuScreen implements Screen {
 			// electricity on the force field
 			float dtL = Gdx.graphics.getDeltaTime();
 			electricity.update(dtL, state == STANDBY);
+		Fx.update(dtL);
 			Fx.additiveOn(game.batch);
 			electricity.draw(game.batch, ffSprites[forceFieldSelected].getX() + ffSprites[forceFieldSelected].getWidth()/2,
 					ffSprites[forceFieldSelected].getY() + ffSprites[forceFieldSelected].getHeight()/2,
@@ -1348,6 +1348,10 @@ public class MainMenuScreen implements Screen {
 		slideBottomBlock();
 		if(drawCounters){
 			// draw counnters
+			Fx.init(game.assetManager);
+			Fx.animateOrb(blueCounter, 0, 0f);
+			Fx.animateOrb(redCounter, 1, 0.33f);
+			Fx.animateOrb(lifeCounter, 2, 0.66f);
 			blueCounter.draw(game.batch);
 			redCounter.draw(game.batch);
 			lifeCounter.draw(game.batch);
