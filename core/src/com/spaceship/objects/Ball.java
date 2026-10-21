@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
+import com.spaceship.handlers.Fx;
 import com.spaceship.handlers.SpriteAccessor;
 import com.spaceship.main.Main;
 
@@ -31,36 +32,23 @@ public class Ball extends GameObject {
 	private int angle;
 	private int angle2;
 	private int type;
-	private int shadow;
-	private int velRest;
 	private boolean velocityChanged;
 	private Texture texB; 
 	private Sprite texSpriteB;
-	private Sprite[] traceB;
 	private Texture texR; 
 	private Sprite texSpriteR;
-	private Sprite[] traceR;
 	private Texture texY; 
 	private Sprite texSpriteY;
-	private Sprite[] traceY;
 	private Texture texO; 
 	private Sprite texSpriteO;
-	private Sprite[] traceO;
-	private boolean[] enabled;
-	private Texture shadowTexB;
-	private Texture shadowTexR;
-	private Texture shadowTexY;
-	private Texture shadowTexO;
 	
 	private Sprite texSelected;
-	private Sprite[] traceSelected;
 	
 	float ratioMotoG = 0.5625f;
 	float ratioV = (float) Gdx.graphics.getWidth()/Gdx.graphics.getHeight();
 	float x = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
 	float y = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
 	
-	boolean firstTween[];
 	
 	public Ball(float x, float y, float radius, float type, int velocity, TweenManager tm, Main gam) {
 		super(x, y, radius);
@@ -81,13 +69,9 @@ public class Ball extends GameObject {
 		taken = false;
 
 		texB = game.assetManager.get("res/shapes/blueBall.png", Texture.class);
-		shadowTexB = game.assetManager.get("res/shapes/shadowBlue.png", Texture.class);
 		texR = game.assetManager.get("res/shapes/redBallParticle.png", Texture.class);
-		shadowTexR = game.assetManager.get("res/shapes/redBallParticle.png", Texture.class);
 		texY = game.assetManager.get("res/shapes/lifeBall.png", Texture.class);
-		shadowTexY = game.assetManager.get("res/shapes/shadowLife.png", Texture.class);
 		texO = game.assetManager.get("res/shapes/objectBall.png", Texture.class);
-		shadowTexO = game.assetManager.get("res/shapes/shadowObject.png", Texture.class);
 		
 		texSpriteB = new Sprite(texB);
 		texSpriteR = new Sprite(texR);
@@ -102,60 +86,17 @@ public class Ball extends GameObject {
 		texSpriteO.setSize(20, 20);
 		texSpriteO.setScale(fxy(20)/20, fxy(20)/20);
 		
-		traceB = new Sprite[40];
-		traceR = new Sprite[40];
-		traceY = new Sprite[40];
-		traceO = new Sprite[40];
-		traceSelected = new Sprite[40];
-		enabled = new boolean[traceB.length];
-		firstTween = new boolean[traceB.length];
-		for(int i = 0; i < traceB.length; i++){
-			traceB[i] = new Sprite(shadowTexB);
-			traceB[i].setColor(1f, 1f, 1f, 0.20f);
-			traceB[i].setSize(20, 20);
-			traceB[i].setScale(fxy(20)/20, fxy(20)/20);
-			traceR[i] = new Sprite(shadowTexR);
-			traceR[i].setColor(1f, 1f, 1f, 0.20f);
-			traceR[i].setSize(20, 20);
-			traceR[i].setScale(fxy(20)/20, fxy(20)/20);
-			traceY[i] = new Sprite(shadowTexY);
-			traceY[i].setColor(1f, 1f, 1f, 0.20f);
-			traceY[i].setSize(20, 20);
-			traceY[i].setScale(fxy(20)/20, fxy(20)/20);
-			traceO[i] = new Sprite(shadowTexO);
-			traceO[i].setColor(1f, 1f, 1f, 0.20f);
-			traceO[i].setSize(20, 20);
-			traceO[i].setScale(fxy(20)/20, fxy(20)/20);
-			enabled[i] = false;
-			firstTween[i] = true;
-		}
-		
-		shadow = 0;
-		velRest = 0;
-		
 		if(type >= 0 && type <= 28){
 			texSelected = texSpriteB;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceB[i]; 
-			}
 			this.type = B_BLUE;
 		}else if(type >= 29 && type <= 57){
 			texSelected = texSpriteR;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceR[i]; 
-			}
 			this.type = B_RED;
 		}else if(type >= 58 && type <= 59){
 			texSelected = texSpriteY;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceY[i]; 
-			}
 			this.type = B_LIFE;
 		}else{
 			texSelected = texSpriteO;
-			for(int i = 0; i < traceO.length; i++){
-				traceSelected[i] = traceO[i]; 
-			}
 			this.type = B_OBJECT;
 		}
 	}
@@ -163,9 +104,6 @@ public class Ball extends GameObject {
 	public void changeBlue(){
 		if(this.type == B_RED){
 			texSelected = texSpriteB;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceB[i]; 
-			}
 			this.type = B_BLUE;
 		}
 	}
@@ -173,9 +111,6 @@ public class Ball extends GameObject {
 	public void changeRed(){
 		if(this.type == B_BLUE){
 			texSelected = texSpriteR;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceR[i]; 
-			}
 			this.type = B_RED;
 		}
 	}
@@ -183,15 +118,7 @@ public class Ball extends GameObject {
 	public void reset(){
 		ball.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2),
 				Gdx.graphics.getHeight() + fxy(20));
-		for(int i = 0; i < traceSelected.length; i++){
-			enabled[i] = false;
-			firstTween[i] = true;
-			tweenManager.killTarget(traceSelected[i]);
-			traceSelected[i].setColor(1f, 1f, 1f, 0.20f);
-		}
 		taken = false;
-		shadow = 0;
-		velRest = 0;
 		velocity = game.getPS().velocityBall;
 		angle = (int) MathUtils.random(-fxy(250), fxy(250));
 		angle2 = angle;
@@ -199,27 +126,15 @@ public class Ball extends GameObject {
 		int t = MathUtils.random(0, 60);
 		if(t >= 0 && t <= 28){
 			texSelected = texSpriteB;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceB[i]; 
-			}
 			this.type = B_BLUE;
 		}else if(t >= 29 && t <= 57){
 			texSelected = texSpriteR;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceR[i]; 
-			}
 			this.type = B_RED;
 		}else if(t >= 58 && t <= 59){
 			texSelected = texSpriteY;
-			for(int i = 0; i < traceB.length; i++){
-				traceSelected[i] = traceY[i]; 
-			}
 			this.type = B_LIFE;
 		}else{
 			texSelected = texSpriteO;
-			for(int i = 0; i < traceO.length; i++){
-				traceSelected[i] = traceO[i]; 
-			}
 			this.type = B_OBJECT;
 		}
 	}
@@ -245,43 +160,27 @@ public class Ball extends GameObject {
 	public void render(SpriteBatch sb) {	
 		ball.setPosition(this.getPosition().x, this.getPosition().y);
 		texSelected.setPosition(this.getPosition().x - texSelected.getWidth()/2, this.getPosition().y - texSelected.getHeight()/2);
-		
-		if(shadow < traceSelected.length)
-			traceSelected[shadow].setPosition(texSelected.getX(), texSelected.getY() - velRest);
-
 		texSelected.draw(sb);
-		for(int i = 0; i < traceSelected.length; i++){
-			if(enabled[i]){
-				traceSelected[i].draw(sb);
-			}
-		}
-
-		if(game.getPS().getState() == game.getPS().PLAY){
-			
-			if(shadow < traceSelected.length)
-				Tween.to(traceSelected[shadow], SpriteAccessor.COLOR, 0.40f).target(1f, 1f, 1f, 0.02f).start(tweenManager);
-			if(shadow+1 < traceSelected.length/2){
-				shadow++;	
-				enabled[shadow] = true;	
-				enabled[shadow + traceSelected.length/2] = false;
-				tweenManager.killTarget(traceSelected[shadow + traceSelected.length/2]);
-				traceSelected[shadow + traceSelected.length/2].setColor(1f, 1f, 1f, 0.20f);
-			}else if(shadow+1 < traceSelected.length){
-				shadow++;
-				enabled[shadow] = true;	
-				enabled[shadow - traceSelected.length/2] = false;
-				tweenManager.killTarget(traceSelected[shadow - traceSelected.length/2]);
-				traceSelected[shadow - traceSelected.length/2].setColor(1f, 1f, 1f, 0.20f);
-			}else{
-				shadow = 0;
-				enabled[shadow] = true;	
-				enabled[shadow + traceSelected.length/2] = false;
-				tweenManager.killTarget(traceSelected[shadow + traceSelected.length/2]);
-				traceSelected[shadow + traceSelected.length/2].setColor(1f, 1f, 1f, 0.20f);
-			}
-			
-		}	
+	}
 	
+	/** Comet tail behind the orb (draw between Fx.additiveOn/Off, before the orbs). */
+	public void renderTail(SpriteBatch sb) {
+		float vx = angle;
+		float vy = fxy(velocity);
+		float speed = (float) Math.sqrt(vx*vx + vy*vy);
+		if(speed < 1f)
+			return;
+		float r, g, b;
+		if(type == B_BLUE){ r = 0.13f; g = 0.83f; b = 0.93f; }
+		else if(type == B_RED){ r = 1f; g = 0.23f; b = 0.36f; }
+		else if(type == B_LIFE){ r = 1f; g = 0.75f; b = 0.18f; }
+		else { r = 0.66f; g = 0.33f; b = 0.97f; }
+		float length = Math.min(fxy(230), speed*0.34f);
+		float width = fxy(30);
+		float px = this.getPosition().x;
+		float py = this.getPosition().y;
+		Fx.tail(sb, false, px, py, vx, vy, length, width, r, g, b, 0.9f);
+		Fx.tail(sb, true, px, py, vx, vy, length*0.6f, width*0.45f, 1f - (1f - r)*0.35f, 1f - (1f - g)*0.35f, 1f - (1f - b)*0.35f, 0.85f);
 	}
 	
 	public void effectRemove(){
@@ -326,13 +225,9 @@ public class Ball extends GameObject {
 	
 	public void dispose(){
 		texB.dispose();
-		shadowTexB.dispose();
 		texR.dispose();
-		shadowTexR.dispose();
 		texY.dispose();
-		shadowTexY.dispose();
 		texO.dispose();
-		shadowTexO.dispose();
 	}
 
 	public boolean isVelocityChanged() {

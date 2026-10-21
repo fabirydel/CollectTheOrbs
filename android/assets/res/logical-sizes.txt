@@ -2,6 +2,14 @@ res/bgs/bgsBought1.png 1100 298
 res/bgs/bgsBought2.png 1100 298
 res/bgs/bgsPrice1.png 1100 298
 res/bgs/bgsPrice2.png 1100 298
+res/fx/core.png 32 256
+res/fx/plume.png 64 256
+res/fx/plume_core.png 32 256
+res/fx/spark_blue.png 32 32
+res/fx/spark_gold.png 32 32
+res/fx/spark_purple.png 32 32
+res/fx/spark_red.png 32 32
+res/fx/tail.png 64 256
 res/gui/bBack.png 80 80
 res/gui/bControlsOff.png 80 80
 res/gui/bControlsOff120.png 120 120

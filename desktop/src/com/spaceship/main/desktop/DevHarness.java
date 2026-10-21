@@ -18,7 +18,7 @@ import com.badlogic.gdx.graphics.PixmapIO;
 
 /**
  * Development-only test driver, enabled with the CTO_DEV_DIR environment variable. It reads
- * commands from CTO_DEV_DIR/cmd (tap X Y | drag X1 Y1 X2 Y2 | scroll X Y AMOUNT | wait MS | shot NAME | quit), replaces Gdx.input with a
+ * commands from CTO_DEV_DIR/cmd (tap X Y | drag X1 Y1 X2 Y2 | hold X Y FRAMES [SHOT] | scroll X Y AMOUNT | wait MS | shot NAME | quit), replaces Gdx.input with a
  * proxy that reports scripted touches (the game polls Gdx.input), and saves screenshots of the
  * game's own framebuffer to CTO_DEV_DIR/NAME.png. It creates CTO_DEV_DIR/idle when the queue is empty.
  */
@@ -31,6 +31,7 @@ public class DevHarness {
 	private final Deque<int[]> frames = new ArrayDeque<int[]>();
 	private long waitUntil;
 	private String pendingShot;
+	private String holdShot;
 
 	public DevHarness(File dir) {
 		this.dir = dir;
@@ -76,6 +77,8 @@ public class DevHarness {
 			} else if (f[0] == 2) {
 				if (p != null) p.touchUp(vx, vy, 0, Input.Buttons.LEFT);
 				virtTouched = false;
+			} else if (f[0] == 6) {
+				pendingShot = holdShot;
 			} else if (f[0] == 4) {
 				if (p != null) p.mouseMoved(vx, vy);
 			} else if (f[0] == 5) {
@@ -104,6 +107,14 @@ public class DevHarness {
 			frames.add(new int[] { 0, x1, y1 });
 			for (int i = 1; i <= n; i++) frames.add(new int[] { 1, x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n });
 			frames.add(new int[] { 2, x2, y2 });
+		} else if (c[0].equals("hold")) {
+			int x = Integer.parseInt(c[1]), y = Integer.parseInt(c[2]), n = Integer.parseInt(c[3]);
+			holdShot = c.length > 4 ? c[4] : null;
+			frames.add(new int[] { 0, x, y });
+			for (int i = 0; i < n; i++) frames.add(new int[] { 1, x, y });
+			if (holdShot != null) frames.add(new int[] { 6, x, y });
+			frames.add(new int[] { 3, x, y });
+			frames.add(new int[] { 2, x, y });
 		} else if (c[0].equals("scroll")) {
 			int x = Integer.parseInt(c[1]), y = Integer.parseInt(c[2]), amount = Integer.parseInt(c[3]);
 			frames.add(new int[] { 4, x, y });

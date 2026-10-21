@@ -17,6 +17,8 @@ import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.spaceship.handlers.CircleAccessor;
+import com.spaceship.handlers.Fx;
+import com.spaceship.handlers.ShipPlume;
 import com.spaceship.handlers.SpriteAccessor;
 import com.spaceship.main.Main;
 import com.spaceship.main.PlayScreen;
@@ -66,6 +68,8 @@ public class Spaceship{
 
 	private boolean[] enabled;
 	private int shadow;
+	private final ShipPlume plume = new ShipPlume();
+	private float prevX = -1;
 	private int bgRegion;
 	public int forceFieldSelected;
 	public int forceFieldSelected2;
@@ -417,36 +421,17 @@ public class Spaceship{
 			shipsSprites[shipSelected].setPosition(ship.x - shipsSprites[shipSelected].getWidth()/2, ship.y - shipsSprites[shipSelected].getHeight()/2);
 			ffSprites[forceFieldSelected].setPosition(ship.x - ffSprites[forceFieldSelected].getWidth()/2, ship.y - ffSprites[forceFieldSelected].getHeight()/2);
 			ffgSprites[forceFieldSelected].setPosition(ship.x - ffgSprites[forceFieldSelected].getWidth()/2, ship.y - ffgSprites[forceFieldSelected].getHeight()/2);
-			if(shadow < trace[1].length && startTrace){
-				trace[shipSelected][shadow].setPosition(shipsSprites[shipSelected].getX(), shipsSprites[shipSelected].getY());
-				Tween.to(trace[shipSelected][shadow], SpriteAccessor.COLOR, 1f).target(1f, 1f, 1f, 0f).start(tweenManager);
-			}	
-			
-			for(int i = 0; i < trace[1].length; i++){
-				if(enabled[i] && startTrace){
-					trace[shipSelected][i].setPosition(trace[shipSelected][i].getX(), trace[shipSelected][i].getY() - game.getMMS().fxy(1));
-					trace[shipSelected][i].draw(sb);
-				}
+			if(startTrace){
+				float dt = Gdx.graphics.getDeltaTime();
+				if(prevX >= 0 && dt > 0)
+					plume.setLateral((ship.x - prevX)/(dt*fxy(speed)));
+				prevX = ship.x;
+				Fx.additiveOn(sb);
+				plume.draw(sb, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f);
+				Fx.additiveOff(sb);
+			}else{
+				prevX = -1;
 			}
-		    if(shadow+1 < trace[1].length/2 && startTrace){
-				shadow++;	
-				enabled[shadow] = true;	
-				enabled[shadow + trace[1].length/2] = false;
-				tweenManager.killTarget(trace[shipSelected][shadow + trace[1].length/2]);
-				trace[shipSelected][shadow + trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-		    }else if(shadow+1 < trace[1].length && startTrace){
-				shadow++;
-				enabled[shadow] = true;	
-				enabled[shadow - trace[1].length/2] = false;
-				tweenManager.killTarget(trace[shipSelected][shadow - trace[1].length/2]);
-				trace[shipSelected][shadow - trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-			}else if(startTrace){
-				shadow = 0;
-				enabled[shadow] = true;	
-				enabled[shadow + trace[1].length/2] = false;
-				tweenManager.killTarget(trace[shipSelected][shadow + trace[1].length/2]);
-				trace[shipSelected][shadow + trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-			}	
 		}
 		ship.setPosition(ship.x, ship.y);
 		shipsSprites[shipSelected].draw(sb);

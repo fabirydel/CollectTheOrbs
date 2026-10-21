@@ -38,6 +38,8 @@ import com.badlogic.gdx.sql.SQLiteGdxException;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
+import com.spaceship.handlers.Fx;
+import com.spaceship.handlers.ShipPlume;
 import com.spaceship.handlers.BitmapFontAccessor;
 import com.spaceship.handlers.ImageAccessor;
 import com.spaceship.handlers.SpriteAccessor;
@@ -225,6 +227,7 @@ public class MainMenuScreen implements Screen {
 	public long lastTimeBg;
 	public int lightTime;
 	public int musicTime;
+	private final ShipPlume menuPlume = new ShipPlume();
 	private float counterBaseY, scoreBaseY, mainCounterY, mainScoreY, titleY1, titleY2;
 	private float musicFade;
 	public long time;
@@ -1289,38 +1292,13 @@ public class MainMenuScreen implements Screen {
 		bStats.draw(game.batch);
 		bHelp.draw(game.batch);
 		
-		//trace stuff
-		if(shadow < trace[1].length && startTrace){
-			trace[shipSelected][shadow].setPosition(shipsSprites[shipSelected].getX(), shipsSprites[shipSelected].getY());
-			Tween.to(trace[shipSelected][shadow], SpriteAccessor.COLOR, 1f).target(1f, 1f, 1f, 0f).start(tweenManager);
-		}	
-		
-		for(int i = 0; i < trace[1].length; i++){
-			if(enabled[i] && startTrace){
-				trace[shipSelected][i].setPosition(trace[shipSelected][i].getX(), trace[shipSelected][i].getY() - game.getMMS().fxy(1));
-				if(drawTrace)
-					trace[shipSelected][i].draw(game.batch);
-			}
+		//engine plume
+		if(startTrace && drawTrace){
+			Fx.init(game.assetManager);
+			Fx.additiveOn(game.batch);
+			menuPlume.draw(game.batch, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f);
+			Fx.additiveOff(game.batch);
 		}
-	    if(shadow+1 < trace[1].length/2 && startTrace){
-			shadow++;	
-			enabled[shadow] = true;	
-			enabled[shadow + trace[1].length/2] = false;
-			tweenManager.killTarget(trace[shipSelected][shadow + trace[1].length/2]);
-			trace[shipSelected][shadow + trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-	    }else if(shadow+1 < trace[1].length && startTrace){
-			shadow++;
-			enabled[shadow] = true;	
-			enabled[shadow - trace[1].length/2] = false;
-			tweenManager.killTarget(trace[shipSelected][shadow - trace[1].length/2]);
-			trace[shipSelected][shadow - trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-		}else if(startTrace){
-			shadow = 0;
-			enabled[shadow] = true;	
-			enabled[shadow + trace[1].length/2] = false;
-			tweenManager.killTarget(trace[shipSelected][shadow + trace[1].length/2]);
-			trace[shipSelected][shadow + trace[1].length/2].setColor(1f, 1f, 1f, 0.35f);
-		}	
 
 		shipsSprites[shipSelected].draw(game.batch);
 		ffSprites[forceFieldSelected].draw(game.batch);

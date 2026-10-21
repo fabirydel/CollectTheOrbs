@@ -38,6 +38,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
+import com.spaceship.handlers.Fx;
 import com.spaceship.handlers.BitmapFontAccessor;
 import com.spaceship.handlers.CircleAccessor;
 import com.spaceship.handlers.SpriteAccessor;
@@ -380,19 +381,20 @@ public class PlayScreen implements Screen {
 			blueWrong[h].setSize(20, 20);
 			blueWrong[h].setScale(fxy(20)/20, fxy(20)/20);
 		}
+		Fx.init(game.assetManager);
 		redParticles = new Sprite[20];
 		blueParticles = new Sprite[20];
 		lifeParticles = new Sprite[20];
 		objectsParticles = new Sprite[20];
 		for(int h = 0; h < 20; h++){
-			redParticles[h] = new Sprite(game.assetManager.get("res/shapes/redBallParticle.png", Texture.class));
-			redParticles[h].setSize(fxy(redParticles[h].getWidth()/4), fxy(redParticles[h].getHeight()/4));
-			blueParticles[h] = new Sprite(game.assetManager.get("res/shapes/blueBall.png", Texture.class));
-			blueParticles[h].setSize(fxy(blueParticles[h].getWidth()/4), fxy(blueParticles[h].getHeight()/4));
-			lifeParticles[h] = new Sprite(game.assetManager.get("res/shapes/lifeBall.png", Texture.class));
-			lifeParticles[h].setSize(fxy(lifeParticles[h].getWidth()/4), fx(lifeParticles[h].getHeight()/4));
-			objectsParticles[h] = new Sprite(game.assetManager.get("res/shapes/objectBall.png", Texture.class));
-			objectsParticles[h].setSize(fxy(objectsParticles[h].getWidth()/4), fxy(objectsParticles[h].getHeight()/4));
+			redParticles[h] = new Sprite(Fx.spark(Fx.SPARK_RED));
+			redParticles[h].setSize(fxy(16), fxy(16));
+			blueParticles[h] = new Sprite(Fx.spark(Fx.SPARK_BLUE));
+			blueParticles[h].setSize(fxy(16), fxy(16));
+			lifeParticles[h] = new Sprite(Fx.spark(Fx.SPARK_GOLD));
+			lifeParticles[h].setSize(fxy(16), fxy(16));
+			objectsParticles[h] = new Sprite(Fx.spark(Fx.SPARK_PURPLE));
+			objectsParticles[h].setSize(fxy(16), fxy(16));
 		}
 
 		//set positions and scales for buttons, objects and arrows
@@ -1603,15 +1605,22 @@ public class PlayScreen implements Screen {
 	
 				// draw balls
 				if(state != PlayScreen.DEAD){
+					Fx.additiveOn(game.batch);
+					for(Ball ball : dBalls){
+						ball.renderTail(game.batch);
+					}
+					Fx.additiveOff(game.batch);
 					for(Ball ball : dBalls){
 						ball.render(game.batch);
 					}			
+					Fx.additiveOn(game.batch);
 					for(int h = 0; h < 20; h++){
 						redParticles[h].draw(game.batch);
 						blueParticles[h].draw(game.batch);
 						lifeParticles[h].draw(game.batch);
 						objectsParticles[h].draw(game.batch);
 					}
+					Fx.additiveOff(game.batch);
 					for(int h = 0; h < 5; h++){
 						redWrong[h].draw(game.batch);
 						blueWrong[h].draw(game.batch);
