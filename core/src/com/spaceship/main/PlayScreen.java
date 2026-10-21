@@ -433,8 +433,10 @@ public class PlayScreen implements Screen {
 		ring2.setSize((fx(0.75f*ring2.getWidth()) + fy(0.75f*ring2.getHeight()))/2, (fx(0.75f*ring2.getWidth()) + fy(0.75f*ring2.getHeight()))/2);
 		ring3.setSize((fx(0.75f*ring3.getWidth()) + fy(0.75f*ring3.getHeight()))/2, (fx(0.75f*ring3.getWidth()) + fy(0.75f*ring3.getHeight()))/2);
 		ring1.setPosition(ring1.getHeight()/3, Gdx.graphics.getHeight() - 4*ring1.getHeight()/3);
-		ring2.setPosition(ring1.getX() + ring1.getWidth() + ring2.getWidth()/3, ring1.getY());
-		ring3.setPosition(ring2.getX() + ring2.getWidth() + ring3.getWidth()/3, ring1.getY());
+		// the ring art has a 10% transparent margin on each side: keep the same small gap between the visible rings
+		float slotGap = 0.12f*ring1.getWidth();
+		ring2.setPosition(ring1.getX() + 0.9f*ring1.getWidth() + slotGap - 0.1f*ring2.getWidth(), ring1.getY());
+		ring3.setPosition(ring2.getX() + 0.9f*ring2.getWidth() + slotGap - 0.1f*ring3.getWidth(), ring1.getY());
 		for(int i = 0; i < objectsSprites1.length; i++){
 			objectsSprites1[i].setSize((fx(objectsSprites1[i].getWidth()) + fy(objectsSprites1[i].getHeight()))/2, (fx(objectsSprites1[i].getWidth()) + fy(objectsSprites1[i].getHeight()))/2);
 			objectsSprites2[i].setSize((fx(0.75f*objectsSprites2[i].getWidth()) + fy(0.75f*objectsSprites2[i].getHeight()))/2, (fx(0.75f*objectsSprites2[i].getWidth()) + fy(0.75f*objectsSprites2[i].getHeight()))/2);
