@@ -62,9 +62,9 @@ public class ShipPlume {
 		cb += (target[2] - cb) * k;
 
 		// occasional surge, like the engine catching
-		if (emit && MathUtils.random() < dt * 2.2f)
+		if (emit && MathUtils.random() < dt * 1.0f)
 			surge = 1f;
-		surge *= 1f - Math.min(1f, dt * 4.5f);
+		surge *= 1f - Math.min(1f, dt * 3f);
 
 		float wEff = ship.getWidth() * ship.getScaleX();
 		float hEff = ship.getHeight() * ship.getScaleY();
@@ -79,10 +79,10 @@ public class ShipPlume {
 			float x = cx + (n[i] - 64f) * wEff / 128f;
 			float y = cy + (64f - n[i + 1]) * hEff / 128f + 2f * u;
 			float w = n[i + 2];
-			float flicker = 0.84f + 0.07f * MathUtils.sin(t * 29f + ph) + 0.05f * MathUtils.sin(t * 61f + 2f * ph)
-					+ MathUtils.random(-0.05f, 0.05f) + 0.28f * surge;
-			float pulse = 1f + 0.09f * MathUtils.sin(t * 43f + ph) + MathUtils.random(-0.04f, 0.04f);
-			float sway = -lateral * 16f + 2.6f * MathUtils.sin(t * 17f + ph) + MathUtils.random(-0.9f, 0.9f);
+			float flicker = 0.88f + 0.04f * MathUtils.sin(t * 16f + ph) + 0.03f * MathUtils.sin(t * 34f + 2f * ph)
+					+ MathUtils.random(-0.015f, 0.015f) + 0.15f * surge;
+			float pulse = 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
+			float sway = -lateral * 16f + 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f);
 			float length = (82f + w * 2.2f) * u * flicker * boost;
 			float width = (7f + w * 1.25f) * u * pulse;
 			float a = alpha * (0.78f + 0.12f * flicker);

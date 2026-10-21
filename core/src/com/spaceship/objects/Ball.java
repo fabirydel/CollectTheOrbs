@@ -179,13 +179,13 @@ public class Ball extends GameObject {
 		
 		// a little life: the tail wavers, breathes, and sheds sparkles
 		float t = Fx.time();
-		float wobble = (2.8f*MathUtils.sin(t*21f + phase*1.3f) + MathUtils.random(-1f, 1f))*MathUtils.degreesToRadians;
+		float wobble = (1.6f*MathUtils.sin(t*12f + phase*1.3f) + MathUtils.random(-0.3f, 0.3f))*MathUtils.degreesToRadians;
 		float c = MathUtils.cos(wobble), s = MathUtils.sin(wobble);
 		float dx = (vx*c - vy*s)/speed;
 		float dy = (vx*s + vy*c)/speed;
-		float flicker = 0.92f + 0.08f*MathUtils.sin(t*33f + phase) + MathUtils.random(-0.04f, 0.04f);
+		float flicker = 0.94f + 0.05f*MathUtils.sin(t*19f + phase) + MathUtils.random(-0.015f, 0.015f);
 		float length = Math.min(fxy(230), speed*0.34f)*flicker;
-		float width = fxy(30)*(0.92f + 0.1f*MathUtils.sin(t*47f + phase));
+		float width = fxy(30)*(0.94f + 0.06f*MathUtils.sin(t*26f + phase));
 		float px = this.getPosition().x;
 		float py = this.getPosition().y;
 		Fx.tail(sb, false, px, py, dx, dy, length, width, r, g, b, 0.9f);
