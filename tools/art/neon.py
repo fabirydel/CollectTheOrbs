@@ -132,8 +132,20 @@ class Pen:
     """Draws glyph strokes in a normalized [-1, 1] frame centered on (cx, cy) with scale s (px)."""
 
     def __init__(self, layer, cx, cy, s, width):
+        self.layer = layer
         self.d = ImageDraw.Draw(layer)
         self.cx, self.cy, self.s, self.w = cx, cy, s, width
+
+    def silhouette(self, draw_fn, angle=0, center=(0, 0), outline=None):
+        """Fill a shape in a scratch mask (draw_fn(ImageDraw, p)), rotate it, and stroke its outline."""
+        m = Image.new('L', self.layer.size, 0)
+        draw_fn(ImageDraw.Draw(m), self.p)
+        if angle:
+            m = m.rotate(angle, center=self.p(*center), resample=Image.BICUBIC)
+        w = int(outline or self.w)
+        m = m.point(lambda v: 255 if v > 127 else 0)
+        edge = ImageChops.subtract(m, m.filter(ImageFilter.MinFilter(2 * (w // 2) + 1)))
+        self.layer.paste((255, 255, 255, 255), (0, 0), edge)
 
     def p(self, x, y):
         return (self.cx + x * self.s, self.cy + y * self.s)
@@ -209,12 +221,19 @@ def glyph(name):
 
 @glyph('upgrades')
 def _(p):
-    p.line([(-0.55, 0.88), (-0.55, 0.09)])
-    p.arc(-0.55, -0.25, 0.34, 295, 605)
-    p.line([(-0.406, -0.558), (-0.36, -0.82)])
-    p.line([(-0.694, -0.558), (-0.74, -0.82)])
-    p.line([(0.5, 0.88), (0.5, -0.12)])
-    p.line([(0.1, -0.78), (0.9, -0.78), (0.9, -0.3), (0.1, -0.3)], close=True)
+    def wrench(d, P):
+        d.rounded_rectangle((*P(-0.12, -0.15), *P(0.12, 0.92)), radius=p.s * 0.12, fill=255)
+        d.ellipse((*P(-0.36, -0.86), *P(0.36, -0.14)), fill=255)
+        d.rectangle((*P(-0.12, -1.0), *P(0.12, -0.5)), fill=0)
+
+    def hammer(d, P):
+        d.rounded_rectangle((*P(-0.11, -0.45), *P(0.11, 0.92)), radius=p.s * 0.11, fill=255)
+        d.rounded_rectangle((*P(-0.5, -0.9), *P(0.5, -0.42)), radius=p.s * 0.08, fill=255)
+        d.polygon([P(-0.5, -0.9), P(-0.82, -0.78), P(-0.82, -0.54), P(-0.5, -0.42)], fill=255)
+
+    ox = 0.5
+    p.silhouette(lambda d, P: wrench(d, lambda x, y: P(x - ox, y)), angle=18, center=(-ox, 0.0), outline=p.w * 0.85)
+    p.silhouette(lambda d, P: hammer(d, lambda x, y: P(x + ox, y)), angle=-18, center=(ox, 0.0), outline=p.w * 0.85)
 
 
 @glyph('settings')
@@ -298,23 +317,19 @@ def _(p):
         p.circle(x, y, 0.24, fill=True)
 
 
-def head(p, x, y, dx, dy, l=0.42):
-    n = math.hypot(dx, dy)
-    dx, dy = dx / n, dy / n
-    pts = []
-    for ang in (0.6, -0.6):
-        c, s = math.cos(ang), math.sin(ang)
-        pts.append((x - l * (dx * c - dy * s), y - l * (dx * s + dy * c)))
-    p.line([pts[0], (x, y), pts[1]])
-
-
 @glyph('retry')
 def _(p):
-    r, cy = 0.78, 0.04
-    p.arc(0, cy, r, 330, 560)
-    th = math.radians(330)
-    x, y = r * math.cos(th), cy + r * math.sin(th)
-    head(p, x + 0.06, y - 0.08, 0.45, -0.9, 0.6)
+    r = 0.7
+    start, end = 50, 330
+    p.arc(0, 0, r, start, end, w=p.w * 1.15)
+    th = math.radians(end)
+    x, y = r * math.cos(th), r * math.sin(th)
+    tx, ty = -math.sin(th), math.cos(th)
+    nx, ny = -ty, tx
+    L, Wd = 0.52, 0.34
+    tip = (x + tx * L * 0.62, y + ty * L * 0.62)
+    base = (x - tx * L * 0.38, y - ty * L * 0.38)
+    p.poly([tip, (base[0] + nx * Wd, base[1] + ny * Wd), (base[0] - nx * Wd, base[1] - ny * Wd)])
 
 
 @glyph('pause')
