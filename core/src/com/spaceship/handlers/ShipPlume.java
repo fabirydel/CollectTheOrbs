@@ -82,7 +82,7 @@ public class ShipPlume {
 			float flicker = !Fx.LIVELY ? 0.92f : 0.88f + 0.04f * MathUtils.sin(t * 16f + ph) + 0.03f * MathUtils.sin(t * 34f + 2f * ph)
 					+ MathUtils.random(-0.015f, 0.015f) + 0.15f * surge;
 			float pulse = !Fx.LIVELY ? 1f : 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
-			float sway = -lateral * 16f + (!Fx.LIVELY ? 0f : 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f));
+			float sway = -lateral * 16f + (!Fx.WOBBLE ? 0f : 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f));
 			float length = (82f + w * 2.2f) * u * flicker * boost;
 			float width = (7f + w * 1.25f) * u * pulse;
 			float a = alpha * (0.78f + 0.12f * flicker);

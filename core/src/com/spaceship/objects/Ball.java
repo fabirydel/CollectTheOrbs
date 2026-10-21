@@ -179,7 +179,7 @@ public class Ball extends GameObject {
 		
 		// a little life: the tail wavers, breathes, and sheds sparkles
 		float t = Fx.time();
-		float wobble = !Fx.LIVELY ? 0f : (1.6f*MathUtils.sin(t*12f + phase*1.3f) + MathUtils.random(-0.3f, 0.3f))*MathUtils.degreesToRadians;
+		float wobble = !Fx.WOBBLE ? 0f : (1.6f*MathUtils.sin(t*12f + phase*1.3f) + MathUtils.random(-0.3f, 0.3f))*MathUtils.degreesToRadians;
 		float c = MathUtils.cos(wobble), s = MathUtils.sin(wobble);
 		float dx = (vx*c - vy*s)/speed;
 		float dy = (vx*s + vy*c)/speed;
