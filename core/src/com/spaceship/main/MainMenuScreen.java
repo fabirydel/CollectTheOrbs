@@ -1334,7 +1334,6 @@ public class MainMenuScreen implements Screen {
 			// electricity on the force field
 			float dtL = Gdx.graphics.getDeltaTime();
 			electricity.update(dtL, state == STANDBY);
-		Fx.update(dtL);
 			Fx.additiveOn(game.batch);
 			electricity.draw(game.batch, ffSprites[forceFieldSelected].getX() + ffSprites[forceFieldSelected].getWidth()/2,
 					ffSprites[forceFieldSelected].getY() + ffSprites[forceFieldSelected].getHeight()/2,
@@ -1346,6 +1345,8 @@ public class MainMenuScreen implements Screen {
 		ffgSprites[forceFieldSelected].draw(game.batch);
 		
 		slideBottomBlock();
+		Fx.init(game.assetManager);
+		Fx.update(Gdx.graphics.getDeltaTime());
 		if(drawCounters){
 			// draw counnters
 			Fx.init(game.assetManager);
