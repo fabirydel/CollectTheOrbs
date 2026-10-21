@@ -18,7 +18,7 @@ public class EnergyBar {
 	public static final String[] ASSETS = { "res/fx/liquid.png", "res/fx/liquid_tip.png", "res/fx/tubeback3.png", "res/fx/tubeback4.png", "res/fx/tubeback5.png" };
 
 	// liquid interior inside the 36 px high bar art, logical px (see tools/art/energy.py)
-	private static final float IN_X0 = 8f, IN_Y0 = 10f, IN_Y1 = 26f, BAR_H = 36f;
+	private static final float IN_X0 = 13f, IN_Y0 = 10f, IN_Y1 = 26f, BAR_H = 36f;
 
 	private final Texture back, liquid, tip;
 	private final int cells;

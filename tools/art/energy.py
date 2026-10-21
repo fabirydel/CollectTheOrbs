@@ -5,7 +5,7 @@ Run from the repo root:  python3 tools/art/energy.py
 - res/fx/tubeback{3,4,5}.png        dark glass interior, drawn behind the liquid
 - res/fx/liquid.png                 64x16 horizontally tileable gold liquid (scrolled by EnergyBar)
 - res/fx/liquid_tip.png             soft glow at the liquid's leading edge
-Geometry (logical px, bar height 36): outer capsule x 2..W-2, y 5..31; liquid interior x 8..W-8, y 10..26.
+Geometry (logical px, bar height 36): end caps x 1.5..12 and W-12..W-1.5 (y 3..33), liquid interior x 13..W-13, y 10..26.
 """
 import os, sys
 import numpy as np
@@ -16,7 +16,7 @@ import neon as N
 from neon import NEUTRAL
 
 OUT_X0, OUT_Y0, OUT_Y1 = 2, 5, 31
-IN_X0, IN_Y0, IN_Y1 = 8, 10, 26
+IN_X0, IN_Y0, IN_Y1 = 13, 10, 26
 GOLD = (255, 190, 46)
 
 
@@ -36,72 +36,106 @@ def capsule_sdf(w, h, x0, y0, x1, y1, K):
     return np.hypot(x - cx, y - cy) - r
 
 
+def lerp(c0, c1, t):
+    return tuple(int(round(c0[i] + (c1[i] - c0[i]) * t)) for i in range(3))
+
+
 def tube_front(W, K):
+    """Mechanical tube: metal rails above and below the glass, collars, and grooved end caps with bolts."""
+    from PIL import ImageDraw
     H = 36
-    outer = capsule_sdf(W, H, OUT_X0, OUT_Y0, W - OUT_X0, OUT_Y1, K)
-    inner = capsule_sdf(W, H, IN_X0, IN_Y0, W - IN_X0, IN_Y1, K)
+    S = K * 3
+    img = Image.new('RGBA', (W * S, H * S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    nc = NEUTRAL
+
+    def R(x0, y0, x1, y1, fill):
+        d.rectangle((x0 * S, y0 * S, x1 * S - 1, y1 * S - 1), fill=fill)
+
+    def vgrad(x0, y0, x1, y1, top, bot):
+        n = max(1, int(round((y1 - y0) * S)))
+        for i in range(n):
+            c = lerp(top, bot, i / max(1, n - 1))
+            d.rectangle((x0 * S, y0 * S + i, x1 * S - 1, y0 * S + i), fill=c + (255,))
+
+    X0, X1 = 13, W - 13           # glass interior (liquid) x range
+    # rails above and below the glass
+    vgrad(X0 - 1, 6.5, X1 + 1, 10, (150, 152, 158), (62, 64, 70))
+    vgrad(X0 - 1, 26, X1 + 1, 29.5, (96, 98, 104), (44, 45, 50))
+    R(X0 - 1, 6.5, X1 + 1, 7.0, nc + (255,))               # bright outer edge of the top rail
+    R(X0 - 1, 29.0, X1 + 1, 29.5, tuple(int(c * 0.8) for c in nc) + (255,))
+    R(X0 - 1, 9.6, X1 + 1, 10.0, (20, 20, 22, 255))         # shadow where the rail meets the glass
+    R(X0 - 1, 26.0, X1 + 1, 26.4, (20, 20, 22, 255))
+
+    def cap(x0, x1, left):
+        y0, y1, c = 3.0, 33.0, 2.6
+        pts = [(x0 + c, y0), (x1 - c, y0), (x1, y0 + c), (x1, y1 - c), (x1 - c, y1), (x0 + c, y1), (x0, y1 - c), (x0, y0 + c)]
+        mask = Image.new('L', img.size, 0)
+        ImageDraw.Draw(mask).polygon([(px * S, py * S) for px, py in pts], fill=255)
+        body = Image.new('RGBA', img.size, (0, 0, 0, 0))
+        bd = ImageDraw.Draw(body)
+        n = int((y1 - y0) * S)
+        for i in range(n):
+            t = i / n
+            c0 = lerp((128, 130, 136), (46, 47, 52), min(1, t * 1.15))
+            bd.rectangle((x0 * S, y0 * S + i, x1 * S, y0 * S + i), fill=c0 + (255,))
+        # vertical grooves (brushed / ribbed metal)
+        gx = x0 + 1.2
+        k = 0
+        while gx < x1 - 0.6:
+            bd.rectangle((gx * S, (y0 + 2) * S, (gx + 0.35) * S, (y1 - 2) * S), fill=(0, 0, 0, 90))
+            bd.rectangle(((gx + 0.4) * S, (y0 + 2) * S, (gx + 0.7) * S, (y1 - 2) * S), fill=(255, 255, 255, 40))
+            gx += 1.5
+            k += 1
+        # bevel: light along the outer edge, dark along the inner edge
+        edge_x = x0 if left else x1
+        bd.rectangle(((edge_x - (0 if left else 0.9)) * S, (y0 + 1.5) * S, (edge_x + (0.9 if left else 0)) * S, (y1 - 1.5) * S), fill=(255, 255, 255, 60))
+        # bolt
+        bx, by = (x0 + x1) / 2 + (0.4 if left else -0.4), 18.0
+        bd.ellipse(((bx - 2.1) * S, (by - 2.1) * S, (bx + 2.1) * S, (by + 2.1) * S), fill=(24, 24, 26, 255))
+        bd.ellipse(((bx - 1.6) * S, (by - 1.6) * S, (bx + 1.6) * S, (by + 1.6) * S), fill=(104, 106, 112, 255))
+        bd.ellipse(((bx - 1.0) * S, (by - 1.3) * S, (bx + 0.4) * S, (by - 0.2) * S), fill=(210, 212, 218, 255))
+        bd.line(((bx - 1.5) * S, (by + 0.1) * S, (bx + 1.5) * S, (by + 0.1) * S), fill=(30, 30, 32, 255), width=max(1, int(0.35 * S)))
+        img.paste(body, (0, 0), mask)
+        d2 = ImageDraw.Draw(img)
+        d2.line([(px * S, py * S) for px, py in pts + [pts[0]]], fill=nc + (255,), width=max(1, int(0.8 * S)), joint='curve')
+
+    cap(1.5, 12.0, True)
+    cap(W - 12.0, W - 1.5, False)
+    # collars where the caps meet the glass
+    for cx0 in (12.0, W - 15.0):
+        vgrad(cx0, 5.5, cx0 + 3.0, 30.5, (96, 98, 104), (36, 37, 41))
+        R(cx0 + (0 if cx0 < W / 2 else 2.6), 5.5, cx0 + (0.4 if cx0 < W / 2 else 3.0), 30.5, (14, 14, 16, 255))
+        R(cx0, 5.5, cx0 + 3.0, 6.0, nc + (255,))
+        R(cx0, 30.0, cx0 + 3.0, 30.5, tuple(int(c * 0.7) for c in nc) + (255,))
+
+    front = img.resize((W * K, H * K), Image.LANCZOS)
+    # glass over the liquid: top specular, soft shade at the bottom
+    arr = np.zeros((H * K, W * K, 4), dtype=np.float32)
     yy, xx = np.mgrid[0:H * K, 0:W * K].astype(np.float32)
     x = (xx + 0.5) / K
     y = (yy + 0.5) / K
-    ring = smooth(0.4, -0.4, outer) * smooth(-0.4, 0.4, inner)          # opaque frame between the two capsules
-    rgb = np.zeros((H * K, W * K, 3), dtype=np.float32)
-    base = np.array([34, 35, 38], dtype=np.float32)
-    shade = 0.75 + 0.5 * smooth(OUT_Y0, OUT_Y1, y)[..., None] * 0.0
-    rgb[:] = base
-    # brushed highlight on the ring top, darker toward the bottom
-    top = 1 - smooth(OUT_Y0, (IN_Y0 + OUT_Y0) / 2 + 1, y)
-    rgb += (np.array([120, 122, 128]) * top[..., None])
-    alpha = ring
-    # neon outlines: outer edge (bright neutral) and inner edge (softer)
-    line_o = smooth(0.9, 0.0, np.abs(outer + 0.45)) * 1.0
-    line_i = smooth(0.8, 0.0, np.abs(inner - 0.4)) * 0.7
-    nc = np.array(NEUTRAL, dtype=np.float32) / 255
-    rgb = rgb / 255
-    rgb = rgb * (1 - line_o[..., None]) + nc * line_o[..., None] * 1.15
-    rgb = rgb * (1 - line_i[..., None]) + nc * line_i[..., None] * 0.9
-    alpha = np.clip(np.maximum(alpha, np.maximum(line_o, line_i)), 0, 1)
-    # glass over the liquid: top specular band + faint tick marks per energy cell
-    glass_in = smooth(0.2, -0.2, inner)
-    spec = np.exp(-((y - (IN_Y0 + 2.2)) / 1.6) ** 2) * glass_in
-    cells = None
-    glass = np.zeros_like(alpha)
-    glass_rgb = np.ones_like(rgb)
-    glass_a = spec * 0.42
-    out = np.dstack([rgb, np.ones_like(alpha)])
-    base_img = out.copy()
-    # composite: ring/lines first, then glass specular on the interior
-    a_total = np.clip(alpha + glass_a * (1 - alpha), 0, 1)
-    rgb_total = (rgb * alpha[..., None] + glass_rgb * (glass_a * (1 - alpha))[..., None]) / np.maximum(a_total, 1e-4)[..., None]
-    # outer glow
-    img = Image.fromarray(np.dstack([rgb_total * 255, a_total * 255]).astype(np.uint8))
-    halo = N.glow(img, 1.6, NEUTRAL, 0.55)
-    return Image.alpha_composite(halo, img)
-
-
-def tick_overlay(W, K, cells):
-    """Thin dividers between energy cells, drawn on the glass."""
-    H = 36
-    yy, xx = np.mgrid[0:H * K, 0:W * K].astype(np.float32)
-    x = (xx + 0.5) / K
-    y = (yy + 0.5) / K
-    inner_w = (W - IN_X0) - IN_X0
-    a = np.zeros((H * K, W * K), dtype=np.float32)
-    for c in range(1, cells):
-        cx = IN_X0 + inner_w * c / cells
-        a = np.maximum(a, np.exp(-((x - cx) / 0.35) ** 2) * ((y > IN_Y0) & (y < IN_Y1)))
-    rgb = np.ones((H * K, W * K, 3), dtype=np.float32)
-    return Image.fromarray(np.dstack([rgb * 255, a * 0.35 * 255]).astype(np.uint8))
+    inside = ((x >= 15) & (x <= W - 15) & (y >= 10) & (y <= 26)).astype(np.float32)
+    spec = np.exp(-((y - 11.8) / 1.1) ** 2) * inside
+    shade = smooth(21, 26, y) * inside
+    arr[..., :3] = 255 * spec[..., None] + 0 * (1 - spec[..., None])
+    arr[..., 3] = (spec * 0.4 + shade * 0.22 * (1 - spec)) * 255
+    arr[..., :3] = np.where(shade[..., None] > spec[..., None], 0, 255)
+    glass = Image.fromarray(arr.astype(np.uint8))
+    out = Image.alpha_composite(glass, front)
+    halo = N.glow(out, 1.6, NEUTRAL, 0.5)
+    return Image.alpha_composite(halo, out)
 
 
 def tube_back(W, K):
     H = 36
-    inner = capsule_sdf(W, H, IN_X0 - 0.5, IN_Y0 - 0.5, W - IN_X0 + 0.5, IN_Y1 + 0.5, K)
     yy, xx = np.mgrid[0:H * K, 0:W * K].astype(np.float32)
+    x = (xx + 0.5) / K
     y = (yy + 0.5) / K
-    inside = smooth(0.3, -0.3, inner)
-    shade = 0.05 + 0.1 * smooth(IN_Y0, IN_Y1, y)       # slightly lighter toward the bottom
+    inside = ((x >= 12) & (x <= W - 12) & (y >= 10) & (y <= 26)).astype(np.float32)
+    shade = 0.05 + 0.10 * smooth(10, 26, y)
     rgb = np.dstack([shade * 255, shade * 255, (shade + 0.01) * 255])
-    return Image.fromarray(np.dstack([rgb, inside * 235]).astype(np.uint8))
+    return Image.fromarray(np.dstack([rgb, inside * 240]).astype(np.uint8))
 
 
 def liquid_tile(K):
@@ -151,7 +185,7 @@ def liquid_tip(K):
 def build():
     K = 4
     for cells, W in ((3, 102), (4, 122), (5, 143)):
-        front = Image.alpha_composite(tube_front(W, K), tick_overlay(W, K, cells))
+        front = tube_front(W, K)
         front.save(os.path.join(N.OUT, 'hud', 'lifeBar%dLifes.png' % cells))
         N.logical_sizes['res/hud/lifeBar%dLifes.png' % cells] = (W, 36)
         back = tube_back(W, K)
