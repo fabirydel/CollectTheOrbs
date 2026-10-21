@@ -283,6 +283,34 @@ def items_image(lang, name):
     N.finish(im, w, h, 'objects/%s.png' % name)
 
 
+def converter_icon(a, b):
+    n = px(250)
+    im = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    o1, o2 = N.orb(84 / 0.8, a), N.orb(84 / 0.8, b)
+    ar = arrow_icon(a, b, 54, 42)
+    im.alpha_composite(o1, (px(46) - o1.width // 2, n // 2 - o1.height // 2))
+    im.alpha_composite(ar, (n // 2 - ar.width // 2, n // 2 - ar.height // 2))
+    im.alpha_composite(o2, (px(204) - o2.width // 2, n // 2 - o2.height // 2))
+    return im
+
+
+def item_icons_sheet():
+    """res/objects/objects.png: the ten in-game item icons, 160x160 frames, in the original order."""
+    font = U.BMFont('fonts/prototype128blueWhite')
+    icons = [converter_icon(CYAN, RED), converter_icon(RED, CYAN),
+             cluster_icon(CYAN, 2, 'X2', font), cluster_icon(RED, 2, 'X2', font),
+             chevrons_icon(250),
+             shield_icon(CYAN, 250), shield_icon(RED, 250),
+             cluster_icon(CYAN, 3, 'X3', font), cluster_icon(RED, 3, 'X3', font),
+             shield_icon(GOLD, 250)]
+    sheet = N.canvas(1600, 160)
+    for i, ic in enumerate(icons):
+        target = px(140)
+        small = ic.resize((target, target), Image.LANCZOS)
+        sheet.alpha_composite(small, (px(160) * i + (px(160) - target) // 2, (px(160) - target) // 2))
+    N.finish(sheet, 1600, 160, 'objects/objects.png')
+
+
 if __name__ == '__main__':
     N.set_scale(1)
     for lang, suffix in (('en', ''), ('es', 'Esp')):
@@ -290,5 +318,7 @@ if __name__ == '__main__':
         controls_image(lang, 'padsControls' + suffix)
         orbs_image(lang, 'orbs' + suffix)
         items_image(lang, 'items' + suffix)
+    N.set_scale(2)
+    item_icons_sheet()
     N.write_manifest()
     print('done')
