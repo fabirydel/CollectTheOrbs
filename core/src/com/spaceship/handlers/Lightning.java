@@ -5,8 +5,8 @@ import com.badlogic.gdx.math.MathUtils;
 
 /**
  * Electricity on the main-menu force field: bolts crawl along the shield surface, jump across it
- * and sometimes lash outward. Each bolt keeps its endpoints but re-jitters its shape many times a
- * second, so it crackles. Drawn additively in the shield's color with a white-hot core.
+ * and never leave the shield. Each bolt keeps its endpoints but re-jitters its shape many times a
+ * second, so it crackles. Bolts stay inside the shield. Drawn additively in the shield's color with a white-hot core.
  */
 public class Lightning {
 	private static final int MAXB = 12, MAXP = 20;
@@ -42,14 +42,14 @@ public class Lightning {
 		}
 		if (!active)
 			return;
-		spawnAccum += dt * 3.6f;
+		spawnAccum += dt * 2.3f;
 		while (spawnAccum >= 1f) {
 			spawnAccum -= 1f;
 			int burst = MathUtils.random() < 0.07f ? 2 : 1;
 			for (int k = 0; k < burst && count < MAXB; k++) {
 				int i = count++;
 				float roll = MathUtils.random();
-				type[i] = roll < 0.6f ? 0 : roll < 0.72f ? 1 : 2;
+				type[i] = roll < 0.75f ? 0 : 1;
 				a0[i] = MathUtils.random(0f, MathUtils.PI2);
 				span[i] = type[i] == 0 ? MathUtils.random(0.45f, 1.5f) : type[i] == 1 ? MathUtils.random(1.4f, 3.0f) : 0f;
 				age[i] = 0;
@@ -96,6 +96,15 @@ public class Lightning {
 				float rad = r * (0.93f + 0.62f * t);
 				px[k] = cx + MathUtils.cos(ang) * rad;
 				py[k] = cy + MathUtils.sin(ang) * rad;
+			}
+		}
+		for (int k = 0; k < n; k++) {
+			float dx = px[k] - cx, dy = py[k] - cy;
+			float d = (float) Math.sqrt(dx * dx + dy * dy);
+			float max = r * 0.97f;
+			if (d > max) {
+				px[k] = cx + dx / d * max;
+				py[k] = cy + dy / d * max;
 			}
 		}
 		return n;
