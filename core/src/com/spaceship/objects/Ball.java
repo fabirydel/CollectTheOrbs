@@ -32,6 +32,7 @@ public class Ball extends GameObject {
 	private int angle;
 	private int angle2;
 	private final float phase = MathUtils.random(0f, 6.28f);
+	private final float loopOffset = MathUtils.random();
 	private int type;
 	private boolean velocityChanged;
 	private Texture texB; 
@@ -161,6 +162,12 @@ public class Ball extends GameObject {
 	public void render(SpriteBatch sb) {	
 		ball.setPosition(this.getPosition().x, this.getPosition().y);
 		texSelected.setPosition(this.getPosition().x - texSelected.getWidth()/2, this.getPosition().y - texSelected.getHeight()/2);
+		// energy swirl: every orb loops through the same frames, starting at its own phase
+		int kind = type == B_BLUE ? 0 : type == B_RED ? 1 : type == B_LIFE ? 2 : 3;
+		com.badlogic.gdx.graphics.g2d.TextureRegion[] frames = Fx.orbFrames(kind);
+		int fi = (int) ((Fx.time()*1.3f + loopOffset)*Fx.ORB_FRAMES) % Fx.ORB_FRAMES;
+		com.badlogic.gdx.graphics.g2d.TextureRegion r = frames[fi];
+		texSelected.setRegion(r);
 		texSelected.draw(sb);
 	}
 	

@@ -4,6 +4,10 @@ res/bgs/bgsPrice1.png 1100 298
 res/bgs/bgsPrice2.png 1100 298
 res/fx/bolt.png 32 32
 res/fx/core.png 32 256
+res/fx/orb_blue.png 320 20
+res/fx/orb_gold.png 320 20
+res/fx/orb_purple.png 320 20
+res/fx/orb_red.png 320 20
 res/fx/plume.png 64 256
 res/fx/plume_core.png 32 256
 res/fx/spark_blue.png 32 32

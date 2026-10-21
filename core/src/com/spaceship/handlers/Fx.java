@@ -9,7 +9,8 @@ import com.badlogic.gdx.math.MathUtils;
 /** Additive-blended glow helpers for the orb tails and engine plumes (textures in res/fx). */
 public class Fx {
 	public static final String[] ASSETS = { "res/fx/tail.png", "res/fx/core.png", "res/fx/plume.png", "res/fx/plume_core.png",
-			"res/fx/spark_blue.png", "res/fx/spark_red.png", "res/fx/spark_gold.png", "res/fx/spark_purple.png", "res/fx/spark_white.png", "res/fx/bolt.png" };
+			"res/fx/spark_blue.png", "res/fx/spark_red.png", "res/fx/spark_gold.png", "res/fx/spark_purple.png", "res/fx/spark_white.png", "res/fx/bolt.png",
+			"res/fx/orb_blue.png", "res/fx/orb_red.png", "res/fx/orb_gold.png", "res/fx/orb_purple.png" };
 
 	/** Flicker, surges, embers and sparkles on the engine plumes and orb tails. Off = steady glow. */
 	public static final boolean LIVELY = true;
@@ -23,6 +24,8 @@ public class Fx {
 	private static Texture tail, core, plume, plumeCore;
 	private static Texture[] sparks = new Texture[4];
 	private static Texture dot, bolt;
+	public static final int ORB_FRAMES = 16;
+	private static com.badlogic.gdx.graphics.g2d.TextureRegion[][] orbFrames;
 
 	// small additive embers shared by the ship engines and the orb tails
 	private static final int MAX = 400;
@@ -50,6 +53,10 @@ public class Fx {
 		sparks[SPARK_PURPLE] = am.get("res/fx/spark_purple.png", Texture.class);
 		dot = am.get("res/fx/spark_white.png", Texture.class);
 		bolt = am.get("res/fx/bolt.png", Texture.class);
+		orbFrames = new com.badlogic.gdx.graphics.g2d.TextureRegion[4][];
+		String[] orbs = { "blue", "red", "gold", "purple" };
+		for (int i = 0; i < 4; i++)
+			orbFrames[i] = com.badlogic.gdx.graphics.g2d.TextureRegion.split(am.get("res/fx/orb_" + orbs[i] + ".png", Texture.class), 20, 20)[0];
 	}
 
 	public static Texture spark(int kind) {
@@ -139,5 +146,10 @@ public class Fx {
 		float deg = MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees;
 		sb.setColor(r, g, b, a);
 		sb.draw(bolt, x0, y0 - th / 2, 0, th / 2, len + th * 0.35f, th, 1f, 1f, deg, 0, 0, bolt.getWidth(), bolt.getHeight(), false, false);
+	}
+
+	/** Looping energy animation frames for an orb: 0 = blue, 1 = red, 2 = gold (energy), 3 = purple (item). */
+	public static com.badlogic.gdx.graphics.g2d.TextureRegion[] orbFrames(int kind) {
+		return orbFrames[kind];
 	}
 }
