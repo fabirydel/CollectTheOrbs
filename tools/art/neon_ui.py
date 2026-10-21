@@ -120,10 +120,10 @@ def light(color, t=0.55):
     return tuple(int(c + (255 - c) * t) for c in color)
 
 
-def neon_text(mask, color):
+def neon_text(mask, color, glow_r=2.0):
     layer = Image.new('RGBA', mask.size, (0, 0, 0, 0))
     layer.putalpha(mask)
-    halo = glow(layer, 2.0, color, 1.0)
+    halo = glow(layer, glow_r, color, 1.0)
     core = Image.new('RGBA', mask.size, light(color, 0.7) + (255,))
     core.putalpha(mask)
     return Image.alpha_composite(halo, core)
@@ -135,17 +135,17 @@ def pad_canvas(layer, margin):
     return out
 
 
-def put_text(dst, mask, x, y, color):
-    m = int(6 * N.U)
-    t = neon_text(pad_canvas(Image.merge('L', [mask]) if False else mask, m).convert('L'), color)
+def put_text(dst, mask, x, y, color, glow_r=2.0):
+    m = int((6 + 2 * glow_r) * N.U)
+    t = neon_text(pad_canvas(Image.merge('L', [mask]) if False else mask, m).convert('L'), color, glow_r)
     dst.alpha_composite(t, (int(x - m), int(y - m)))
 
 
-def center_text(dst, mask, cx, cy, color):
+def center_text(dst, mask, cx, cy, color, glow_r=2.0):
     """Draw text so the center of its actual ink bounds lands on (cx, cy)."""
     box = mask.getbbox()
     mask = mask.crop(box)
-    put_text(dst, mask, cx - mask.width / 2, cy - mask.height / 2, color)
+    put_text(dst, mask, cx - mask.width / 2, cy - mask.height / 2, color, glow_r)
 
 
 def rounded_mask(w, h, r, inset=0):
@@ -313,9 +313,15 @@ def build_play():
     N.set_scale(4)
     font = BMFont('fonts/prototype128blueWhite')
     w, h = 196, 98
-    t = tile(w, h, (NEUTRAL,), None, 26, alpha=210)
-    m = font.mask('PLAY', 58)
-    center_text(t, m, t.width / 2, t.height / 2, NEUTRAL)
+    # inset the button so its outer neon glow fits inside the image
+    mg = 12
+    inner = tile(w - 2 * mg, h - 2 * mg, (NEUTRAL,), None, 20, alpha=230, bw=5.0, glow_r=2.0)
+    t = N.canvas(w, h)
+    t.alpha_composite(inner, (mg * N.U, mg * N.U))
+    halo = glow(t, 6.5, NEUTRAL, 1.0)
+    t = Image.alpha_composite(halo, t)
+    m = font.mask('PLAY', 50)
+    center_text(t, m, t.width / 2, t.height / 2, NEUTRAL, 4.0)
     N.finish(t, w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
                              ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
@@ -389,6 +395,103 @@ def build_lightning():
         N.logical_sizes['res/shapes/%s.png' % name] = (src.width, src.height)
 
 
+FONT_COLORS = {'grey': NEUTRAL, 'blueWhite': CYAN, 'redBlack': RED, 'yellowOrange': GOLD}
+
+
+def build_neon_fonts():
+    """Re-renders every bitmap font as neon (white-hot core, tinted body, glow halo).
+
+    Glyph shapes and metrics come from the original atlases (BASE commit). Each glyph gets a transparent
+    margin for its glow, so the new atlases are re-packed and the .fnt files rewritten with offsets and
+    sizes adjusted (xadvance is unchanged, so text layout is identical).
+    """
+    from PIL import ImageFilter
+    names = [n[:-4] for n in subprocess.check_output(['git', 'ls-tree', '--name-only', BASE, 'android/assets/fonts/'], cwd=ROOT).decode().split()
+             if n.endswith('.fnt')]
+    for path in names:
+        fnt = os.path.basename(path)
+        txt = orig_bytes('fonts/' + fnt + '.fnt').decode('latin-1')
+        color = next(c for k, c in FONT_COLORS.items() if k in fnt)
+        size = int(re.search(r'size=(\d+)', txt).group(1))
+        pages = {}
+        header, chars, tail = [], [], []
+        for line in txt.splitlines():
+            if line.startswith('page'):
+                kv = dict(re.findall(r'(\w+)=("[^"]*"|-?\d+)', line))
+                pages[int(kv['id'])] = orig('fonts/' + kv['file'].strip('"'))
+            elif line.startswith('char '):
+                chars.append({k: int(v) for k, v in re.findall(r'(\w+)=(-?\d+)', line)})
+            elif line.startswith('kerning') or line.startswith('chars'):
+                if line.startswith('kerning'):
+                    tail.append(line)
+            else:
+                header.append(line)
+        P = int(size * 0.16) + 2
+        k = size / 64.0
+        glyphs = []
+        for c in chars:
+            w, h = c['width'], c['height']
+            W, H = w + 2 * P, h + 2 * P
+            canvas = Image.new('L', (W, H), 0)
+            if w > 0 and h > 0:
+                m = pages[c['page']].crop((c['x'], c['y'], c['x'] + w, c['y'] + h)).split()[3]
+                canvas.paste(m, (P, P))
+            hard = canvas.point(lambda v: 255 if v > 110 else 0)
+            core = hard.filter(ImageFilter.MinFilter(max(3, int(round(4 * k)) | 1))).filter(ImageFilter.GaussianBlur(0.6 * k))
+            body = canvas
+            h1 = canvas.filter(ImageFilter.GaussianBlur(2.2 * k))
+            h2 = canvas.filter(ImageFilter.GaussianBlur(5.5 * k))
+            body_a = np.asarray(body, dtype=np.float32) / 255
+            core_a = np.asarray(core, dtype=np.float32) / 255
+            glow_a = np.clip(np.asarray(h1, dtype=np.float32) / 255 * 1.3 + np.asarray(h2, dtype=np.float32) / 255 * 1.0, 0, 1) * (1 - body_a)
+            rgb = np.zeros(body_a.shape + (3,), dtype=np.float32)
+            for i in range(3):
+                t = color[i] / 255.0
+                lite = t + (1 - t) * 0.55
+                num = t * glow_a * 0.9 + lite * body_a * (1 - core_a) + 1.0 * core_a
+                den = glow_a * 0.9 + body_a * (1 - core_a) + core_a
+                rgb[..., i] = np.clip(num / np.maximum(den, 1e-3), 0, 1)
+            alpha = np.clip(glow_a * 0.8 + body_a, 0, 1)
+            alpha = np.maximum(alpha, core_a)
+            glyphs.append((c, Image.fromarray(np.dstack([rgb * 255, alpha * 255]).astype(np.uint8)), W, H))
+        # shelf-pack into one page
+        AW = 1024
+        x = y = rowh = 0
+        placed = []
+        for c, im, W, H in glyphs:
+            if x + W > AW:
+                x, y, rowh = 0, y + rowh + 2, 0
+            placed.append((c, im, x, y, W, H))
+            x += W + 2
+            rowh = max(rowh, H)
+        AH = 256
+        while AH < y + rowh + 2:
+            AH *= 2
+        atlas = Image.new('RGBA', (AW, AH), (0, 0, 0, 0))
+        out = []
+        for c, im, px, py, W, H in placed:
+            atlas.paste(im, (px, py))
+            out.append(('char id=%d x=%d y=%d width=%d height=%d xoffset=%d yoffset=%d xadvance=%d page=0 chnl=0' %
+                        (c['id'], px, py, W, H, c['xoffset'] - P, c['yoffset'] - P, c['xadvance'])))
+        png = 'neon_%s.png' % fnt
+        atlas.save(os.path.join(ASSETS, 'fonts', png))
+        lines = []
+        for h in header:
+            if h.startswith('common'):
+                h = re.sub(r'scaleW=\d+', 'scaleW=%d' % AW, h)
+                h = re.sub(r'scaleH=\d+', 'scaleH=%d' % AH, h)
+                h = re.sub(r'pages=\d+', 'pages=1', h)
+            lines.append(h)
+        lines.append('page id=0 file="%s"' % png)
+        lines.append('chars count=%d' % len(out))
+        lines += out
+        if tail:
+            lines.append('kernings count=%d' % len(tail))
+            lines += tail
+        with open(os.path.join(ASSETS, 'fonts', fnt + '.fnt'), 'w', encoding='latin-1') as fh:
+            fh.write('\n'.join(lines) + '\n')
+
+
 if __name__ == '__main__':
     parts = sys.argv[1:] or ['fonts', 'hud', 'cards', 'pads', 'play', 'lightning']
     if 'fonts' in parts:
@@ -403,5 +506,7 @@ if __name__ == '__main__':
         build_play()
     if 'lightning' in parts:
         build_lightning()
+    if 'neonfonts' in parts:
+        build_neon_fonts()
     N.write_manifest()
     print('done', parts)
