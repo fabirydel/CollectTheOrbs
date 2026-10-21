@@ -171,6 +171,7 @@ public class Splash implements Screen{
 		game.assetManager.load("res/shapes/lightningBlue.png", Texture.class);
 		game.assetManager.load("res/shapes/lightningRed.png", Texture.class);
 		com.spaceship.handlers.Fx.load(game.assetManager);
+		com.spaceship.handlers.EnergyBar.load(game.assetManager);
 		com.spaceship.handlers.ShipPlume.load();
 
 		game.assetManager.load("res/upgrades/upgradesPrice.png", Texture.class);

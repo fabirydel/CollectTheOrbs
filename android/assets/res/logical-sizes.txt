@@ -4,6 +4,8 @@ res/bgs/bgsPrice1.png 1100 298
 res/bgs/bgsPrice2.png 1100 298
 res/fx/bolt.png 32 32
 res/fx/core.png 32 256
+res/fx/liquid.png 64 16
+res/fx/liquid_tip.png 12 16
 res/fx/orb_blue.png 512 32
 res/fx/orb_gold.png 512 32
 res/fx/orb_purple.png 512 32
@@ -16,6 +18,9 @@ res/fx/spark_purple.png 32 32
 res/fx/spark_red.png 32 32
 res/fx/spark_white.png 32 32
 res/fx/tail.png 64 256
+res/fx/tubeback3.png 102 36
+res/fx/tubeback4.png 122 36
+res/fx/tubeback5.png 143 36
 res/gui/bBack.png 80 80
 res/gui/bControlsOff.png 80 80
 res/gui/bControlsOff120.png 120 120
@@ -51,6 +56,9 @@ res/gui/bVibrationOff120.png 120 120
 res/gui/bVibrationOn.png 80 80
 res/gui/bVibrationOn120.png 120 120
 res/gui/bYes.png 80 80
+res/hud/lifeBar3Lifes.png 102 36
+res/hud/lifeBar4Lifes.png 122 36
+res/hud/lifeBar5Lifes.png 143 36
 res/hud/padHorizontal.png 392 284
 res/hud/padVertical.png 160 576
 res/hud/padsDer.png 160 576

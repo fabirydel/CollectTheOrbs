@@ -67,6 +67,7 @@ public class PlayScreen implements Screen {
 
 	private Sprite[] lifeSprites;
 	private Sprite lifeBarSprite;
+	private com.spaceship.handlers.EnergyBar energyBar;
 	public static Sprite arrowLeft;
 	public static Sprite arrowRight;
 	private Sprite bHome;
@@ -564,6 +565,7 @@ public class PlayScreen implements Screen {
 
 			//set ship stuff
 			ship.setLifes(game.getMMS().energyStart);
+			if(energyBar != null) energyBar.snap(game.getMMS().energyStart/(float)barWidth);
 			ship.shipSelected = game.getMMS().shipSelected;
 			ship.setShipScale();
 			deathAngle = MathUtils.random(0, 1);
@@ -607,6 +609,7 @@ public class PlayScreen implements Screen {
 				lifeSprites[k].setSize(fx(1.75f*lifeSprites[k].getWidth()), 1.75f*fy(lifeSprites[k].getHeight()));
 				lifeSprites[k].setPosition(Gdx.graphics.getWidth()/2 - lifeSprites[k].getWidth()/2, Gdx.graphics.getHeight()/15 + adHeight/2);
 			}
+			energyBar = new com.spaceship.handlers.EnergyBar(game.assetManager, barWidth);
 			lastTimeBg = TimeUtils.nanoTime();
 			currentBgY = (bgs1.getHeight() + bgs2.getHeight())/3;
 
@@ -2167,7 +2170,9 @@ public class PlayScreen implements Screen {
 	}
 
 	public void drawLifeMeter(){
-		lifeSprites[ship.getLifes()].draw(game.batch);
+		// gold liquid in a glass tube: eases toward the current energy; the frame sprite (lifeBarSprite) draws on top
+		energyBar.update(Gdx.graphics.getDeltaTime(), ship.getLifes()/(float)barWidth);
+		energyBar.draw(game.batch, lifeBarSprite, lifeSprites[ship.getLifes()].getColor());
 		lifeBarSprite.draw(game.batch);
 	}
 	private final TweenCallback newHighScoreCallback = new TweenCallback() {
