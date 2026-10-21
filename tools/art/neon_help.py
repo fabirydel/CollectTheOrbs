@@ -303,11 +303,19 @@ def item_icons_sheet():
              shield_icon(CYAN, 250), shield_icon(RED, 250),
              cluster_icon(CYAN, 3, 'X3', font), cluster_icon(RED, 3, 'X3', font),
              shield_icon(GOLD, 250)]
+    # The ring (res/objects/ring.png) has an inner diameter of ~118 of the 160px frame. Fit each icon's
+    # lit shape inside a ~92px circle and center it on its own bounds.
     sheet = N.canvas(1600, 160)
     for i, ic in enumerate(icons):
-        target = px(140)
-        small = ic.resize((target, target), Image.LANCZOS)
-        sheet.alpha_composite(small, (px(160) * i + (px(160) - target) // 2, (px(160) - target) // 2))
+        alpha = ic.split()[3].point(lambda v: 255 if v > 60 else 0)
+        box = alpha.getbbox()
+        ic = ic.crop(box)
+        w, h = ic.size
+        diag = (w * w + h * h) ** 0.5
+        k = min(px(92) / max(w, h), px(96) / diag)
+        small = ic.resize((max(1, int(w * k)), max(1, int(h * k))), Image.LANCZOS)
+        cx, cy = px(160) * i + px(160) // 2, px(160) // 2
+        sheet.alpha_composite(small, (cx - small.width // 2, cy - small.height // 2))
     N.finish(sheet, 1600, 160, 'objects/objects.png')
 
 
