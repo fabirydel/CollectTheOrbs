@@ -237,8 +237,8 @@ public class PlayScreen implements Screen {
 	
 	float ratioMotoG = 0.5625f;
 	float ratioV = (float) Gdx.graphics.getWidth()/Gdx.graphics.getHeight();
-	float x = Gdx.graphics.getWidth()/720f;
-	float y = Gdx.graphics.getHeight()/1280f;
+	float x = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
+	float y = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
 
 	public PlayScreen(final Main gam){
 		this.game = gam;
@@ -2446,11 +2446,11 @@ public class PlayScreen implements Screen {
 	}
 
 	public float fx(float v){
-		return x*ratioMotoG*v/ratioV;
+		return x*v;
 	}
 
 	public float fy(float v){
-		return y*ratioMotoG*v/ratioV;
+		return y*v;
 	}
 
 	public float fxy(float v){

@@ -36,8 +36,8 @@ public class Splash implements Screen{
 		
     	ratioMotoG = 0.5625f;
     	ratioV = (float) Gdx.graphics.getWidth()/Gdx.graphics.getHeight();
-    	x = Gdx.graphics.getWidth()/720f;
-    	y = Gdx.graphics.getHeight()/1280f;
+    	x = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
+    	y = Math.min(Gdx.graphics.getWidth()/720f, Gdx.graphics.getHeight()/1280f);
     	
     	try{
 			cursor = game.getDataBase().rawQuery("SELECT galaxySelected FROM seleccionsAndNumbers;");
@@ -345,11 +345,11 @@ public class Splash implements Screen{
 	}	
 	
 	public float fx(float v){
-    	return x*ratioMotoG*v/ratioV;
+    	return x*v;
 	}
     
     public float fy(float v){
-    	return y*ratioMotoG*v/ratioV;
+    	return y*v;
 	}
     
     public float fxy(float v){
