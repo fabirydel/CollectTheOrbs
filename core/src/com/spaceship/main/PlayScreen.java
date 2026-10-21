@@ -710,8 +710,8 @@ public class PlayScreen implements Screen {
 					push(Tween.to(bRetry, SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
 					push(Tween.to(bShare, SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
 					push(Tween.to(bExit, SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
-					push(Tween.to(bluesFont, BitmapFontAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 0.60f)).
-					push(Tween.to(redsFont, BitmapFontAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 0.60f)).
+					push(Tween.to(bluesFont, BitmapFontAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
+					push(Tween.to(redsFont, BitmapFontAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
 					push(Tween.to(bgs1, SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
 					push(Tween.to(bgs2, SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
 					push(Tween.to(lifeSprites[ship.getLifes()], SpriteAccessor.COLOR, 0.75f).target(1f, 1f, 1f, 1f)).
