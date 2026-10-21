@@ -39,6 +39,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.spaceship.handlers.Lightning;
+import com.spaceship.handlers.UpgradeBar;
 import com.spaceship.handlers.Fx;
 import com.spaceship.handlers.ShipPlume;
 import com.spaceship.handlers.BitmapFontAccessor;
@@ -204,6 +205,8 @@ public class MainMenuScreen implements Screen {
 	private Sprite[] upgradesPriceSprites;
 	private Image[] upgradesPriceImages;
 	private Image[] upgradeFullImages;
+	private UpgradeBar[] upgradeBars = new UpgradeBar[6];
+	private static final int[] UPGRADE_MAX = { 5, 5, 5, 3, 3, 5 };
 	private Image[] upgradeEmptyImages;
 	private Image padsControlsEN;
 	private Image padsControlsES;
@@ -1347,14 +1350,6 @@ public class MainMenuScreen implements Screen {
 		slideBottomBlock();
 		Fx.init(game.assetManager);
 		Fx.update(Gdx.graphics.getDeltaTime());
-		if(upgradeFullImages != null){
-			// flowing liquid in the filled upgrade cells
-			com.badlogic.gdx.graphics.g2d.TextureRegion liquidFrame = Fx.upgradeFrame();
-			for(int i = 0; i < upgradeFullImages.length; i++){
-				if(upgradeFullImages[i] != null && upgradeFullImages[i].getDrawable() instanceof com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable)
-					((com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable) upgradeFullImages[i].getDrawable()).setRegion(liquidFrame);
-			}
-		}
 		if(drawCounters){
 			// draw counnters
 			Fx.init(game.assetManager);
@@ -2047,19 +2042,8 @@ public class MainMenuScreen implements Screen {
 			speedLabel.setFontScale(x/2.25f, y/2.25f);
 		}
 		auxTableSpeed.row();
-		for(int i = 0; i < shipSpeed; i++){
-			auxTableSpeed.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-		}
-		for(int i = 0; i < 5 - shipSpeed; i++){
-			auxTableSpeed.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);			
-			cellCounter++;
-		}	
-		for(int i = 0; i < 1; i++){
-			Image IupgradeEmpty = new Image(upgradeEmpty);
-			IupgradeEmpty.setColor(0f, 0f, 0f, 0f);
-			auxTableSpeed.add(IupgradeEmpty).width(IupgradeEmpty.getWidth()).height(IupgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		}	
+		upgradeBars[0] = new UpgradeBar(game.assetManager, fx(1.55f), shipSpeed/5.0f);
+		auxTableSpeed.add(upgradeBars[0]).width(upgradeBars[0].getPrefWidth()).height(upgradeBars[0].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableSpeed).expandX().left().padBottom(upgradePad2);
 		if(shipSpeed < 5){
 			imgsUpg.add(speedPrice).width(Math.abs(imgsUpg.getWidth() - auxTableSpeed.getWidth())).height(Math.abs(imgsUpg.getWidth() - auxTableSpeed.getWidth())).padLeft(speedPrice.getWidth()/5).left().padBottom(upgradePad2);		
@@ -2070,14 +2054,8 @@ public class MainMenuScreen implements Screen {
 		auxTableEnergy.setSize(upgradeFull.getWidth()*5, upgradeFull.getHeight() + speedLabel.getHeight());
 		auxTableEnergy.add(energyLabel).width(speedLabel.getWidth()).height(speedLabel.getHeight()).padTop(upgradePad2).left().colspan(5);
 		auxTableEnergy.row();
-		for(int i = 0; i < energyMeter; i++){
-			auxTableEnergy.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}
-		for(int i = 0; i < 5 - energyMeter; i++){
-			auxTableEnergy.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);			
-			cellCounter++;
-			}		
+		upgradeBars[1] = new UpgradeBar(game.assetManager, fx(1.55f), energyMeter/5.0f);
+		auxTableEnergy.add(upgradeBars[1]).width(upgradeBars[1].getPrefWidth()).height(upgradeBars[1].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableEnergy).expandX().left().padBottom(upgradePad2);
 		if(energyMeter < 5){
 			Image energyPrice = upgradesPriceImages[energyMeter + 1];
@@ -2089,14 +2067,8 @@ public class MainMenuScreen implements Screen {
 		auxTableEnergyStart.setSize(upgradeFull.getWidth()*5, upgradeFull.getHeight() + speedLabel.getHeight());
 		auxTableEnergyStart.add(energyStartLabel).width(speedLabel.getWidth()).height(speedLabel.getHeight()).padTop(upgradePad2).left().colspan(5);
 		auxTableEnergyStart.row();
-		for(int i = 0; i < energyStart; i++){
-			auxTableEnergyStart.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}
-		for(int i = 0; i < 5 - energyStart; i++){
-			auxTableEnergyStart.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);			
-			cellCounter++;
-			}	
+		upgradeBars[2] = new UpgradeBar(game.assetManager, fx(1.55f), energyStart/5.0f);
+		auxTableEnergyStart.add(upgradeBars[2]).width(upgradeBars[2].getPrefWidth()).height(upgradeBars[2].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableEnergyStart).expandX().left().padBottom(upgradePad2);
 		if(energyStart < 5){
 			Image energyStartPrice = upgradesPriceImages[energyStart + 4];
@@ -2110,21 +2082,8 @@ public class MainMenuScreen implements Screen {
 		auxTableObjects.setSize(upgradeFull.getWidth()*3, upgradeFull.getHeight() + speedLabel.getHeight());
 		auxTableObjects.add(objectsLabel).width(speedLabel.getWidth()).height(speedLabel.getHeight()).padTop(upgradePad2).left().colspan(5);
 		auxTableObjects.row();
-		for(int i = 0; i < objectsSlots; i++){
-			auxTableObjects.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}
-		for(int i = 0; i < 3 - objectsSlots; i++){
-			auxTableObjects.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);			
-			cellCounter++;
-			}	
-		auxTableObjects.add(new Image()).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		auxTableObjects.add(new Image()).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		for(int i = 0; i < 2; i++){
-			Image IupgradeEmpty = new Image(upgradeEmpty);
-			IupgradeEmpty.setColor(0f, 0f, 0f, 0f);
-			auxTableObjects.add(IupgradeEmpty).width(IupgradeEmpty.getWidth()).height(IupgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		}
+		upgradeBars[3] = new UpgradeBar(game.assetManager, fx(1.55f), objectsSlots/3.0f);
+		auxTableObjects.add(upgradeBars[3]).width(upgradeBars[3].getPrefWidth()).height(upgradeBars[3].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableObjects).expandX().left().padBottom(upgradePad2);
 		if(objectsSlots < 3){
 			Image objectsPrice = upgradesPriceImages[objectsSlots + 8];
@@ -2135,21 +2094,8 @@ public class MainMenuScreen implements Screen {
 		auxTableObjectsStart.setSize(upgradeFull.getWidth()*3, upgradeFull.getHeight() + speedLabel.getHeight());
 		auxTableObjectsStart.add(objectsStartLabel).width(speedLabel.getWidth()).height(speedLabel.getHeight()).padTop(upgradePad2).left().colspan(5);
 		auxTableObjectsStart.row();
-		for(int i = 0; i < objectStart; i++){
-			auxTableObjectsStart.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}
-		for(int i = 0; i < 3 - objectStart; i++){
-			auxTableObjectsStart.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}	
-		auxTableObjectsStart.add(new Image()).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		auxTableObjectsStart.add(new Image()).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		for(int i = 0; i < 2; i++){
-			Image IupgradeEmpty = new Image(upgradeEmpty);
-			IupgradeEmpty.setColor(0f, 0f, 0f, 0f);
-			auxTableObjectsStart.add(IupgradeEmpty).width(IupgradeEmpty.getWidth()).height(IupgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-		}
+		upgradeBars[4] = new UpgradeBar(game.assetManager, fx(1.55f), objectStart/3.0f);
+		auxTableObjectsStart.add(upgradeBars[4]).width(upgradeBars[4].getPrefWidth()).height(upgradeBars[4].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableObjectsStart).expandX().left().padBottom(upgradePad2);
 		if(objectStart < 3){
 			Image objectsStartPrice = upgradesPriceImages[objectStart + 11];
@@ -2163,14 +2109,8 @@ public class MainMenuScreen implements Screen {
 		auxTableObjectsDuration.setSize(upgradeFull.getWidth()*5, upgradeFull.getHeight() + speedLabel.getHeight());
 		auxTableObjectsDuration.add(objectsDurationLabel).width(speedLabel.getWidth()).height(speedLabel.getHeight()).padTop(upgradePad2).left().colspan(5);
 		auxTableObjectsDuration.row();
-		for(int i = 0; i < objectsDuration; i++){
-			auxTableObjectsDuration.add(upgradeFullImages[cellCounter]).width(upgradeFull.getWidth()).height(upgradeFull.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
-			cellCounter++;
-			}
-		for(int i = 0; i < 5 - objectsDuration; i++){
-			auxTableObjectsDuration.add(upgradeEmptyImages[cellCounter]).width(upgradeEmpty.getWidth()).height(upgradeEmpty.getHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);			
-			cellCounter++;
-			}	
+		upgradeBars[5] = new UpgradeBar(game.assetManager, fx(1.55f), objectsDuration/5.0f);
+		auxTableObjectsDuration.add(upgradeBars[5]).width(upgradeBars[5].getPrefWidth()).height(upgradeBars[5].getPrefHeight()).left().padTop(upgradePad1).padBottom(upgradePad2);
 		imgsUpg.add(auxTableObjectsDuration).expandX().left().padBottom(upgradePad2);
 		if(objectsDuration < 5){
 			Image objectsDurationPrice = upgradesPriceImages[objectsDuration + 13];
@@ -2248,8 +2188,9 @@ public class MainMenuScreen implements Screen {
 								up6 = true;
 							}
 							
-							Tween.to(upgradeEmptyImages[i + des], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 0f).start(tweenManager);
-							Tween.set(upgradeFullImages[i + des], ImageAccessor.COLOR).target(1f, 1f, 1f, 0f).start(tweenManager);
+							final int barIndex = i < 4 ? 0 : i < 6 ? 1 : i < 9 ? 2 : i < 11 ? 3 : i < 14 ? 4 : 5;
+							final int newLevel = barIndex == 0 ? shipSpeed : barIndex == 1 ? energyMeter : barIndex == 2 ? energyStart : barIndex == 3 ? objectsSlots : barIndex == 4 ? objectStart : objectsDuration;
+							upgradeBars[barIndex].setLevel(newLevel/(float) UPGRADE_MAX[barIndex]);
 							Tween.to(upgradesPriceImages[i], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 0f).start(tweenManager);
 							Timer.schedule(new Task(){
 								@Override
@@ -2292,8 +2233,6 @@ public class MainMenuScreen implements Screen {
 										if(i == 10)	
 											Tween.to(upgradesPriceImages[13], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
 									}	
-									auxTable.getCell(upgradeEmptyImages[i + des]).setActor(upgradeFullImages[i + des]);
-									Tween.to(upgradeFullImages[i + des], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
 								}
 							}, 0.25f);
 							
