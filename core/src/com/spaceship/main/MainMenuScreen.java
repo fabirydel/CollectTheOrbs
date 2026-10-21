@@ -1307,14 +1307,38 @@ public class MainMenuScreen implements Screen {
 		shipsSprites[shipSelected].draw(game.batch);
 		ffSprites[forceFieldSelected].draw(game.batch);
 		
-		// electricity on the force field
-		float dtL = Gdx.graphics.getDeltaTime();
-		electricity.update(dtL, state == STANDBY);
-		Fx.additiveOn(game.batch);
-		electricity.draw(game.batch, ffSprites[forceFieldSelected].getX() + ffSprites[forceFieldSelected].getWidth()/2,
-				ffSprites[forceFieldSelected].getY() + ffSprites[forceFieldSelected].getHeight()/2,
-				0.45f*ffSprites[forceFieldSelected].getWidth()*ffSprites[forceFieldSelected].getScaleX(), forceFieldSelected);
-		Fx.additiveOff(game.batch);
+		if(Fx.CLASSIC_LIGHTNING){
+			// original effect: two pre-drawn sprite flashes at random angles
+			if(lightTime % 50 == 0 && state == STANDBY){
+				l1 = MathUtils.random(0, 5);
+				l2 = MathUtils.random(0, 5);
+				if(l1 == l2)
+					l2 = MathUtils.random(0, 5);
+				if(forceFieldSelected == 0){
+					lightBSprites[l1].setRotation(MathUtils.random(0, 360));
+					lightBSprites[l2].setRotation(MathUtils.random(0, 360));
+					lightBSprites[l1].draw(game.batch);
+				}else{
+					lightRSprites[l1].setRotation(MathUtils.random(0, 360));
+					lightRSprites[l2].setRotation(MathUtils.random(0, 360));
+					lightRSprites[l1].draw(game.batch);
+				}
+			}
+			if(lightTime % 55 == 0 && state == STANDBY)
+				if(forceFieldSelected == 0)
+					lightBSprites[l2].draw(game.batch);	
+				else
+					lightRSprites[l2].draw(game.batch);
+		}else{
+			// electricity on the force field
+			float dtL = Gdx.graphics.getDeltaTime();
+			electricity.update(dtL, state == STANDBY);
+			Fx.additiveOn(game.batch);
+			electricity.draw(game.batch, ffSprites[forceFieldSelected].getX() + ffSprites[forceFieldSelected].getWidth()/2,
+					ffSprites[forceFieldSelected].getY() + ffSprites[forceFieldSelected].getHeight()/2,
+					0.45f*ffSprites[forceFieldSelected].getWidth()*ffSprites[forceFieldSelected].getScaleX(), forceFieldSelected);
+			Fx.additiveOff(game.batch);
+		}
 		lightTime++;
 
 		ffgSprites[forceFieldSelected].draw(game.batch);
