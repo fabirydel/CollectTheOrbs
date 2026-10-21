@@ -11,6 +11,9 @@ public class Fx {
 	public static final String[] ASSETS = { "res/fx/tail.png", "res/fx/core.png", "res/fx/plume.png", "res/fx/plume_core.png",
 			"res/fx/spark_blue.png", "res/fx/spark_red.png", "res/fx/spark_gold.png", "res/fx/spark_purple.png", "res/fx/spark_white.png" };
 
+	/** Flicker, wobble, surges, embers and sparkles on the engine plumes and orb tails. Off = steady glow. */
+	public static final boolean LIVELY = false;
+
 	public static final int SPARK_BLUE = 0, SPARK_RED = 1, SPARK_GOLD = 2, SPARK_PURPLE = 3;
 
 	private static Texture tail, core, plume, plumeCore;

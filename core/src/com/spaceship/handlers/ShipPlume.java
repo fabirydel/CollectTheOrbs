@@ -62,7 +62,7 @@ public class ShipPlume {
 		cb += (target[2] - cb) * k;
 
 		// occasional surge, like the engine catching
-		if (emit && MathUtils.random() < dt * 1.0f)
+		if (Fx.LIVELY && emit && MathUtils.random() < dt * 1.0f)
 			surge = 1f;
 		surge *= 1f - Math.min(1f, dt * 3f);
 
@@ -79,10 +79,10 @@ public class ShipPlume {
 			float x = cx + (n[i] - 64f) * wEff / 128f;
 			float y = cy + (64f - n[i + 1]) * hEff / 128f + 2f * u;
 			float w = n[i + 2];
-			float flicker = 0.88f + 0.04f * MathUtils.sin(t * 16f + ph) + 0.03f * MathUtils.sin(t * 34f + 2f * ph)
+			float flicker = !Fx.LIVELY ? 0.92f : 0.88f + 0.04f * MathUtils.sin(t * 16f + ph) + 0.03f * MathUtils.sin(t * 34f + 2f * ph)
 					+ MathUtils.random(-0.015f, 0.015f) + 0.15f * surge;
-			float pulse = 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
-			float sway = -lateral * 16f + 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f);
+			float pulse = !Fx.LIVELY ? 1f : 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
+			float sway = -lateral * 16f + (!Fx.LIVELY ? 0f : 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f));
 			float length = (82f + w * 2.2f) * u * flicker * boost;
 			float width = (7f + w * 1.25f) * u * pulse;
 			float a = alpha * (0.78f + 0.12f * flicker);
@@ -91,7 +91,7 @@ public class ShipPlume {
 			Fx.plume(sb, false, x, y, length, width * 1.5f, sway, cr, cg, cb, a);
 			Fx.plume(sb, true, x, y, length * 0.62f, width * 0.7f, sway, 1f - (1f - cr) * 0.35f, 1f - (1f - cg) * 0.35f, 1f - (1f - cb) * 0.35f, a);
 
-			if (emit && MathUtils.random() < dt * 44f) {
+			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f) {
 				float white = MathUtils.random(0f, 0.55f);
 				Fx.emit(x + MathUtils.random(-w * 0.5f, w * 0.5f) * u, y - MathUtils.random(0f, 12f) * u,
 						-lateral * 90f * u + MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u,
