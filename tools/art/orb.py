@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import neon as N
 
 FRAMES = 16
+SOFTNESS = 0.6  # 0 = the original hard bright rim, 1 = fully soft edge
 CORE = 0.9  # orb radius as a fraction of the frame half-size (the rest is glow)
 
 
@@ -21,7 +22,8 @@ def smooth(e0, e1, x):
     return t * t * (3 - 2 * t)
 
 
-def orb_frame(n, col, p, body=0.5625, corona=True):
+def orb_frame(n, col, p, body=0.5625, corona=True, softness=None):
+    sf = SOFTNESS if softness is None else softness
     """One frame. `body` = orb radius as a fraction of the half-frame; the rest of the canvas holds the glow
     and the corona wisps, which wrap around the orb and flow with whole-number cycles per loop."""
     yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
@@ -48,13 +50,22 @@ def orb_frame(n, col, p, body=0.5625, corona=True):
     core_halo = np.exp(-(r / 0.5) ** 2) * 0.22
     rgb_in = np.clip(body_rgb + core_halo[..., None] * light[None, None, :] + core[..., None], 0, 1)
 
-    # soft edge: the plasma fades out toward the rim instead of ending in a hard ring
-    body_a = 1 - smooth(0.80, 1.10, r)
+    # edge: sf = 0 is the original crisp rim, sf = 1 fades the plasma out toward the edge
+    e0 = 0.985 + (0.80 - 0.985) * sf
+    e1 = 1.03 + (1.10 - 1.03) * sf
+    body_a = 1 - smooth(e0, e1, r)
+    hard = 1.0 - sf
+    rim_ring = smooth(0.93, 0.985, r) * (1 - smooth(0.985, 1.02, r)) * 0.7 * hard
+    rim_fill = smooth(0.7, 1.0, r) ** 1.6 * 0.5 * hard
+
+    rgb_in = np.clip(rgb_in + rim_fill[..., None] * tint[None, None, :] + rim_ring[..., None] * light[None, None, :], 0, 1)
 
     # glow that hugs the orb and a wider breathing aura
     breathe = 0.9 + 0.1 * np.sin(TAU * 2 * p)
-    glow_near = np.exp(-np.maximum(r - 0.8, 0) / 0.34) * 0.7
-    glow_far = np.exp(-np.maximum(r - 0.8, 0) / 0.9) * 0.28
+    g0 = 1.0 + (0.8 - 1.0) * sf
+    tau = 0.26 + (0.34 - 0.26) * sf
+    glow_near = np.exp(-np.maximum(r - g0, 0) / tau) * (0.72 + (0.7 - 0.72) * sf)
+    glow_far = np.exp(-np.maximum(r - g0, 0) / 0.9) * 0.28
     glow = (glow_near + glow_far) * breathe
 
     # corona: tongues of energy that travel around the orb and lick outward
