@@ -477,7 +477,12 @@ def build_neon_fonts():
         atlas.save(os.path.join(ASSETS, 'fonts', png))
         lines = []
         for h in header:
+            if h.startswith('info'):
+                # tell libGDX about the glow margin: it subtracts padding from width, cap height and line height
+                h = re.sub(r'padding=[\d,\-]+', 'padding=%d,%d,%d,%d' % (P, P, P, P), h)
             if h.startswith('common'):
+                h = re.sub(r'lineHeight=(\d+)', lambda m: 'lineHeight=%d' % (int(m.group(1)) + 2 * P), h)
+                h = re.sub(r'base=(\d+)', lambda m: 'base=%d' % (int(m.group(1)) + 0), h)
                 h = re.sub(r'scaleW=\d+', 'scaleW=%d' % AW, h)
                 h = re.sub(r'scaleH=\d+', 'scaleH=%d' % AH, h)
                 h = re.sub(r'pages=\d+', 'pages=1', h)
