@@ -10,12 +10,12 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(__file__))
 import neon as N
-from neon import CYAN, RED, GOLD, PURPLE, WHITE, tint, glow, radial
+from neon import CYAN, RED, GOLD, PURPLE, WHITE, NEUTRAL, tint, glow, radial
 
 BASE = 'fcb590d'
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 ASSETS = os.path.join(ROOT, 'android', 'assets')
-NAVY = (7, 15, 38)
+NAVY = (13, 13, 15)
 
 
 def orig_bytes(path):
@@ -51,11 +51,11 @@ def recolor(im, stops, hot=None, all_hot=False):
     return Image.fromarray(np.dstack([out, a]).clip(0, 255).astype(np.uint8))
 
 
-GREY = [(0, (18, 40, 80)), (0.45, (120, 190, 235)), (0.75, (200, 236, 255)), (1, (248, 253, 255))]
+GREY = [(0, (36, 36, 40)), (0.45, (150, 152, 158)), (0.75, (222, 223, 226)), (1, (252, 252, 252))]
 BLUE = [(0, (0, 70, 110)), (0.5, (20, 190, 225)), (0.8, (120, 240, 255)), (1, (235, 252, 255))]
 REDR = [(0, (70, 0, 18)), (0.35, (200, 20, 55)), (0.7, (255, 70, 100)), (1, (255, 200, 210))]
 GOLDR = [(0, (110, 50, 0)), (0.5, (255, 160, 20)), (0.8, (255, 210, 90)), (1, (255, 245, 200))]
-NEUT = [(0, (10, 30, 70)), (0.5, (40, 170, 220)), (1, (210, 250, 255))]
+NEUT = [(0, (30, 30, 33)), (0.5, (150, 152, 158)), (1, (240, 240, 242))]
 
 
 def build_fonts():
@@ -65,7 +65,7 @@ def build_fonts():
         save_same_size(recolor(orig('fonts/%s.png' % name), st), 'fonts/%s.png' % name)
 
 
-TUBE = [(0, (8, 24, 60)), (0.5, (22, 95, 150)), (0.85, (50, 160, 210)), (1, (110, 225, 250))]
+TUBE = [(0, (16, 16, 18)), (0.5, (66, 68, 72)), (0.85, (128, 130, 135)), (1, (206, 208, 212))]
 
 
 def build_hud():
@@ -228,9 +228,9 @@ def ship_sprite(i):
 
 
 def bought_ship_tile(i, size=149):
-    t = tile(size, size, (CYAN,), None, 18)
+    t = tile(size, size, (NEUTRAL,), None, 18)
     n = int(size * N.U)
-    back = radial(n, [(0, CYAN + (95,)), (0.55, CYAN + (28,)), (0.8, CYAN + (0,)), (1, CYAN + (0,))])
+    back = radial(n, [(0, NEUTRAL + (80,)), (0.55, NEUTRAL + (24,)), (0.8, NEUTRAL + (0,)), (1, NEUTRAL + (0,))])
     t = Image.alpha_composite(t, back)
     sp = ship_sprite(i).resize((int(120 * N.U), int(120 * N.U)), Image.LANCZOS)
     t.alpha_composite(sp, ((n - sp.width) // 2, (n - sp.height) // 2))
@@ -256,7 +256,7 @@ def galaxy_thumb(sheet_name, k):
 
 
 def bought_galaxy_tile(sheet_name, k):
-    t = tile(220, 298, (CYAN,), None, 22)
+    t = tile(220, 298, (NEUTRAL,), None, 22)
     th = galaxy_thumb(sheet_name, k)
     w, h = int(184 * N.U), int(250 * N.U)
     th = th.resize((w, h), Image.LANCZOS).convert('RGBA')
@@ -264,8 +264,8 @@ def bought_galaxy_tile(sheet_name, k):
     ImageDraw.Draw(m).ellipse((0, 0, w - 1, h - 1), fill=255)
     th.putalpha(m)
     ring = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    ImageDraw.Draw(ring).ellipse((0, 0, w - 1, h - 1), outline=light(CYAN, 0.2) + (255,), width=int(2.2 * N.U))
-    th = Image.alpha_composite(Image.alpha_composite(glow(ring, 3, CYAN, 0.9), th), ring)
+    ImageDraw.Draw(ring).ellipse((0, 0, w - 1, h - 1), outline=light(NEUTRAL, 0.2) + (255,), width=int(2.2 * N.U))
+    th = Image.alpha_composite(Image.alpha_composite(glow(ring, 3, NEUTRAL, 0.9), th), ring)
     t.alpha_composite(th, (int((220 * N.U - w) / 2), int((298 * N.U - h) / 2)))
     return t
 
@@ -313,9 +313,9 @@ def build_play():
     N.set_scale(4)
     font = BMFont('fonts/prototype128blueWhite')
     w, h = 196, 98
-    t = tile(w, h, (CYAN,), None, 26, alpha=210)
+    t = tile(w, h, (NEUTRAL,), None, 26, alpha=210)
     m = font.mask('PLAY', 58)
-    center_text(t, m, t.width / 2, t.height / 2, CYAN)
+    center_text(t, m, t.width / 2, t.height / 2, NEUTRAL)
     N.finish(t, w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
                              ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
@@ -326,7 +326,7 @@ def build_play():
 
 
 def glass_pad(w, h):
-    return tile(w, h, (CYAN,), None, 40, alpha=150)
+    return tile(w, h, (NEUTRAL,), None, 40, alpha=150)
 
 
 def chevron(t, w, h, direction):
@@ -339,7 +339,7 @@ def chevron(t, w, h, direction):
     for x, y in pts:
         r = 4.5 * N.U
         d.ellipse((x - r, y - r, x + r, y + r), fill=WHITE + (255,))
-    t.alpha_composite(Image.alpha_composite(glow(layer, 5, CYAN, 1.0), layer))
+    t.alpha_composite(Image.alpha_composite(glow(layer, 5, NEUTRAL, 1.0), layer))
 
 
 def build_pads():
@@ -354,7 +354,7 @@ def build_pads():
     for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use Item'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
         t = glass_pad(392, 284)
         m = font.mask(text, 40)
-        center_text(t, m, t.width / 2, t.height / 2, CYAN)
+        center_text(t, m, t.width / 2, t.height / 2, NEUTRAL)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 

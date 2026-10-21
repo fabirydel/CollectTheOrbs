@@ -9,9 +9,9 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(__file__))
 import neon as N
 import neon_ui as U
-from neon import CYAN, RED, GOLD, PURPLE, WHITE, glow, tint
+from neon import CYAN, RED, GOLD, PURPLE, WHITE, NEUTRAL, glow, tint
 
-BODY = (196, 226, 247)
+BODY = (214, 215, 218)
 W = 1344
 
 TEXT = {
@@ -86,7 +86,7 @@ def new_layers(w, h):
 
 def composite_layers(layers, size):
     out = Image.new('RGBA', size, (0, 0, 0, 0))
-    for kind, col, st in (('body', BODY, 0.35), ('head', CYAN, 1.0), ('emph', GOLD, 0.9)):
+    for kind, col, st in (('body', BODY, 0.35), ('head', NEUTRAL, 1.0), ('emph', GOLD, 0.9)):
         m = layers[kind]
         halo = glow(Image.merge('RGBA', [Image.new('L', size, 0)] * 3 + [m]), 1.6, col, st)
         core = Image.new('RGBA', size, U.light(col, 0.55 if kind != 'body' else 0.0) + (255,))
@@ -132,8 +132,8 @@ def controls_image(lang, name):
     w, h = 1280, 980
     im = N.canvas(w, h)
     t = TEXT[lang]['pads']
-    pads = [(20, 20, 270, 940, CYAN, t[0], -1), (990, 20, 270, 940, CYAN, t[1], 1),
-            (310, 20, 660, 460, PURPLE, t[2], 0), (310, 500, 660, 460, CYAN, t[3], 0)]
+    pads = [(20, 20, 270, 940, NEUTRAL, t[0], -1), (990, 20, 270, 940, NEUTRAL, t[1], 1),
+            (310, 20, 660, 460, PURPLE, t[2], 0), (310, 500, 660, 460, NEUTRAL, t[3], 0)]
     for x, y, pw, ph, col, label, d in pads:
         tl = U.tile(pw, ph, (col,), None, 54, alpha=165, bw=7.0, glow_r=5)
         cx, cy = tl.width / 2, tl.height / 2
@@ -225,7 +225,7 @@ def chevrons_icon(size):
         d.line(pts, fill=WHITE + (255,), width=px(12), joint='curve')
         for a, b in pts:
             d.ellipse((a - px(6), b - px(6), a + px(6), b + px(6)), fill=WHITE + (255,))
-    return Image.alpha_composite(glow(lay, 8, CYAN, 1.0), lay)
+    return Image.alpha_composite(glow(lay, 8, NEUTRAL, 1.0), lay)
 
 
 def cluster_icon(col, count, tag, font):

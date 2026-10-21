@@ -18,7 +18,8 @@ CYAN = (34, 211, 238)
 RED = (255, 59, 92)
 GOLD = (255, 190, 46)
 PURPLE = (168, 85, 247)
-WHITE = (232, 248, 255)
+WHITE = (244, 244, 246)
+NEUTRAL = (206, 208, 212)  # metallic gray-white glow for UI that is not tied to a shield color
 logical_sizes = {}
 
 
@@ -408,7 +409,7 @@ def button(name, gname, size, slash=False):
     c = w * U / 2
     R = w * U * 0.45
     ring_w = w * U * 0.040
-    d.ellipse((c - R, c - R, c + R, c + R), fill=(8, 14, 36, 140))
+    d.ellipse((c - R, c - R, c + R, c + R), fill=(12, 12, 14, 150))
     stroke = canvas(w, w)
     d = ImageDraw.Draw(stroke)
     d.ellipse((c - R, c - R, c + R, c + R), outline=(255, 255, 255, 255), width=int(ring_w))
@@ -418,7 +419,7 @@ def button(name, gname, size, slash=False):
         stroke = ImageOps.mirror(stroke)
     if slash:
         pen.line([(-0.95, -0.95), (0.95, 0.95)], w=w * U * 0.05)
-    halo = glow(stroke, w * 0.045, CYAN, 1.0)
+    halo = glow(stroke, w * 0.045, NEUTRAL, 1.0)
     core = Image.new('RGBA', stroke.size, WHITE + (0,))
     core.putalpha(stroke.split()[3])
     out = Image.alpha_composite(Image.alpha_composite(base, halo), core)
