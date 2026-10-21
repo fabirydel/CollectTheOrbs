@@ -63,9 +63,9 @@ def orb_frame(n, col, p, body=0.5625, corona=True, softness=None):
     # glow that hugs the orb and a wider breathing aura
     breathe = 0.9 + 0.1 * np.sin(TAU * 2 * p)
     g0 = 1.0 + (0.8 - 1.0) * sf
-    tau = 0.26 + (0.34 - 0.26) * sf
+    tau = 0.20 + (0.24 - 0.20) * sf
     glow_near = np.exp(-np.maximum(r - g0, 0) / tau) * (0.72 + (0.7 - 0.72) * sf)
-    glow_far = np.exp(-np.maximum(r - g0, 0) / 0.9) * 0.28
+    glow_far = np.exp(-np.maximum(r - g0, 0) / 0.5) * 0.2
     glow = (glow_near + glow_far) * breathe
 
     # corona: tongues of energy that travel around the orb and lick outward
