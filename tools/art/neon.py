@@ -6,7 +6,7 @@ original file. res/logical-sizes.txt tells the game the logical size (see GameAs
 """
 import math, os
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops, ImageOps
 
 K = 4
 SS = 2
@@ -222,18 +222,17 @@ def glyph(name):
 @glyph('upgrades')
 def _(p):
     def wrench(d, P):
-        d.rounded_rectangle((*P(-0.12, -0.15), *P(0.12, 0.92)), radius=p.s * 0.12, fill=255)
-        d.ellipse((*P(-0.36, -0.86), *P(0.36, -0.14)), fill=255)
-        d.rectangle((*P(-0.12, -1.0), *P(0.12, -0.5)), fill=0)
+        d.rounded_rectangle((*P(-0.11, -0.12), *P(0.11, 0.9)), radius=p.s * 0.11, fill=255)
+        d.ellipse((*P(-0.34, -0.84), *P(0.34, -0.16)), fill=255)
+        d.rectangle((*P(-0.11, -1.0), *P(0.11, -0.52)), fill=0)
 
     def hammer(d, P):
-        d.rounded_rectangle((*P(-0.11, -0.45), *P(0.11, 0.92)), radius=p.s * 0.11, fill=255)
-        d.rounded_rectangle((*P(-0.5, -0.9), *P(0.5, -0.42)), radius=p.s * 0.08, fill=255)
-        d.polygon([P(-0.5, -0.9), P(-0.82, -0.78), P(-0.82, -0.54), P(-0.5, -0.42)], fill=255)
+        d.rounded_rectangle((*P(-0.1, -0.4), *P(0.1, 0.9)), radius=p.s * 0.1, fill=255)
+        d.rounded_rectangle((*P(-0.3, -0.86), *P(0.3, -0.38)), radius=p.s * 0.07, fill=255)
 
-    ox = 0.5
-    p.silhouette(lambda d, P: wrench(d, lambda x, y: P(x - ox, y)), angle=18, center=(-ox, 0.0), outline=p.w * 0.85)
-    p.silhouette(lambda d, P: hammer(d, lambda x, y: P(x + ox, y)), angle=-18, center=(ox, 0.0), outline=p.w * 0.85)
+    ox, oy = 0.44, 0.0
+    p.silhouette(lambda d, P: wrench(d, lambda x, y: P(x - ox, y + oy)), outline=p.w * 0.85)
+    p.silhouette(lambda d, P: hammer(d, lambda x, y: P(x + ox, y + oy)), outline=p.w * 0.85)
 
 
 @glyph('settings')
@@ -320,16 +319,18 @@ def _(p):
 @glyph('retry')
 def _(p):
     r = 0.7
-    start, end = 50, 330
+    start, end = 50, 325
     p.arc(0, 0, r, start, end, w=p.w * 1.15)
-    th = math.radians(end)
-    x, y = r * math.cos(th), r * math.sin(th)
-    tx, ty = -math.sin(th), math.cos(th)
-    nx, ny = -ty, tx
-    L, Wd = 0.52, 0.34
-    tip = (x + tx * L * 0.62, y + ty * L * 0.62)
-    base = (x - tx * L * 0.38, y - ty * L * 0.38)
-    p.poly([tip, (base[0] + nx * Wd, base[1] + ny * Wd), (base[0] - nx * Wd, base[1] - ny * Wd)])
+
+    def pt(rad, deg):
+        a = math.radians(deg)
+        return (rad * math.cos(a), rad * math.sin(a))
+
+    # head hugs the circle: radial base at `end`, tip on the circle 30 degrees further along
+    p.poly([pt(r + 0.3, end - 2), pt(r - 0.3, end - 2), pt(r, end + 34)])
+
+
+MIRROR = {'retry'}
 
 
 @glyph('pause')
@@ -411,6 +412,8 @@ def button(name, gname, size, slash=False):
     d.ellipse((c - R, c - R, c + R, c + R), outline=(255, 255, 255, 255), width=int(ring_w))
     pen = Pen(stroke, c, c, R * 0.55, w * U * 0.040)
     GLYPHS[gname](pen)
+    if gname in MIRROR:
+        stroke = ImageOps.mirror(stroke)
     if slash:
         pen.line([(-0.95, -0.95), (0.95, 0.95)], w=w * U * 0.05)
     halo = glow(stroke, w * 0.045, CYAN, 1.0)

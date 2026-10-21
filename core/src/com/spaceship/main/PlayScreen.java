@@ -1147,6 +1147,7 @@ public class PlayScreen implements Screen {
 						game.getMMS().buttonSmall.play();
 						game.getMMS().sound = game.getMMS().ON;
 					}
+					game.getMMS().updateMusicVolume();
 				}else if(Gdx.input.getX() > bVibrationOn.getX() && Gdx.input.getX() < bVibrationOn.getX() + bVibrationOn.getWidth() && 
 						Gdx.graphics.getHeight() - Gdx.input.getY() > bVibrationOn.getY() && Gdx.graphics.getHeight() - 
 						Gdx.input.getY() < bVibrationOn.getY() + bVibrationOn.getHeight()){

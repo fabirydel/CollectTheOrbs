@@ -225,6 +225,7 @@ public class MainMenuScreen implements Screen {
 	public long lastTimeBg;
 	public int lightTime;
 	public int musicTime;
+	private float musicFade;
 	public long time;
 	public int galaxySelected;
 	public int forceFieldSelected;
@@ -993,7 +994,8 @@ public class MainMenuScreen implements Screen {
 		updateSettingsMenuSpent();
 
 		music.setLooping(true);
-		music.setVolume(0f);
+		musicFade = 0f;
+		updateMusicVolume();
 		music.play();
 		
 		if(Gdx.app.getType().equals(ApplicationType.Android) && !game.getActionResolver().getSignedIn() && bestScore == 0)
@@ -1263,11 +1265,12 @@ public class MainMenuScreen implements Screen {
 			boughtUpgrade = false;
 		}
 
-		if(music.getVolume() < 1){
+		if(musicFade < 1){
 			if(musicTime % 40 == 0)
-				music.setVolume(music.getVolume() + 0.025f);
+				musicFade = Math.min(1f, musicFade + 0.025f);
 			musicTime++;
 		}
+		updateMusicVolume();
 
 		tweenManager.update(delta);
 		
@@ -3003,6 +3006,7 @@ public class MainMenuScreen implements Screen {
 		iSoundOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){
 				sound = OFF;
+				updateMusicVolume();
 				soundInMenu = OFF;
 				imgsSttngs.getCell(iSoundOn).setActor(iSoundOff);
 			}
@@ -3011,6 +3015,7 @@ public class MainMenuScreen implements Screen {
 			public void clicked(InputEvent event, float x, float y){
 				buttonSmall.play();
 				sound = ON;
+				updateMusicVolume();
 				soundInMenu = ON;
 				imgsSttngs.getCell(iSoundOff).setActor(iSoundOn);
 			}
@@ -3782,6 +3787,11 @@ public class MainMenuScreen implements Screen {
 		}
 	};
 	
+	/** The music follows the Sound setting: silent when it is OFF, otherwise the faded-in level. */
+	public void updateMusicVolume(){
+		music.setVolume(sound == ON ? musicFade : 0f);
+	}
+
 	public float fx(float v){
 		return x*v;
 	}
