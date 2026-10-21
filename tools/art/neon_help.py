@@ -9,6 +9,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(__file__))
 import neon as N
 import neon_ui as U
+import orb as O
 from neon import CYAN, RED, GOLD, PURPLE, WHITE, NEUTRAL, glow, tint
 
 BODY = (214, 215, 218)
@@ -50,6 +51,13 @@ TEXT = {
         'pads': ['Izquierda', 'Derecha', 'Usar Objeto', 'Cambiar\nEscudo'],
     },
 }
+
+
+def eorb(body, col):
+    """The animated-orb look (soft edge + glow) as a still, with an orb body `body` logical px across.
+    The image is larger than the body (it carries the glow): paste it centered."""
+    n = int(round(body * N.U / 0.5625))
+    return O.render(n, col, 0.12, ss=2)
 
 
 def px(v):
@@ -165,8 +173,8 @@ def orbs_image(lang, name):
         cx = 20 + (i % 2) * 650
         cy = 105 + (i // 2) * 210
         d = 170
-        o = N.orb(d / 0.8, col)
-        im.alpha_composite(o, (px(cx + d / 2 / 0.8 * 0.8 - d / 0.8 / 2 + 8), px(cy - d / 0.8 / 2)))
+        o = eorb(d, col)
+        im.alpha_composite(o, (px(cx + d / 2 + 8) - o.width // 2, px(cy) - o.height // 2))
         m = font.mask(lab, size)
         box = m.getbbox()
         m = m.crop(box)
@@ -231,10 +239,9 @@ def chevrons_icon(size):
 def cluster_icon(col, count, tag, font):
     n = px(250)
     im = Image.new('RGBA', (n, n), (0, 0, 0, 0))
-    d = 118 / 0.8
     spots = {2: [(0.36, 0.40), (0.62, 0.46)], 3: [(0.5, 0.28), (0.34, 0.5), (0.66, 0.5)]}[count]
     for fx, fy in spots:
-        o = N.orb(d, col)
+        o = eorb(118, col)
         im.alpha_composite(o, (int(n * fx - o.width / 2), int(n * fy - o.height / 2)))
     m = font.mask(tag, 56).crop(font.mask(tag, 56).getbbox())
     U.put_text(im, m, (n - m.width) / 2, n * 0.84 - m.height / 2, col)
@@ -256,11 +263,11 @@ def items_image(lang, name):
         icx = 175
         if i in (0, 1):
             a, b = (CYAN, RED) if i == 0 else (RED, CYAN)
-            o1, o2 = N.orb(100 / 0.8, a), N.orb(100 / 0.8, b)
+            o1, o2 = eorb(100, a), eorb(100, b)
             ar = arrow_icon(a, b, 70, 44)
-            im.alpha_composite(o1, (px(icx - 150) - 0, px(cy) - o1.height // 2))
+            im.alpha_composite(o1, (px(icx - 87.5) - o1.width // 2, px(cy) - o1.height // 2))
             im.alpha_composite(ar, (px(icx - 52), px(cy) - ar.height // 2))
-            im.alpha_composite(o2, (px(icx + 28), px(cy) - o2.height // 2))
+            im.alpha_composite(o2, (px(icx + 90.5) - o2.width // 2, px(cy) - o2.height // 2))
         elif i in (2, 3, 7, 8):
             ic = cluster_icon(CYAN if i in (2, 7) else RED, 2 if i < 4 else 3, 'X2' if i < 4 else 'X3', font)
         elif i == 4:
@@ -286,7 +293,7 @@ def items_image(lang, name):
 def converter_icon(a, b):
     n = px(250)
     im = Image.new('RGBA', (n, n), (0, 0, 0, 0))
-    o1, o2 = N.orb(84 / 0.8, a), N.orb(84 / 0.8, b)
+    o1, o2 = eorb(84, a), eorb(84, b)
     ar = arrow_icon(a, b, 54, 42)
     im.alpha_composite(o1, (px(46) - o1.width // 2, n // 2 - o1.height // 2))
     im.alpha_composite(ar, (n // 2 - ar.width // 2, n // 2 - ar.height // 2))
@@ -307,8 +314,10 @@ def item_icons_sheet():
     # lit shape inside a ~92px circle and center it on its own bounds.
     sheet = N.canvas(1600, 160)
     for i, ic in enumerate(icons):
-        alpha = ic.split()[3].point(lambda v: 255 if v > 60 else 0)
+        alpha = ic.split()[3].point(lambda v: 255 if v > 170 else 0)
         box = alpha.getbbox()
+        pad = px(8)
+        box = (max(0, box[0] - pad), max(0, box[1] - pad), min(ic.width, box[2] + pad), min(ic.height, box[3] + pad))
         ic = ic.crop(box)
         w, h = ic.size
         diag = (w * w + h * h) ** 0.5
