@@ -22,6 +22,12 @@ WHITE = (232, 248, 255)
 logical_sizes = {}
 
 
+def set_scale(k):
+    global K, U
+    K = k
+    U = K * SS
+
+
 def canvas(w, h):
     return Image.new('RGBA', (int(w * U), int(h * U)), (0, 0, 0, 0))
 
@@ -440,15 +446,7 @@ def build_buttons():
         button(name, g, size, slash)
 
 
-if __name__ == '__main__':
-    import sys
-    parts = sys.argv[1:] or ['orbs', 'fields', 'buttons']
-    if 'orbs' in parts:
-        build_orbs()
-    if 'fields' in parts:
-        build_fields()
-    if 'buttons' in parts:
-        build_buttons()
+def write_manifest():
     path = os.path.join(OUT, 'logical-sizes.txt')
     existing = {}
     if os.path.exists(path):
@@ -460,4 +458,16 @@ if __name__ == '__main__':
     with open(path, 'w') as f:
         for k in sorted(existing):
             f.write('%s %d %d\n' % ((k,) + existing[k]))
+
+
+if __name__ == '__main__':
+    import sys
+    parts = sys.argv[1:] or ['orbs', 'fields', 'buttons']
+    if 'orbs' in parts:
+        build_orbs()
+    if 'fields' in parts:
+        build_fields()
+    if 'buttons' in parts:
+        build_buttons()
+    write_manifest()
     print('wrote', len(logical_sizes), 'assets')

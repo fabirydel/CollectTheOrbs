@@ -1,0 +1,364 @@
+"""Neon restyle of cards, touch pads, HUD pieces and fonts for Collect The Orbs.
+
+Run from the repo root:  python3 tools/art/neon_ui.py [fonts|hud|cards|pads]
+Inputs that are restyled in place (fonts, HUD, ship and galaxy art) are always read from the last
+commit before the neon work (BASE), so the script can be re-run without compounding changes.
+"""
+import io, math, os, re, subprocess, sys
+import numpy as np
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+sys.path.insert(0, os.path.dirname(__file__))
+import neon as N
+from neon import CYAN, RED, GOLD, PURPLE, WHITE, tint, glow, radial
+
+BASE = 'fcb590d'
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+ASSETS = os.path.join(ROOT, 'android', 'assets')
+NAVY = (7, 15, 38)
+
+
+def orig_bytes(path):
+    return subprocess.check_output(['git', 'show', '%s:android/assets/%s' % (BASE, path)], cwd=ROOT)
+
+
+def orig(path):
+    return Image.open(io.BytesIO(orig_bytes(path))).convert('RGBA')
+
+
+def save_same_size(im, path):
+    im.save(os.path.join(ASSETS, path))
+
+
+def ramp(lum, stops):
+    xs = [p for p, _ in stops]
+    return np.stack([np.interp(lum, xs, [c[i] for _, c in stops]) for i in range(3)], -1)
+
+
+def recolor(im, stops, hot=None, all_hot=False):
+    """Map luminance through `stops`. Saturated pixels (or all, if all_hot) go through the `hot` ramp."""
+    arr = np.asarray(im, dtype=np.float32)
+    rgb, a = arr[..., :3] / 255.0, arr[..., 3]
+    lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
+    out = ramp(lum, stops)
+    if hot:
+        mx, mn = rgb.max(-1), rgb.min(-1)
+        w = np.clip(((mx - mn) / (mx + 1e-6) - 0.2) / 0.2, 0, 1)[..., None]
+        if all_hot:
+            w = np.ones_like(w)
+        out = out * (1 - w) + ramp(lum, hot) * w
+    out = out * (a[..., None] > 0)
+    return Image.fromarray(np.dstack([out, a]).clip(0, 255).astype(np.uint8))
+
+
+GREY = [(0, (18, 40, 80)), (0.45, (120, 190, 235)), (0.75, (200, 236, 255)), (1, (248, 253, 255))]
+BLUE = [(0, (0, 70, 110)), (0.5, (20, 190, 225)), (0.8, (120, 240, 255)), (1, (235, 252, 255))]
+REDR = [(0, (70, 0, 18)), (0.35, (200, 20, 55)), (0.7, (255, 70, 100)), (1, (255, 200, 210))]
+GOLDR = [(0, (110, 50, 0)), (0.5, (255, 160, 20)), (0.8, (255, 210, 90)), (1, (255, 245, 200))]
+NEUT = [(0, (10, 30, 70)), (0.5, (40, 170, 220)), (1, (210, 250, 255))]
+
+
+def build_fonts():
+    for name, st in [('prototype128blueWhite', BLUE), ('prototype64blueWhite', BLUE), ('prototype128redBlack', REDR),
+                     ('prototype64redBlack', REDR), ('prototype64yellowOrange', GOLDR),
+                     ('prototype96grey1', GREY), ('prototype96grey2', GREY)]:
+        save_same_size(recolor(orig('fonts/%s.png' % name), st), 'fonts/%s.png' % name)
+
+
+TUBE = [(0, (8, 24, 60)), (0.5, (22, 95, 150)), (0.85, (50, 160, 210)), (1, (110, 225, 250))]
+
+
+def build_hud():
+    jobs = [('arrowLeft', NEUT, None, False), ('arrowRight', NEUT, None, False),
+            ('upgradeBarEmpty', TUBE, None, False), ('upgradeBarFull', TUBE, GOLDR, True), ('progress_bar', TUBE, GOLDR, False)]
+    for n in (3, 4, 5):
+        jobs.append(('lifeBar%dLifes' % n, TUBE, None, False))
+        jobs.append(('lifeEnergy%dLifes' % n, TUBE, GOLDR, True))
+    for n, st, hot, all_hot in jobs:
+        save_same_size(recolor(orig('res/hud/%s.png' % n), st, hot, all_hot), 'res/hud/%s.png' % n)
+
+
+class BMFont:
+    def __init__(self, name):
+        txt = orig_bytes(name + '.fnt').decode('latin-1')
+        self.chars, self.pages = {}, {}
+        for line in txt.splitlines():
+            kv = dict((k, v) for k, v in re.findall(r'(\w+)=("[^"]*"|-?\d+)', line))
+            if line.startswith('common'):
+                self.line_h, self.base = int(kv['lineHeight']), int(kv['base'])
+            elif line.startswith('page'):
+                self.pages[int(kv['id'])] = orig('fonts/' + kv['file'].strip('"'))
+            elif line.startswith('char '):
+                self.chars[int(kv['id'])] = {k: int(v) for k, v in kv.items()}
+        self.size = int(re.search(r'size=(\d+)', txt).group(1))
+
+    def mask(self, text, size):
+        """L mask of text at nominal font size `size` logical px (drawn at the current art scale)."""
+        s = size * N.U / self.size
+        lines = text.split('\n')
+        widths = [sum(self.chars[ord(c)]['xadvance'] for c in l if ord(c) in self.chars) * s for l in lines]
+        W, H = int(max(widths)) + 4, int(self.line_h * s * len(lines)) + 4
+        out = Image.new('L', (W, H), 0)
+        for li, l in enumerate(lines):
+            x = (max(widths) - widths[li]) / 2
+            for c in l:
+                g = self.chars.get(ord(c))
+                if not g:
+                    continue
+                if g['width'] > 0 and g['height'] > 0:
+                    a = self.pages[g['page']].crop((g['x'], g['y'], g['x'] + g['width'], g['y'] + g['height'])).split()[3]
+                    a = a.resize((max(1, int(g['width'] * s)), max(1, int(g['height'] * s))), Image.LANCZOS)
+                    out.paste(a, (int(x + g['xoffset'] * s), int(li * self.line_h * s + g['yoffset'] * s)), a)
+                x += g['xadvance'] * s
+        return out
+
+
+def light(color, t=0.55):
+    return tuple(int(c + (255 - c) * t) for c in color)
+
+
+def neon_text(mask, color):
+    layer = Image.new('RGBA', mask.size, (0, 0, 0, 0))
+    layer.putalpha(mask)
+    halo = glow(layer, 2.0, color, 1.0)
+    core = Image.new('RGBA', mask.size, light(color, 0.7) + (255,))
+    core.putalpha(mask)
+    return Image.alpha_composite(halo, core)
+
+
+def pad_canvas(layer, margin):
+    out = Image.new('RGBA', (layer.width + 2 * margin, layer.height + 2 * margin), (0, 0, 0, 0))
+    out.paste(layer, (margin, margin))
+    return out
+
+
+def put_text(dst, mask, x, y, color):
+    m = int(6 * N.U)
+    t = neon_text(pad_canvas(Image.merge('L', [mask]) if False else mask, m).convert('L'), color)
+    dst.alpha_composite(t, (int(x - m), int(y - m)))
+
+
+def rounded_mask(w, h, r, inset=0):
+    m = Image.new('L', (int(w * N.U), int(h * N.U)), 0)
+    ImageDraw.Draw(m).rounded_rectangle((inset * N.U, inset * N.U, (w - inset) * N.U, (h - inset) * N.U), radius=r * N.U, fill=255)
+    return m
+
+
+def tile(w, h, colors, split=None, radius=14, alpha=255):
+    """Dark glass card with neon border. colors: one color, or two for a split tile.
+    split: None, 'diag' (top-left/bottom-right) or 'horiz' (top/bottom)."""
+    size = (int(w * N.U), int(h * N.U))
+    outer = rounded_mask(w, h, radius)
+    inner = rounded_mask(w, h, radius, 3.0)
+    ring = ImageChops.subtract(outer, inner)
+    base = Image.new('RGBA', size, NAVY + (alpha,))
+    if split is None:
+        regions = [Image.new('L', size, 255)]
+    else:
+        a = Image.new('L', size, 0)
+        d = ImageDraw.Draw(a)
+        if split == 'diag':
+            d.polygon([(0, 0), (size[0], 0), (0, size[1])], fill=255)
+        else:
+            d.rectangle((0, 0, size[0], size[1] // 2), fill=255)
+        regions = [a, ImageChops.invert(a)]
+    out = Image.new('RGBA', size, (0, 0, 0, 0))
+    out.paste(base, (0, 0), outer)
+    for col, reg in zip(colors, regions):
+        wash = radial(max(size), [(0, col + (90,)), (0.9, col + (26,)), (1.0, col + (8,))]).crop((0, 0) + size)
+        wash.putalpha(ImageChops.multiply(wash.split()[3], ImageChops.multiply(reg, inner)))
+        out = Image.alpha_composite(out, wash)
+        border = Image.new('RGBA', size, light(col, 0.15) + (255,))
+        border.putalpha(ImageChops.multiply(ring, reg))
+        out = Image.alpha_composite(out, border)
+        out = Image.alpha_composite(glow(border, 2.2, col, 0.8), out)
+    if split is not None:
+        line = Image.new('RGBA', size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(line)
+        if split == 'diag':
+            d.line((size[0], 0, 0, size[1]), fill=WHITE + (230,), width=int(1.6 * N.U))
+        else:
+            d.line((0, size[1] // 2, size[0], size[1] // 2), fill=WHITE + (230,), width=int(1.6 * N.U))
+        line.putalpha(ImageChops.multiply(line.split()[3], inner))
+        out = Image.alpha_composite(out, Image.alpha_composite(glow(line, 1.6, WHITE, 0.6), line))
+    return out
+
+
+def stamp(dst, tile_img, i, tw):
+    dst.alpha_composite(tile_img, (int(i * tw * N.U), 0))
+
+
+def price_tile(font, w, h, red, blue, flip=False, radius=14, horiz=False, size=44):
+    if red and blue:
+        cols = (RED, CYAN) if not flip else (CYAN, RED)
+        amts = (red, blue) if not flip else (blue, red)
+        t = tile(w, h, cols, 'horiz' if horiz else 'diag', radius)
+        sz = size * (0.8 if not horiz else 1.0)
+        m1, m2 = font.mask(str(amts[0]), sz), font.mask(str(amts[1]), sz)
+        pad = 9 * N.U
+        if horiz:
+            put_text(t, m1, w * N.U - pad - m1.width, h * N.U / 2 - pad - m1.height, cols[0])
+            put_text(t, m2, pad, h * N.U - pad - m2.height, cols[1])
+        else:
+            put_text(t, m1, pad, pad * 0.8, cols[0])
+            put_text(t, m2, w * N.U - pad - m2.width, h * N.U - pad * 0.8 - m2.height, cols[1])
+        return t
+    col = RED if red else CYAN
+    t = tile(w, h, (col,), None, radius)
+    m = font.mask(str(red or blue), size)
+    pad = 10 * N.U
+    put_text(t, m, w * N.U - pad - m.width, h * N.U - pad - m.height, col)
+    return t
+
+
+def ship_sprite(i):
+    sheet = orig('res/ships/ships%d.png' % (i // 15 + 1))
+    f = i % 15
+    return sheet.crop((f * 128, 0, f * 128 + 128, 128))
+
+
+def bought_ship_tile(i, size=149):
+    t = tile(size, size, (CYAN,), None, 18)
+    n = int(size * N.U)
+    back = radial(n, [(0, CYAN + (95,)), (0.55, CYAN + (28,)), (0.8, CYAN + (0,)), (1, CYAN + (0,))])
+    t = Image.alpha_composite(t, back)
+    sp = ship_sprite(i).resize((int(120 * N.U), int(120 * N.U)), Image.LANCZOS)
+    t.alpha_composite(sp, ((n - sp.width) // 2, (n - sp.height) // 2))
+    return t
+
+
+def parse_prices():
+    src = open(os.path.join(ROOT, 'core/src/com/spaceship/main/Main.java'), encoding='latin-1').read()
+    ships = {int(i): (int(r), int(b)) for i, r, b in re.findall(r'INSERT INTO ships \(id, bought, reds, blues\) VALUES \((\d+), \d+, (\d+), (\d+)\)', src)}
+    gal = {int(i): (int(r), int(b)) for i, r, b in re.findall(r'INSERT INTO galaxies \(id, bought, reds, blues\) VALUES \((\d+), \d+, (\d+), (\d+)\)', src)}
+    ups = [int(x) for x in re.findall(r'INSERT INTO upgradesPrice \(id, bought, lifeBalls\) VALUES \(\d+, \d+, (\d+)\)', src)]
+    return ships, gal, ups
+
+
+def galaxy_thumb(sheet_name, k):
+    sheet = orig('res/bgs/%s.png' % sheet_name)
+    t = sheet.crop((k * 220, 0, k * 220 + 220, 298))
+    arr = np.asarray(t.convert('L'), dtype=np.float32)
+    ys, xs = np.where(arr < 205)
+    x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
+    img = t.crop((x0, y0, x1 + 1, y1 + 1)).convert('RGB')
+    return img
+
+
+def bought_galaxy_tile(sheet_name, k):
+    t = tile(220, 298, (CYAN,), None, 22)
+    th = galaxy_thumb(sheet_name, k)
+    w, h = int(184 * N.U), int(250 * N.U)
+    th = th.resize((w, h), Image.LANCZOS).convert('RGBA')
+    m = Image.new('L', (w, h), 0)
+    ImageDraw.Draw(m).ellipse((0, 0, w - 1, h - 1), fill=255)
+    th.putalpha(m)
+    ring = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    ImageDraw.Draw(ring).ellipse((0, 0, w - 1, h - 1), outline=light(CYAN, 0.2) + (255,), width=int(2.2 * N.U))
+    th = Image.alpha_composite(Image.alpha_composite(glow(ring, 3, CYAN, 0.9), th), ring)
+    t.alpha_composite(th, (int((220 * N.U - w) / 2), int((298 * N.U - h) / 2)))
+    return t
+
+
+def build_cards():
+    N.set_scale(2)
+    font = BMFont('fonts/prototype128blueWhite')
+    ships, gal, ups = parse_prices()
+    for s in range(8):
+        n = 5 if s == 7 else 10
+        name = 'shipsPrice%d' % (75 if s == 7 else s + 1)
+        bname = name.replace('Price', 'Bought')
+        W = 149 * n
+        price = N.canvas(W, 149)
+        bought = N.canvas(W, 149)
+        for j in range(n):
+            i = s * 10 + j
+            r, b = ships[i]
+            bt = bought_ship_tile(i)
+            stamp(bought, bt, j, 149)
+            stamp(price, bt if i == 0 else price_tile(font, 149, 149, r, b, flip=(i % 2 == 0)), j, 149)
+        N.finish(price, W, 149, 'ships/%s.png' % name)
+        N.finish(bought, W, 149, 'ships/%s.png' % bname)
+    for s in (1, 2):
+        price = N.canvas(1100, 298)
+        bought = N.canvas(1100, 298)
+        for j in range(5):
+            i = (s - 1) * 5 + j
+            bt = bought_galaxy_tile('bgsBought%d' % s, j)
+            stamp(bought, bt, j, 220)
+            r, b = gal[i] if i in gal else (0, 0)
+            stamp(price, bt if i == 0 else price_tile(font, 220, 298, r, b, flip=(i % 2 == 0), radius=22, horiz=True, size=52), j, 220)
+        N.finish(price, 1100, 298, 'bgs/bgsPrice%d.png' % s)
+        N.finish(bought, 1100, 298, 'bgs/bgsBought%d.png' % s)
+    sheet = N.canvas(745, 149)
+    for j, v in enumerate([50, 100, 250, 500, 1000]):
+        t = tile(149, 149, (GOLD,), None, 14)
+        m = font.mask(str(v), 44)
+        put_text(t, m, 149 * N.U - 10 * N.U - m.width, 149 * N.U - 10 * N.U - m.height, GOLD)
+        stamp(sheet, t, j, 149)
+    N.finish(sheet, 745, 149, 'upgrades/upgradesPrice.png')
+
+
+def build_play():
+    N.set_scale(4)
+    font = BMFont('fonts/prototype128blueWhite')
+    w, h = 196, 98
+    t = tile(w, h, (CYAN,), None, 26, alpha=210)
+    m = font.mask('PLAY', 58)
+    put_text(t, m, (t.width - m.width) / 2, (t.height - m.height) / 2 - 4 * N.U, CYAN)
+    N.finish(t, w, h, 'gui/bGo.png')
+    for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
+                             ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
+        im = N.canvas(w, h)
+        m = font.mask(text, 29)
+        put_text(im, m, (im.width - m.width) / 2, (im.height - m.height) / 2, WHITE)
+        N.finish(im, w, h, 'gui/%s.png' % name)
+
+
+def glass_pad(w, h):
+    return tile(w, h, (CYAN,), None, 40, alpha=150)
+
+
+def chevron(t, w, h, direction):
+    cx, cy = w * N.U / 2, h * N.U / 2
+    s = 22 * N.U * 1.6
+    pts = [(cx - direction * s * 0.45, cy - s), (cx + direction * s * 0.45, cy), (cx - direction * s * 0.45, cy + s)]
+    layer = Image.new('RGBA', t.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    d.line(pts, fill=WHITE + (255,), width=int(9 * N.U), joint='curve')
+    for x, y in pts:
+        r = 4.5 * N.U
+        d.ellipse((x - r, y - r, x + r, y + r), fill=WHITE + (255,))
+    t.alpha_composite(Image.alpha_composite(glow(layer, 5, CYAN, 1.0), layer))
+
+
+def build_pads():
+    N.set_scale(2)
+    font = BMFont('fonts/prototype128blueWhite')
+    for name, w, h, d in [('padsLeft', 160, 576, -1), ('padsIzq', 160, 576, -1), ('padsRight', 160, 576, 1), ('padsDer', 160, 576, 1)]:
+        t = glass_pad(w, h)
+        chevron(t, w, h, d)
+        N.finish(t, w, h, 'hud/%s.png' % name)
+    for name, w, h in [('padVertical', 160, 576), ('padHorizontal', 392, 284)]:
+        N.finish(glass_pad(w, h), w, h, 'hud/%s.png' % name)
+    for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use Item'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
+        t = glass_pad(392, 284)
+        m = font.mask(text, 40)
+        put_text(t, m, (t.width - m.width) / 2, (t.height - m.height) / 2, CYAN)
+        N.finish(t, 392, 284, 'hud/%s.png' % name)
+
+
+if __name__ == '__main__':
+    parts = sys.argv[1:] or ['fonts', 'hud', 'cards', 'pads', 'play']
+    if 'fonts' in parts:
+        build_fonts()
+    if 'hud' in parts:
+        build_hud()
+    if 'cards' in parts:
+        build_cards()
+    if 'pads' in parts:
+        build_pads()
+    if 'play' in parts:
+        build_play()
+    N.write_manifest()
+    print('done', parts)
