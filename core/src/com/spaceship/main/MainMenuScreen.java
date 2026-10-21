@@ -1350,12 +1350,9 @@ public class MainMenuScreen implements Screen {
 		if(drawCounters){
 			// draw counnters
 			Fx.init(game.assetManager);
-			Fx.animateOrb(blueCounter, 0, 0f);
-			Fx.animateOrb(redCounter, 1, 0.33f);
-			Fx.animateOrb(lifeCounter, 2, 0.66f);
-			blueCounter.draw(game.batch);
-			redCounter.draw(game.batch);
-			lifeCounter.draw(game.batch);
+			Fx.drawOrb(game.batch, blueCounter, 0, 0f);
+			Fx.drawOrb(game.batch, redCounter, 1, 0.33f);
+			Fx.drawOrb(game.batch, lifeCounter, 2, 0.66f);
 			// draw fonts		
 			bluesFont.draw(game.batch, String.valueOf(blueBalls), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).width - blueCounter.getWidth()/4,
 					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).height);

@@ -162,13 +162,9 @@ public class Ball extends GameObject {
 	public void render(SpriteBatch sb) {	
 		ball.setPosition(this.getPosition().x, this.getPosition().y);
 		texSelected.setPosition(this.getPosition().x - texSelected.getWidth()/2, this.getPosition().y - texSelected.getHeight()/2);
-		// energy swirl: every orb loops through the same frames, starting at its own phase
+		// energy orb: soft edge + corona, every orb loops the same frames from its own phase
 		int kind = type == B_BLUE ? 0 : type == B_RED ? 1 : type == B_LIFE ? 2 : 3;
-		com.badlogic.gdx.graphics.g2d.TextureRegion[] frames = Fx.orbFrames(kind);
-		int fi = (int) ((Fx.time()*1.3f + loopOffset)*Fx.ORB_FRAMES) % Fx.ORB_FRAMES;
-		com.badlogic.gdx.graphics.g2d.TextureRegion r = frames[fi];
-		texSelected.setRegion(r);
-		texSelected.draw(sb);
+		Fx.drawOrb(sb, texSelected, kind, loopOffset);
 	}
 	
 	/** Comet tail behind the orb (draw between Fx.additiveOn/Off, before the orbs). */

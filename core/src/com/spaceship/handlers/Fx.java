@@ -25,6 +25,8 @@ public class Fx {
 	private static Texture[] sparks = new Texture[4];
 	private static Texture dot, bolt;
 	public static final int ORB_FRAMES = 16;
+	/** The orb frames are 32 px canvases whose orb body is 18 px: draw them 1.6x the 20 px orb sprite. */
+	public static final float ORB_DRAW_SCALE = 1.6f;
 	private static com.badlogic.gdx.graphics.g2d.TextureRegion[][] orbFrames;
 
 	// small additive embers shared by the ship engines and the orb tails
@@ -56,7 +58,7 @@ public class Fx {
 		orbFrames = new com.badlogic.gdx.graphics.g2d.TextureRegion[4][];
 		String[] orbs = { "blue", "red", "gold", "purple" };
 		for (int i = 0; i < 4; i++)
-			orbFrames[i] = com.badlogic.gdx.graphics.g2d.TextureRegion.split(am.get("res/fx/orb_" + orbs[i] + ".png", Texture.class), 20, 20)[0];
+			orbFrames[i] = com.badlogic.gdx.graphics.g2d.TextureRegion.split(am.get("res/fx/orb_" + orbs[i] + ".png", Texture.class), 32, 32)[0];
 	}
 
 	public static Texture spark(int kind) {
@@ -153,10 +155,15 @@ public class Fx {
 		return orbFrames[kind];
 	}
 
-	/** Plays the orb's energy loop on a sprite (counter icons); phase shifts the start so icons do not pulse in sync. */
-	public static void animateOrb(com.badlogic.gdx.graphics.g2d.Sprite sprite, int kind, float phase) {
-		com.badlogic.gdx.graphics.g2d.TextureRegion[] frames = orbFrames[kind];
-		int fi = (int) ((time*1.3f + phase)*ORB_FRAMES) % ORB_FRAMES;
-		sprite.setRegion(frames[fi]);
+	/** Draws the orb's animated energy frame (soft edge + corona) centered on a 20 px-style orb sprite. */
+	public static void drawOrb(SpriteBatch sb, com.badlogic.gdx.graphics.g2d.Sprite sprite, int kind, float phase) {
+		com.badlogic.gdx.graphics.g2d.TextureRegion r = orbFrames[kind][(int) ((time*1.3f + phase)*ORB_FRAMES) % ORB_FRAMES];
+		float w = sprite.getWidth()*sprite.getScaleX()*ORB_DRAW_SCALE;
+		float h = sprite.getHeight()*sprite.getScaleY()*ORB_DRAW_SCALE;
+		float cx = sprite.getX() + sprite.getWidth()/2;
+		float cy = sprite.getY() + sprite.getHeight()/2;
+		sb.setColor(sprite.getColor());
+		sb.draw(r, cx - w/2, cy - h/2, w, h);
+		sb.setColor(1f, 1f, 1f, 1f);
 	}
 }
