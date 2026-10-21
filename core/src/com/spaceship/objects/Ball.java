@@ -33,6 +33,10 @@ public class Ball extends GameObject {
 	private int angle2;
 	private final float phase = MathUtils.random(0f, 6.28f);
 	private final float loopOffset = MathUtils.random();
+	// positions the orb has passed through (newest first): the tail follows this path, so it bends after a bounce
+	private static final int TRAIL_POINTS = 26;
+	private final float[] trailX = new float[TRAIL_POINTS], trailY = new float[TRAIL_POINTS];
+	private int trailCount;
 	private int type;
 	private boolean velocityChanged;
 	private Texture texB; 
@@ -120,6 +124,7 @@ public class Ball extends GameObject {
 	public void reset(){
 		ball.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2),
 				Gdx.graphics.getHeight() + fxy(20));
+		trailCount = 0;
 		taken = false;
 		velocity = game.getPS().velocityBall;
 		angle = (int) MathUtils.random(-fxy(250), fxy(250));
@@ -164,40 +169,93 @@ public class Ball extends GameObject {
 		texSelected.setPosition(this.getPosition().x - texSelected.getWidth()/2, this.getPosition().y - texSelected.getHeight()/2);
 		// energy orb: soft edge + corona, every orb loops the same frames from its own phase
 		int kind = type == B_BLUE ? 0 : type == B_RED ? 1 : type == B_LIFE ? 2 : 3;
+		Fx.additiveOn(sb);
 		Fx.drawOrb(sb, texSelected, kind, loopOffset);
+		Fx.additiveOff(sb);
 	}
 	
-	/** Comet tail behind the orb (draw between Fx.additiveOn/Off, before the orbs). */
+	/** Comet tail: a ribbon through the orb's recent path with a head that wraps around the orb (draw between Fx.additiveOn/Off, before the orbs). */
 	public void renderTail(SpriteBatch sb) {
-		float vx = angle;
-		float vy = fxy(velocity);
+		float px = this.getPosition().x;
+		float py = this.getPosition().y;
+		float vx = -angle;
+		float vy = -fxy(velocity);
 		float speed = (float) Math.sqrt(vx*vx + vy*vy);
 		if(speed < 1f)
 			return;
+		float spacing = fxy(7);
+		
+		// record the path: a new point whenever the orb has moved far enough; a jump (respawn) clears it
+		if(trailCount > 0){
+			float ddx = px - trailX[0], ddy = py - trailY[0];
+			float dist = (float) Math.sqrt(ddx*ddx + ddy*ddy);
+			if(dist > fxy(90))
+				trailCount = 0;
+			else if(dist >= spacing){
+				int n = Math.min(trailCount + 1, TRAIL_POINTS);
+				for(int k = n - 1; k > 0; k--){
+					trailX[k] = trailX[k - 1];
+					trailY[k] = trailY[k - 1];
+				}
+				trailX[0] = px;
+				trailY[0] = py;
+				trailCount = n;
+			}
+		}
+		if(trailCount == 0){
+			trailX[0] = px;
+			trailY[0] = py;
+			trailCount = 1;
+		}
+		
 		float r, g, b;
-		if(type == B_BLUE){ r = 0.13f; g = 0.83f; b = 0.93f; }
-		else if(type == B_RED){ r = 1f; g = 0.23f; b = 0.36f; }
-		else if(type == B_LIFE){ r = 1f; g = 0.75f; b = 0.18f; }
-		else { r = 0.66f; g = 0.33f; b = 0.97f; }
+		int kind;
+		if(type == B_BLUE){ r = 0.13f; g = 0.83f; b = 0.93f; kind = Fx.SPARK_BLUE; }
+		else if(type == B_RED){ r = 1f; g = 0.23f; b = 0.36f; kind = Fx.SPARK_RED; }
+		else if(type == B_LIFE){ r = 1f; g = 0.75f; b = 0.18f; kind = Fx.SPARK_GOLD; }
+		else { r = 0.66f; g = 0.33f; b = 0.97f; kind = Fx.SPARK_PURPLE; }
+		float hr = 1f - (1f - r)*0.35f, hg = 1f - (1f - g)*0.35f, hb = 1f - (1f - b)*0.35f;
 		
-		// a little life: the tail wavers, breathes, and sheds sparkles
 		float t = Fx.time();
-		float wobble = !Fx.WOBBLE ? 0f : (1.6f*MathUtils.sin(t*12f + phase*1.3f) + MathUtils.random(-0.3f, 0.3f))*MathUtils.degreesToRadians;
-		float c = MathUtils.cos(wobble), s = MathUtils.sin(wobble);
-		float dx = (vx*c - vy*s)/speed;
-		float dy = (vx*s + vy*c)/speed;
 		float flicker = !Fx.LIVELY ? 1f : 0.94f + 0.05f*MathUtils.sin(t*19f + phase) + MathUtils.random(-0.015f, 0.015f);
-		float length = Math.min(fxy(230), speed*0.34f)*flicker;
-		float width = fxy(30)*(!Fx.LIVELY ? 1f : 0.94f + 0.06f*MathUtils.sin(t*26f + phase));
-		float px = this.getPosition().x;
-		float py = this.getPosition().y;
-		Fx.tail(sb, false, px, py, dx, dy, length, width, r, g, b, 0.9f);
-		Fx.tail(sb, true, px, py, dx, dy, length*0.6f, width*0.45f, 1f - (1f - r)*0.35f, 1f - (1f - g)*0.35f, 1f - (1f - b)*0.35f, 0.85f);
+		float orbR = fxy(10)*0.9f;
+		float dirX = vx/speed, dirY = vy/speed;
 		
-		if(Fx.LIVELY && game.getPS().getState() == game.getPS().PLAY && MathUtils.random() < Gdx.graphics.getDeltaTime()*22f){
-			float d = MathUtils.random(0.08f, 0.6f)*length;
+		// coma: a soft glow that surrounds the head, pushed slightly ahead so the orb sits inside it
+		Texture glow = Fx.spark(kind);
+		float cs = orbR*4.6f*flicker;
+		sb.setColor(r, g, b, 0.28f);
+		sb.draw(glow, px + dirX*orbR*0.35f - cs/2, py + dirY*orbR*0.35f - cs/2, cs, cs);
+		
+		// ribbon through the path as a chain of soft glow blobs: wide where it wraps the head, tapering to nothing
+		int n = trailCount;
+		float headW = orbR*6.4f*flicker;
+		float ax = px + dirX*orbR*0.55f, ay = py + dirY*orbR*0.55f; // start a little ahead of the orb centre
+		int sub = 6;
+		for(int k = 0; k < n; k++){
+			float bx = k == 0 ? px : trailX[k], by = k == 0 ? py : trailY[k];
+			for(int m = 0; m < sub; m++){
+				float f = m/(float) sub;
+				float cx = ax + (bx - ax)*f, cy = ay + (by - ay)*f;
+				float u = (k + f)/TRAIL_POINTS;
+				float taper = (float) Math.pow(Math.max(1f - u, 0f), 0.75f);
+				float fade = (float) Math.pow(Math.max(1f - u, 0f), 1.3f)*(0.3f + 0.7f*Math.min(1f, u/0.16f)); // dimmer at the head so the orb stays visible
+				float w = headW*taper;
+				sb.setColor(r, g, b, 0.17f*fade);
+				sb.draw(glow, cx - w/2, cy - w/2, w, w);
+				float wc = w*0.5f;
+				sb.setColor(hr, hg, hb, 0.24f*fade);
+				sb.draw(glow, cx - wc/2, cy - wc/2, wc, wc);
+			}
+			ax = bx;
+			ay = by;
+		}
+		sb.setColor(1f, 1f, 1f, 1f);
+		
+		if(Fx.LIVELY && game.getPS().getState() == game.getPS().PLAY && MathUtils.random() < Gdx.graphics.getDeltaTime()*22f && n > 2){
+			int k = MathUtils.random(1, n - 1);
 			float white = MathUtils.random(0f, 0.5f);
-			Fx.emit(px + dx*d + MathUtils.random(-0.3f, 0.3f)*width, py + dy*d, MathUtils.random(-22f, 22f)*fxy(1), MathUtils.random(-10f, 26f)*fxy(1),
+			Fx.emit(trailX[k] + MathUtils.random(-0.3f, 0.3f)*headW, trailY[k], MathUtils.random(-22f, 22f)*fxy(1), MathUtils.random(-10f, 26f)*fxy(1),
 					MathUtils.random(0.3f, 0.65f), MathUtils.random(3.5f, 7.5f)*fxy(1),
 					r + (1f - r)*white, g + (1f - g)*white, b + (1f - b)*white);
 		}
