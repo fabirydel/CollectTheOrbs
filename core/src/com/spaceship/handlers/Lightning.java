@@ -42,14 +42,14 @@ public class Lightning {
 		}
 		if (!active)
 			return;
-		spawnAccum += dt * 7f;
+		spawnAccum += dt * 3.6f;
 		while (spawnAccum >= 1f) {
 			spawnAccum -= 1f;
-			int burst = MathUtils.random() < 0.18f ? MathUtils.random(2, 3) : 1;
+			int burst = MathUtils.random() < 0.07f ? 2 : 1;
 			for (int k = 0; k < burst && count < MAXB; k++) {
 				int i = count++;
 				float roll = MathUtils.random();
-				type[i] = roll < 0.55f ? 0 : roll < 0.75f ? 1 : 2;
+				type[i] = roll < 0.6f ? 0 : roll < 0.72f ? 1 : 2;
 				a0[i] = MathUtils.random(0f, MathUtils.PI2);
 				span[i] = type[i] == 0 ? MathUtils.random(0.45f, 1.5f) : type[i] == 1 ? MathUtils.random(1.4f, 3.0f) : 0f;
 				age[i] = 0;
@@ -109,15 +109,15 @@ public class Lightning {
 			float t = age[i] / life[i];
 			float env = Math.min(1f, t * 9f) * (1f - t * t);
 			float flick = 0.7f + 0.3f * (((seed[i] + (int) (age[i] / 0.045f) * 31) & 7) / 7f);
-			float a = env * flick;
+			float a = env * flick * 0.85f;
 			int n = build(i, cx, cy, r);
 			float w = thick[i] * u;
 			for (int k = 0; k + 1 < n; k++)
-				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 15f * w, c[0], c[1], c[2], a * 0.28f);
+				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 12f * w, c[0], c[1], c[2], a * 0.24f);
 			for (int k = 0; k + 1 < n; k++)
-				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 6.5f * w, c[0], c[1], c[2], a * 0.75f);
+				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 5f * w, c[0], c[1], c[2], a * 0.7f);
 			for (int k = 0; k + 1 < n; k++)
-				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 2.4f * w, 1f, 1f, 1f, a);
+				Fx.segment(sb, px[k], py[k], px[k + 1], py[k + 1], 1.9f * w, 1f, 1f, 1f, a);
 		}
 	}
 }
