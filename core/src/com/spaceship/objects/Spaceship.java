@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
+import com.badlogic.gdx.math.MathUtils;
 import com.spaceship.handlers.CircleAccessor;
 import com.spaceship.handlers.Fx;
 import com.spaceship.handlers.ShipPlume;
@@ -69,6 +70,10 @@ public class Spaceship{
 	private boolean[] enabled;
 	private int shadow;
 	private final ShipPlume plume = new ShipPlume();
+	private Sprite[] shockBlue, shockRed;
+	private float shockTime = 1f;
+	private int[] shockFrame = new int[3];
+	private float shockNext;
 	private float prevX = -1;
 	private int bgRegion;
 	public int forceFieldSelected;
@@ -114,6 +119,14 @@ public class Spaceship{
 		}
 		
 		forceFields = game.assetManager.get("res/shapes/forceFields.png", Texture.class);
+		TextureRegion[] lb = TextureRegion.split(game.assetManager.get("res/shapes/lightningBlue.png", Texture.class), 128, 128)[0];
+		TextureRegion[] lr = TextureRegion.split(game.assetManager.get("res/shapes/lightningRed.png", Texture.class), 128, 128)[0];
+		shockBlue = new Sprite[lb.length];
+		shockRed = new Sprite[lr.length];
+		for(int i = 0; i < lb.length; i++){
+			shockBlue[i] = new Sprite(lb[i]);
+			shockRed[i] = new Sprite(lr[i]);
+		}
 		ffTextures = TextureRegion.split(forceFields, 128, 128)[0];
 		ffSprites = new Sprite[ffTextures.length];
 		for(int i = 0; i < ffTextures.length; i++){
@@ -437,6 +450,34 @@ public class Spaceship{
 		shipsSprites[shipSelected].draw(sb);
 		ffSprites[forceFieldSelected].draw(sb);
 		ffgSprites[forceFieldSelected].draw(sb);
+		drawShock(sb);
+	}
+	
+	/** Electricity across the force field for a moment after a wrong-colored orb hits it. */
+	private void drawShock(SpriteBatch sb){
+		if(shockTime >= 0.34f)
+			return;
+		float dt = Gdx.graphics.getDeltaTime();
+		shockTime += dt;
+		Sprite[] set = forceFieldSelected == 0 ? shockBlue : shockRed;
+		if(shockTime >= shockNext){
+			shockNext = shockTime + 0.045f;
+			for(int k = 0; k < shockFrame.length; k++){
+				shockFrame[k] = MathUtils.random(0, set.length - 1);
+				set[shockFrame[k]].setRotation(MathUtils.random(0, 360));
+			}
+		}
+		float fade = shockTime < 0.2f ? 1f : Math.max(0f, 1f - (shockTime - 0.2f)/0.14f);
+		float scale = ffSprites[forceFieldSelected].getScaleX()*1.05f;
+		Fx.additiveOn(sb);
+		for(int k = 0; k < shockFrame.length; k++){
+			Sprite b = set[shockFrame[k]];
+			b.setScale(scale);
+			b.setPosition(ship.x - b.getWidth()/2, ship.y - b.getHeight()/2);
+			b.setColor(1f, 1f, 1f, fade*(k == 0 ? 1f : 0.85f));
+			b.draw(sb);
+		}
+		Fx.additiveOff(sb);
 	}
 	
 	private final TweenCallback arrowLeftCallback = new TweenCallback() {
@@ -562,6 +603,8 @@ public class Spaceship{
 	}
 	
 	public void tweenBlackFF(){
+		shockTime = 0f;
+		shockNext = 0f;
 		Tween.set(ffSprites[forceFieldSelected], SpriteAccessor.SCALE).target((fx(ffSprites[forceFieldSelected].getWidth()) + fy(ffSprites[forceFieldSelected].getHeight()))/2/128, 
 				(fx(ffSprites[forceFieldSelected].getWidth()) + fy(ffSprites[forceFieldSelected].getHeight()))/2/128)
 		.ease(TweenEquations.easeInOutSine).start(tweenManager);
