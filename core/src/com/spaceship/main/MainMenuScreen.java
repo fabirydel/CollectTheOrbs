@@ -225,6 +225,7 @@ public class MainMenuScreen implements Screen {
 	public long lastTimeBg;
 	public int lightTime;
 	public int musicTime;
+	private float counterBaseY, scoreBaseY, mainCounterY, mainScoreY, titleY1, titleY2;
 	private float musicFade;
 	public long time;
 	public int galaxySelected;
@@ -895,6 +896,7 @@ public class MainMenuScreen implements Screen {
 		iEnglish.setSize(fx(iEnglish.getWidth()), fy(iEnglish.getHeight()));
 		iEspanol.setSize(fx(iEspanol.getWidth()), fy(iEspanol.getHeight()));
 		
+		counterBaseY = Gdx.graphics.getHeight()/8 + 3*adHeight/4;
 		blueCounter.setPosition(Gdx.graphics.getWidth()/2 - 1.25f*blueCounter.getWidth(), Gdx.graphics.getHeight()/8 + 3*adHeight/4);
 		redCounter.setPosition(Gdx.graphics.getWidth()/2 + 0.25f*redCounter.getWidth(), Gdx.graphics.getHeight()/8 + 3*adHeight/4);
 		lifeCounter.setPosition(Gdx.graphics.getWidth()/2 - (1.25f*lifeCounter.getWidth() + com.spaceship.handlers.FontUtil.bounds(lifeFont, String.valueOf(lifeBalls)).width)/2,
@@ -1087,15 +1089,11 @@ public class MainMenuScreen implements Screen {
 				shipsSprites[shipSelected].getY() + 0.25f*shipsSprites[shipSelected].getHeight() + adHeight/3);
 		bHelp.setPosition(shipsSprites[shipSelected].getX() + shipsSprites[shipSelected].getWidth(), 
 				shipsSprites[shipSelected].getY() - shipsSprites[shipSelected].getHeight() + adHeight/3);
-		bGo.setPosition((shipsSprites[shipSelected].getX() + shipsSprites[shipSelected].getWidth()/2 - bGo.getWidth()/2), 
-				bUpgrades.getY() + bUpgrades.getHeight() + (Gdx.graphics.getHeight() - 3*com.spaceship.handlers.FontUtil.bounds(greysFont, "Collect The Orbs").height - 
-						(bUpgrades.getY() + bUpgrades.getHeight()))/2 - bGo.getHeight()/2);
-		bExit.setPosition((shipsSprites[shipSelected].getX() + shipsSprites[shipSelected].getWidth()/2 - bTrophy.getWidth()/2), 
-				blueCounter.getY() + blueCounter.getHeight() + (bGalaxies.getY() - (blueCounter.getY() + blueCounter.getHeight()))/2 - bTrophy.getHeight()/2);
-		bTrophy.setPosition(bGalaxies.getX() - bExit.getWidth()/2, 
-				blueCounter.getY() + blueCounter.getHeight() + (bGalaxies.getY() - (blueCounter.getY() + blueCounter.getHeight()))/2 - bExit.getHeight()/2);
-		bLeaderboard.setPosition(bHelp.getX() + bLeaderboard.getWidth()/2, 
-				blueCounter.getY() + blueCounter.getHeight() + (bGalaxies.getY() - (blueCounter.getY() + blueCounter.getHeight()))/2 - bLeaderboard.getHeight()/2);
+		bGo.setX(shipsSprites[shipSelected].getX() + shipsSprites[shipSelected].getWidth()/2 - bGo.getWidth()/2);
+		bExit.setX(shipsSprites[shipSelected].getX() + shipsSprites[shipSelected].getWidth()/2 - bTrophy.getWidth()/2);
+		bTrophy.setX(bGalaxies.getX() - bExit.getWidth()/2);
+		bLeaderboard.setX(bHelp.getX() + bLeaderboard.getWidth()/2);
+		layoutMainMenu();
 
 		giftizLogo.setPosition(bGo.getX() + bGo.getWidth() + bGo.getX()/2 - giftizLogo.getWidth()/2, 
 				bGo.getY() + bGo.getHeight()/2 - giftizLogo.getHeight()/2);
@@ -1351,6 +1349,7 @@ public class MainMenuScreen implements Screen {
 
 		ffgSprites[forceFieldSelected].draw(game.batch);
 		
+		slideBottomBlock();
 		if(drawCounters){
 			// draw counnters
 			blueCounter.draw(game.batch);
@@ -1358,22 +1357,22 @@ public class MainMenuScreen implements Screen {
 			lifeCounter.draw(game.batch);
 			// draw fonts		
 			bluesFont.draw(game.batch, String.valueOf(blueBalls), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).width - blueCounter.getWidth()/4,
-					Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).height + 3*adHeight/4);
+					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).height);
 			redsFont.draw(game.batch, String.valueOf(redBalls), redCounter.getX() + 1.25f*redCounter.getWidth(),
-					Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont, String.valueOf(redBalls)).height + 3*adHeight/4);
+					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont, String.valueOf(redBalls)).height);
 			lifeFont.draw(game.batch, String.valueOf(lifeBalls), lifeCounter.getX() + 1.25f*lifeCounter.getWidth(),
-					Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(lifeFont, String.valueOf(lifeBalls)).height + 3*adHeight/4);
+					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(lifeFont, String.valueOf(lifeBalls)).height);
 		}
 		greysFontTitle.draw(game.batch, "Collect The", (Gdx.graphics.getWidth() - com.spaceship.handlers.FontUtil.bounds(greysFontTitle, "Collect The").width)/2, 
-				Gdx.graphics.getHeight() - com.spaceship.handlers.FontUtil.bounds(greysFontTitle, "Collect The Orbs").height/2);
+				titleY1);
 		greysFontTitle.draw(game.batch, "Orbs", (Gdx.graphics.getWidth() - com.spaceship.handlers.FontUtil.bounds(greysFontTitle, "Orbs").width)/2, 
-				Gdx.graphics.getHeight() - 2*com.spaceship.handlers.FontUtil.bounds(greysFontTitle, "Collect The Orbs").height);
+				titleY2);
 		if(language == ON)
 			greysFont.draw(game.batch, "Best Score: " + bestScore, (Gdx.graphics.getWidth() - 
-				com.spaceship.handlers.FontUtil.bounds(greysFont, "Best Score: " + bestScore).width)/2, 1.5f*com.spaceship.handlers.FontUtil.bounds(greysFont, "Best Score").height + adHeight);
+				com.spaceship.handlers.FontUtil.bounds(greysFont, "Best Score: " + bestScore).width)/2, scoreY);
 		else
 			greysFont.draw(game.batch, "Mejor Marca: " + bestScore, (Gdx.graphics.getWidth() - 
-					com.spaceship.handlers.FontUtil.bounds(greysFont, "Mejor Marca: " + bestScore).width)/2, 1.5f*com.spaceship.handlers.FontUtil.bounds(greysFont, "Mejor Marca").height + adHeight);
+					com.spaceship.handlers.FontUtil.bounds(greysFont, "Mejor Marca: " + bestScore).width)/2, scoreY);
 
 		 switch (g) {
 	        case 1 : giftizLogo.draw(game.batch);
@@ -1706,7 +1705,7 @@ public class MainMenuScreen implements Screen {
 		stageShips = new Stage();
 		containerShips = new Table();
 		stageShips.addActor(containerShips);
-		containerShips.setBounds(Gdx.graphics.getWidth()/8 , blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerShips.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsShips = new Table();
 		scrollShips = new ScrollPane(imgsShips);
@@ -1829,7 +1828,7 @@ public class MainMenuScreen implements Screen {
 		float galaxyPad = (3*Gdx.graphics.getWidth()/4 - bgsBoughtImage[0].getWidth()*2)/2;
 		containerBgs = new Table();
 		stageGalaxies.addActor(containerBgs);
-		containerBgs.setBounds(Gdx.graphics.getWidth()/8 , blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerBgs.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsBgs = new Table();
 		scrollBgs = new ScrollPane(imgsBgs);
@@ -1973,7 +1972,7 @@ public class MainMenuScreen implements Screen {
 		stageUpgrades = new Stage();
 		containerUpg = new Table();
 		stageUpgrades.addActor(containerUpg);
-		containerUpg.setBounds(Gdx.graphics.getWidth()/8 , blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerUpg.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsUpg = new Table();
 		scrollUpg = new ScrollPane(imgsUpg);
@@ -2322,7 +2321,7 @@ public class MainMenuScreen implements Screen {
 		stageHelp = new Stage();
 		containerHelp = new Table();
 		stageHelp.addActor(containerHelp);
-		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsHelp = new Table();
 		scrollHelp = new ScrollPane(imgsHelp);
@@ -2475,7 +2474,7 @@ public class MainMenuScreen implements Screen {
 		stageStats = new Stage();
 		containerSts = new Table();
 		stageStats.addActor(containerSts);
-		containerSts.setBounds(blueCounter.getX(), blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerSts.setBounds(blueCounter.getX(), counterBaseY + 1.5f*blueCounter.getHeight(), 
 				redCounter.getX() + redCounter.getWidth() - blueCounter.getX(), Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsSts = new Table();
 		scrollSts = new ScrollPane(imgsSts);
@@ -2928,7 +2927,7 @@ public class MainMenuScreen implements Screen {
 		stageSettings = new Stage();
 		containerSttngs = new Table();
 		stageSettings.addActor(containerSttngs);
-		containerSttngs.setBounds(Gdx.graphics.getWidth()/8 , blueCounter.getY() + 1.5f*blueCounter.getHeight(), 
+		containerSttngs.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsSttngs = new Table();
 		scrollSttngs = new ScrollPane(imgsSttngs);
@@ -3790,6 +3789,48 @@ public class MainMenuScreen implements Screen {
 	/** The music follows the Sound setting: silent when it is OFF, otherwise the faded-in level. */
 	public void updateMusicVolume(){
 		music.setVolume(sound == ON ? musicFade : 0f);
+	}
+
+	/**
+	 * Stacks the main menu around the ring with one equal gap between title, PLAY, ring, bottom
+	 * row, counters and best score, so it stays compact on tall screens. The sub-menus keep the
+	 * full-height layout (counterBaseY/scoreBaseY); the counters and score slide between the two.
+	 */
+	private void layoutMainMenu(){
+		float gap = 0.7f*bUpgrades.getHeight();
+		float ringTop = bUpgrades.getY() + bUpgrades.getHeight();
+		float ringBottom = bGalaxies.getY();
+
+		bGo.setY(ringTop + gap);
+		float titleH = com.spaceship.handlers.FontUtil.bounds(greysFontTitle, "Collect The Orbs").height;
+		float titleBottom = bGo.getY() + bGo.getHeight() + gap;
+		titleY2 = titleBottom + titleH;
+		titleY1 = titleY2 + 1.5f*titleH;
+
+		float rowY = ringBottom - gap - bExit.getHeight();
+		bExit.setY(rowY);
+		bTrophy.setY(rowY);
+		bLeaderboard.setY(rowY);
+
+		mainCounterY = rowY - gap - blueCounter.getHeight();
+		mainScoreY = mainCounterY - gap;
+		scoreBaseY = 1.5f*com.spaceship.handlers.FontUtil.bounds(greysFont, "Best Score").height + adHeight;
+		setCounterY(mainCounterY);
+		scoreY = mainScoreY;
+	}
+
+	private float scoreY;
+
+	private void setCounterY(float y){
+		blueCounter.setY(y);
+		redCounter.setY(y);
+		lifeCounter.setY(y);
+	}
+
+	private void slideBottomBlock(){
+		boolean compact = state == STANDBY || state == LAUNCH || state == EXIT || state == LEAVING;
+		setCounterY(blueCounter.getY() + ((compact ? mainCounterY : counterBaseY) - blueCounter.getY())*0.2f);
+		scoreY += ((compact ? mainScoreY : scoreBaseY) - scoreY)*0.2f;
 	}
 
 	public float fx(float v){
