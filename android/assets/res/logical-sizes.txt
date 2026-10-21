@@ -74,6 +74,8 @@ res/shapes/forceFields.png 640 128
 res/shapes/glows.png 800 160
 res/shapes/lifeBall.png 20 20
 res/shapes/lifeCounter.png 64 64
+res/shapes/lightningBlue.png 768 128
+res/shapes/lightningRed.png 768 128
 res/shapes/objectBall.png 20 20
 res/shapes/redBall.png 20 20
 res/shapes/redBallParticle.png 20 20

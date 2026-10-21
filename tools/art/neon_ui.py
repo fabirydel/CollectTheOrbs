@@ -358,8 +358,39 @@ def build_pads():
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 
+def build_lightning():
+    """Brighter, shinier versions of the original menu-shield bolt sprites (same shapes)."""
+    from PIL import ImageFilter
+    N.set_scale(2)
+    for name, col in (('lightningBlue', CYAN), ('lightningRed', RED)):
+        src = orig('res/shapes/%s.png' % name)
+        big = src.resize((src.width * N.U, src.height * N.U), Image.LANCZOS)
+        a = np.asarray(big.split()[3], dtype=np.float32) / 255.0
+        hard = Image.fromarray(((a > 0.55) * 255).astype(np.uint8))
+        thin = hard.filter(ImageFilter.MinFilter(5)).filter(ImageFilter.GaussianBlur(0.7 * N.U / 2))
+        mid = hard.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8 * N.U / 2))
+        core = np.asarray(thin, dtype=np.float32) / 255.0
+        body = np.asarray(mid, dtype=np.float32) / 255.0
+        halo1 = np.asarray(hard.filter(ImageFilter.GaussianBlur(1.6 * N.U)), dtype=np.float32) / 255.0
+        halo2 = np.asarray(hard.filter(ImageFilter.GaussianBlur(4.2 * N.U)), dtype=np.float32) / 255.0
+        glow_a = np.clip(halo1 * 0.8 + halo2 * 1.1, 0, 1)
+        rgb = np.zeros(a.shape + (3,), dtype=np.float32)
+        for i in range(3):
+            tint = col[i] / 255.0
+            lite = tint + (1 - tint) * 0.55
+            white = 1.0
+            c = tint * glow_a * (1 - body) + lite * body * (1 - core) + white * core
+            w = glow_a * (1 - body) + body * (1 - core) + core
+            rgb[..., i] = np.clip(c / np.maximum(w, 1e-3), 0, 1)
+        alpha = np.clip(glow_a * 0.85 + body, 0, 1)
+        alpha = np.maximum(alpha, core)
+        im = Image.fromarray(np.dstack([rgb * 255, alpha * 255]).astype(np.uint8))
+        im.save(os.path.join(ASSETS, 'res/shapes/%s.png' % name))
+        N.logical_sizes['res/shapes/%s.png' % name] = (src.width, src.height)
+
+
 if __name__ == '__main__':
-    parts = sys.argv[1:] or ['fonts', 'hud', 'cards', 'pads', 'play']
+    parts = sys.argv[1:] or ['fonts', 'hud', 'cards', 'pads', 'play', 'lightning']
     if 'fonts' in parts:
         build_fonts()
     if 'hud' in parts:
@@ -370,5 +401,7 @@ if __name__ == '__main__':
         build_pads()
     if 'play' in parts:
         build_play()
+    if 'lightning' in parts:
+        build_lightning()
     N.write_manifest()
     print('done', parts)

@@ -13,8 +13,8 @@ public class Fx {
 
 	/** Flicker, surges, embers and sparkles on the engine plumes and orb tails. Off = steady glow. */
 	public static final boolean LIVELY = true;
-	/** true = the original sprite-flash electricity on the menu force field; false = the live procedural bolts. */
-	public static final boolean CLASSIC_LIGHTNING = false;
+	/** true = the original sprite-flash electricity on the menu force field (now brighter); false = the live procedural bolts. */
+	public static final boolean CLASSIC_LIGHTNING = true;
 	/** Sideways wobble of the flames and the angle of the orb tails. */
 	public static final boolean WOBBLE = false;
 

@@ -1308,7 +1308,8 @@ public class MainMenuScreen implements Screen {
 		ffSprites[forceFieldSelected].draw(game.batch);
 		
 		if(Fx.CLASSIC_LIGHTNING){
-			// original effect: two pre-drawn sprite flashes at random angles
+			// original effect (two sprite flashes at random angles), now drawn additively for extra shine
+			Fx.additiveOn(game.batch);
 			if(lightTime % 50 == 0 && state == STANDBY){
 				l1 = MathUtils.random(0, 5);
 				l2 = MathUtils.random(0, 5);
@@ -1329,6 +1330,7 @@ public class MainMenuScreen implements Screen {
 					lightBSprites[l2].draw(game.batch);	
 				else
 					lightRSprites[l2].draw(game.batch);
+			Fx.additiveOff(game.batch);
 		}else{
 			// electricity on the force field
 			float dtL = Gdx.graphics.getDeltaTime();
