@@ -320,7 +320,7 @@ def build_play():
     t.alpha_composite(inner, (mg * N.U, mg * N.U))
     halo = glow(t, 6.5, NEUTRAL, 1.0)
     t = Image.alpha_composite(halo, t)
-    m = font.mask('PLAY', 50)
+    m = font.mask('START', 44)
     center_text(t, m, t.width / 2, t.height / 2, NEUTRAL, 4.0)
     N.finish(t, w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
