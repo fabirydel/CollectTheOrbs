@@ -1,0 +1,24 @@
+package com.spaceship.main.desktop;
+
+import com.spaceship.main.Main;
+
+public class DevMain extends Main {
+	private final DevHarness harness;
+
+	public DevMain(DevHarness harness) {
+		super(0, 0);
+		this.harness = harness;
+	}
+
+	@Override
+	public void create() {
+		super.create();
+		harness.install();
+	}
+
+	@Override
+	public void render() {
+		super.render();
+		harness.afterRender();
+	}
+}

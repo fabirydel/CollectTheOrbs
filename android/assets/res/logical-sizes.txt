@@ -47,6 +47,14 @@ res/hud/padsLeft.png 160 576
 res/hud/padsRight.png 160 576
 res/hud/padsShield.png 392 284
 res/hud/padsShieldEsp.png 392 284
+res/objects/inst.png 1344 1528
+res/objects/instEsp.png 1344 1600
+res/objects/items.png 1344 2900
+res/objects/itemsEsp.png 1344 2900
+res/objects/orbs.png 1281 418
+res/objects/orbsEsp.png 1281 418
+res/objects/padsControls.png 1280 980
+res/objects/padsControlsEsp.png 1280 980
 res/objects/ring.png 160 160
 res/shapes/blueBall.png 20 20
 res/shapes/blueCounter.png 64 64

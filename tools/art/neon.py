@@ -99,7 +99,12 @@ def orb(w, color, core=0.80, wrong=False):
     hi = hi.filter(ImageFilter.GaussianBlur(n * 0.02))
     out = Image.alpha_composite(halo, body)
     out = Image.alpha_composite(out, rim)
-    return Image.alpha_composite(out, hi)
+    out = Image.alpha_composite(out, hi)
+    yy, xx = np.mgrid[0:n, 0:n]
+    r = np.hypot(xx - (n - 1) / 2, yy - (n - 1) / 2) / (n / 2)
+    fade = np.clip((1.0 - r) / 0.22, 0, 1)
+    out.putalpha(Image.fromarray((np.asarray(out.split()[3], dtype=np.float32) * fade).astype(np.uint8)))
+    return out
 
 
 def soft_disc(w, color, core=0.8):
@@ -204,10 +209,12 @@ def glyph(name):
 
 @glyph('upgrades')
 def _(p):
-    p.line([(0.35, 0.8), (0.35, -0.8)])
-    p.line([(0.05, -0.45), (0.35, -0.8), (0.65, -0.45)])
-    p.line([(-0.55, 0.15), (-0.55, 0.85)])
-    p.arc(-0.55, -0.12, 0.3, 0, 360)
+    p.line([(-0.55, 0.88), (-0.55, 0.09)])
+    p.arc(-0.55, -0.25, 0.34, 295, 605)
+    p.line([(-0.406, -0.558), (-0.36, -0.82)])
+    p.line([(-0.694, -0.558), (-0.74, -0.82)])
+    p.line([(0.5, 0.88), (0.5, -0.12)])
+    p.line([(0.1, -0.78), (0.9, -0.78), (0.9, -0.3), (0.1, -0.3)], close=True)
 
 
 @glyph('settings')

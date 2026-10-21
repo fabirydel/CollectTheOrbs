@@ -92,7 +92,10 @@ class BMFont:
                 self.chars[int(kv['id'])] = {k: int(v) for k, v in kv.items()}
         self.size = int(re.search(r'size=(\d+)', txt).group(1))
 
-    def mask(self, text, size):
+    def width(self, text, size):
+        return sum(self.chars[ord(c)]['xadvance'] for c in text if ord(c) in self.chars) * size * N.U / self.size
+
+    def mask(self, text, size, align='center'):
         """L mask of text at nominal font size `size` logical px (drawn at the current art scale)."""
         s = size * N.U / self.size
         lines = text.split('\n')
@@ -100,7 +103,7 @@ class BMFont:
         W, H = int(max(widths)) + 4, int(self.line_h * s * len(lines)) + 4
         out = Image.new('L', (W, H), 0)
         for li, l in enumerate(lines):
-            x = (max(widths) - widths[li]) / 2
+            x = (max(widths) - widths[li]) / 2 if align == 'center' else 0
             for c in l:
                 g = self.chars.get(ord(c))
                 if not g:
@@ -138,18 +141,25 @@ def put_text(dst, mask, x, y, color):
     dst.alpha_composite(t, (int(x - m), int(y - m)))
 
 
+def center_text(dst, mask, cx, cy, color):
+    """Draw text so the center of its actual ink bounds lands on (cx, cy)."""
+    box = mask.getbbox()
+    mask = mask.crop(box)
+    put_text(dst, mask, cx - mask.width / 2, cy - mask.height / 2, color)
+
+
 def rounded_mask(w, h, r, inset=0):
     m = Image.new('L', (int(w * N.U), int(h * N.U)), 0)
     ImageDraw.Draw(m).rounded_rectangle((inset * N.U, inset * N.U, (w - inset) * N.U, (h - inset) * N.U), radius=r * N.U, fill=255)
     return m
 
 
-def tile(w, h, colors, split=None, radius=14, alpha=255):
+def tile(w, h, colors, split=None, radius=14, alpha=255, bw=3.0, glow_r=2.2):
     """Dark glass card with neon border. colors: one color, or two for a split tile.
     split: None, 'diag' (top-left/bottom-right) or 'horiz' (top/bottom)."""
     size = (int(w * N.U), int(h * N.U))
     outer = rounded_mask(w, h, radius)
-    inner = rounded_mask(w, h, radius, 3.0)
+    inner = rounded_mask(w, h, radius, bw)
     ring = ImageChops.subtract(outer, inner)
     base = Image.new('RGBA', size, NAVY + (alpha,))
     if split is None:
@@ -171,14 +181,14 @@ def tile(w, h, colors, split=None, radius=14, alpha=255):
         border = Image.new('RGBA', size, light(col, 0.15) + (255,))
         border.putalpha(ImageChops.multiply(ring, reg))
         out = Image.alpha_composite(out, border)
-        out = Image.alpha_composite(glow(border, 2.2, col, 0.8), out)
+        out = Image.alpha_composite(glow(border, glow_r, col, 0.8), out)
     if split is not None:
         line = Image.new('RGBA', size, (0, 0, 0, 0))
         d = ImageDraw.Draw(line)
         if split == 'diag':
-            d.line((size[0], 0, 0, size[1]), fill=WHITE + (230,), width=int(1.6 * N.U))
+            d.line((size[0], 0, 0, size[1]), fill=WHITE + (230,), width=int(bw * 0.55 * N.U))
         else:
-            d.line((0, size[1] // 2, size[0], size[1] // 2), fill=WHITE + (230,), width=int(1.6 * N.U))
+            d.line((0, size[1] // 2, size[0], size[1] // 2), fill=WHITE + (230,), width=int(bw * 0.55 * N.U))
         line.putalpha(ImageChops.multiply(line.split()[3], inner))
         out = Image.alpha_composite(out, Image.alpha_composite(glow(line, 1.6, WHITE, 0.6), line))
     return out
@@ -305,13 +315,13 @@ def build_play():
     w, h = 196, 98
     t = tile(w, h, (CYAN,), None, 26, alpha=210)
     m = font.mask('PLAY', 58)
-    put_text(t, m, (t.width - m.width) / 2, (t.height - m.height) / 2 - 4 * N.U, CYAN)
+    center_text(t, m, t.width / 2, t.height / 2, CYAN)
     N.finish(t, w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
                              ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
         im = N.canvas(w, h)
         m = font.mask(text, 29)
-        put_text(im, m, (im.width - m.width) / 2, (im.height - m.height) / 2, WHITE)
+        center_text(im, m, im.width / 2, im.height / 2, WHITE)
         N.finish(im, w, h, 'gui/%s.png' % name)
 
 
@@ -344,7 +354,7 @@ def build_pads():
     for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use Item'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
         t = glass_pad(392, 284)
         m = font.mask(text, 40)
-        put_text(t, m, (t.width - m.width) / 2, (t.height - m.height) / 2, CYAN)
+        center_text(t, m, t.width / 2, t.height / 2, CYAN)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 
