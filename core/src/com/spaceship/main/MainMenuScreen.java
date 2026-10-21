@@ -3794,6 +3794,11 @@ public class MainMenuScreen implements Screen {
 	 * row, counters and best score, so it stays compact on tall screens. The sub-menus keep the
 	 * full-height layout (counterBaseY/scoreBaseY); the counters and score slide between the two.
 	 */
+	/** Bottom anchor of the full-height sub-menu layout (the counters' resting y before the compact main-menu stack moves them up). */
+	public float getCounterBaseY(){
+		return counterBaseY;
+	}
+
 	private void layoutMainMenu(){
 		float gap = 0.7f*bUpgrades.getHeight();
 		float ringTop = bUpgrades.getY() + bUpgrades.getHeight();

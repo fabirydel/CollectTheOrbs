@@ -2356,7 +2356,7 @@ public class PlayScreen implements Screen {
 		stageHelp = new Stage();
 		containerHelp = new Table();
 		stageHelp.addActor(containerHelp);
-		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , game.getMMS().blueCounter.getY() + 1.5f*game.getMMS().blueCounter.getHeight(), 
+		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , game.getMMS().getCounterBaseY() + 1.5f*game.getMMS().blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);
 		imgsHelp = new Table();
 		scrollHelp = new ScrollPane(imgsHelp);
@@ -2452,8 +2452,8 @@ public class PlayScreen implements Screen {
 			}
 		});	
 		
-		containerHelp.debug();
-		imgsHelp.debug();
+//		containerHelp.debug();
+//		imgsHelp.debug();
 	}
 
 	public int getState() {
