@@ -43,7 +43,7 @@ public class Main extends Game{
 	@Override
 	public void create(){
 	
-		assetManager = new AssetManager();
+		assetManager = new com.spaceship.handlers.GameAssetManager();
 		batch = new SpriteBatch();
 	    font = new BitmapFont();
 	    setTutorial(false);
