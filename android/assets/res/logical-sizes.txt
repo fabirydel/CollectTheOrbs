@@ -69,6 +69,8 @@ res/hud/padsLeft.png 160 576
 res/hud/padsRight.png 160 576
 res/hud/padsShield.png 392 284
 res/hud/padsShieldEsp.png 392 284
+res/hud/upgradeBarEmpty.png 40 24
+res/hud/upgradeBarFull.png 40 24
 res/objects/inst.png 1344 1528
 res/objects/instEsp.png 1344 1600
 res/objects/items.png 1344 2900
