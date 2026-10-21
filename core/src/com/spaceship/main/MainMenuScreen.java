@@ -2900,11 +2900,11 @@ public class MainMenuScreen implements Screen {
 		
 	   	Image bBackISts = new Image(bBack);
 	   	if(language == OFF){
-	   		containerSts.add(bBackISts).width(bBack.getWidth()).height(bBack.getHeight()).expandX().left();
+	   		containerSts.add(bBackISts).width(bBack.getWidth()).height(bBack.getHeight()).left();
 			containerSts.add(stsLabel).width(stsLabel.getWidth()).height(stsLabel.getHeight()).left().expandX().padLeft(statsPad);
 	   	}else{
-	   		containerSts.add(bBackISts).width(bBack.getWidth()).height(bBack.getHeight()).expandX().left();
-			containerSts.add(stsLabel).width(stsLabel.getWidth()).height(stsLabel.getHeight()).left().padLeft(statsPad);
+	   		containerSts.add(bBackISts).width(bBack.getWidth()).height(bBack.getHeight()).left();
+			containerSts.add(stsLabel).width(stsLabel.getWidth()).height(stsLabel.getHeight()).left().expandX().padLeft(statsPad);
 	   	}
 		containerSts.row();
 		containerSts.add(scrollSts).width(3*Gdx.graphics.getWidth()/4).height(containerShips.getHeight() - bBack.getHeight() - 2*statsPad).padTop(statsPad).colspan(2);
