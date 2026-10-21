@@ -5,7 +5,7 @@ Run from the repo root:  python3 tools/art/fx.py
 - res/fx/core.png       narrower, hotter tail core
 - res/fx/plume.png      engine flame, nozzle at the top, white (tinted in code)
 - res/fx/plume_core.png narrower flame core
-- res/fx/spark_*.png    small glow dots for the collect burst
+- res/fx/spark_*.png    small glow dots for the collect burst (spark_white is tinted in code for embers)
 - res/ships/nozzles.txt "id x y w [x y w ...]" per ship, in the 128px ship frame (y down), read
                         from the original white-pixel trail art (BASE commit)
 """
@@ -65,7 +65,7 @@ def build_textures():
     save(streak(32, 256, lambda t: 0.40 * (1 - t) ** 0.7 + 0.03, lambda t: (1 - t) ** 1.9, True), 'core.png')
     save(streak(64, 256, lambda t: (0.5 + 0.5 * np.minimum(t * 7, 1)) * (1 - t) ** 0.8 * 0.95 + 0.04, lambda t: (1 - t) ** 1.25, False), 'plume.png')
     save(streak(32, 256, lambda t: (0.45 + 0.55 * np.minimum(t * 9, 1)) * (1 - t) ** 0.95 * 0.7 + 0.03, lambda t: (1 - t) ** 1.6, False), 'plume_core.png')
-    for name, col in (('blue', N.CYAN), ('red', N.RED), ('gold', N.GOLD), ('purple', N.PURPLE)):
+    for name, col in (('blue', N.CYAN), ('red', N.RED), ('gold', N.GOLD), ('purple', N.PURPLE), ('white', (255, 255, 255))):
         save(spark(col), 'spark_%s.png' % name)
 
 

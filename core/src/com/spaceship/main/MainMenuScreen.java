@@ -1296,7 +1296,9 @@ public class MainMenuScreen implements Screen {
 		if(startTrace && drawTrace){
 			Fx.init(game.assetManager);
 			Fx.additiveOn(game.batch);
-			menuPlume.draw(game.batch, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f);
+			Fx.update(Gdx.graphics.getDeltaTime());
+			menuPlume.draw(game.batch, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f, true);
+			Fx.draw(game.batch);
 			Fx.additiveOff(game.batch);
 		}
 

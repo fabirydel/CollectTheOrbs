@@ -1599,8 +1599,10 @@ public class PlayScreen implements Screen {
 				}
 	
 				// draw ship
-				if(state == PLAY) 
+				if(state == PLAY){
 					ship.update();
+					Fx.update(Gdx.graphics.getDeltaTime());
+				}
 				ship.render(game.batch);
 	
 				// draw balls
@@ -1620,6 +1622,7 @@ public class PlayScreen implements Screen {
 						lifeParticles[h].draw(game.batch);
 						objectsParticles[h].draw(game.batch);
 					}
+					Fx.draw(game.batch);
 					Fx.additiveOff(game.batch);
 					for(int h = 0; h < 5; h++){
 						redWrong[h].draw(game.batch);

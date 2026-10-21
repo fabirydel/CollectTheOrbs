@@ -427,7 +427,7 @@ public class Spaceship{
 					plume.setLateral((ship.x - prevX)/(dt*fxy(speed)));
 				prevX = ship.x;
 				Fx.additiveOn(sb);
-				plume.draw(sb, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f);
+				plume.draw(sb, shipsSprites[shipSelected], shipSelected, forceFieldSelected, 1f, game.getPS().getState() == game.getPS().PLAY);
 				Fx.additiveOff(sb);
 			}else{
 				prevX = -1;

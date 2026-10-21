@@ -9,6 +9,7 @@ res/fx/spark_blue.png 32 32
 res/fx/spark_gold.png 32 32
 res/fx/spark_purple.png 32 32
 res/fx/spark_red.png 32 32
+res/fx/spark_white.png 32 32
 res/fx/tail.png 64 256
 res/gui/bBack.png 80 80
 res/gui/bControlsOff.png 80 80

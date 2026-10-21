@@ -47,37 +47,57 @@ public class ShipPlume {
 		lateral += (MathUtils.clamp(target, -1f, 1f) - lateral) * Math.min(1f, Gdx.graphics.getDeltaTime() * 12f);
 	}
 
+	private float surge;
+
 	/** Call between Fx.additiveOn/Off, before the ship sprite is drawn. */
-	public void draw(SpriteBatch sb, Sprite ship, int shipId, int shieldState, float alpha) {
+	public void draw(SpriteBatch sb, Sprite ship, int shipId, int shieldState, float alpha, boolean emit) {
 		if (nozzles == null || shipId >= nozzles.length || nozzles[shipId] == null)
 			return;
 		float dt = Gdx.graphics.getDeltaTime();
-		time += dt;
+		float t = Fx.time();
 		float[] target = COLORS[Math.min(shieldState, COLORS.length - 1)];
 		float k = Math.min(1f, dt * 10f);
 		cr += (target[0] - cr) * k;
 		cg += (target[1] - cg) * k;
 		cb += (target[2] - cb) * k;
 
+		// occasional surge, like the engine catching
+		if (emit && MathUtils.random() < dt * 2.2f)
+			surge = 1f;
+		surge *= 1f - Math.min(1f, dt * 4.5f);
+
 		float wEff = ship.getWidth() * ship.getScaleX();
 		float hEff = ship.getHeight() * ship.getScaleY();
 		float cx = ship.getX() + ship.getWidth() / 2;
 		float cy = ship.getY() + ship.getHeight() / 2;
 		float u = wEff / 128f;
-		float sway = -lateral * 16f;
 		float boost = 1f + 0.35f * Math.abs(lateral);
 
 		float[] n = nozzles[shipId];
 		for (int i = 0; i + 2 < n.length; i += 3) {
+			float ph = i * 1.7f;
 			float x = cx + (n[i] - 64f) * wEff / 128f;
 			float y = cy + (64f - n[i + 1]) * hEff / 128f + 2f * u;
 			float w = n[i + 2];
-			float flicker = 0.92f + 0.06f * MathUtils.sin(time * 37f + i * 1.7f) + 0.03f * MathUtils.sin(time * 91f + i);
-			float length = (50f + w * 1.4f) * u * flicker * boost;
-			float width = (7f + w * 1.25f) * u;
-			float a = alpha * (0.8f + 0.1f * flicker);
+			float flicker = 0.84f + 0.07f * MathUtils.sin(t * 29f + ph) + 0.05f * MathUtils.sin(t * 61f + 2f * ph)
+					+ MathUtils.random(-0.05f, 0.05f) + 0.28f * surge;
+			float pulse = 1f + 0.09f * MathUtils.sin(t * 43f + ph) + MathUtils.random(-0.04f, 0.04f);
+			float sway = -lateral * 16f + 2.6f * MathUtils.sin(t * 17f + ph) + MathUtils.random(-0.9f, 0.9f);
+			float length = (82f + w * 2.2f) * u * flicker * boost;
+			float width = (7f + w * 1.25f) * u * pulse;
+			float a = alpha * (0.78f + 0.12f * flicker);
+			// long faint wake, then the glow, then the hot core
+			Fx.plume(sb, false, x, y, length * 1.5f, width * 1.1f, sway * 1.2f, cr, cg, cb, a * 0.38f);
 			Fx.plume(sb, false, x, y, length, width * 1.5f, sway, cr, cg, cb, a);
 			Fx.plume(sb, true, x, y, length * 0.62f, width * 0.7f, sway, 1f - (1f - cr) * 0.35f, 1f - (1f - cg) * 0.35f, 1f - (1f - cb) * 0.35f, a);
+
+			if (emit && MathUtils.random() < dt * 44f) {
+				float white = MathUtils.random(0f, 0.55f);
+				Fx.emit(x + MathUtils.random(-w * 0.5f, w * 0.5f) * u, y - MathUtils.random(0f, 12f) * u,
+						-lateral * 90f * u + MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u,
+						MathUtils.random(0.35f, 0.85f), MathUtils.random(5f, 12f) * u,
+						cr + (1f - cr) * white, cg + (1f - cg) * white, cb + (1f - cb) * white);
+			}
 		}
 	}
 }

@@ -31,6 +31,7 @@ public class Ball extends GameObject {
 	private int velocity;
 	private int angle;
 	private int angle2;
+	private final float phase = MathUtils.random(0f, 6.28f);
 	private int type;
 	private boolean velocityChanged;
 	private Texture texB; 
@@ -175,12 +176,28 @@ public class Ball extends GameObject {
 		else if(type == B_RED){ r = 1f; g = 0.23f; b = 0.36f; }
 		else if(type == B_LIFE){ r = 1f; g = 0.75f; b = 0.18f; }
 		else { r = 0.66f; g = 0.33f; b = 0.97f; }
-		float length = Math.min(fxy(230), speed*0.34f);
-		float width = fxy(30);
+		
+		// a little life: the tail wavers, breathes, and sheds sparkles
+		float t = Fx.time();
+		float wobble = (2.8f*MathUtils.sin(t*21f + phase*1.3f) + MathUtils.random(-1f, 1f))*MathUtils.degreesToRadians;
+		float c = MathUtils.cos(wobble), s = MathUtils.sin(wobble);
+		float dx = (vx*c - vy*s)/speed;
+		float dy = (vx*s + vy*c)/speed;
+		float flicker = 0.92f + 0.08f*MathUtils.sin(t*33f + phase) + MathUtils.random(-0.04f, 0.04f);
+		float length = Math.min(fxy(230), speed*0.34f)*flicker;
+		float width = fxy(30)*(0.92f + 0.1f*MathUtils.sin(t*47f + phase));
 		float px = this.getPosition().x;
 		float py = this.getPosition().y;
-		Fx.tail(sb, false, px, py, vx, vy, length, width, r, g, b, 0.9f);
-		Fx.tail(sb, true, px, py, vx, vy, length*0.6f, width*0.45f, 1f - (1f - r)*0.35f, 1f - (1f - g)*0.35f, 1f - (1f - b)*0.35f, 0.85f);
+		Fx.tail(sb, false, px, py, dx, dy, length, width, r, g, b, 0.9f);
+		Fx.tail(sb, true, px, py, dx, dy, length*0.6f, width*0.45f, 1f - (1f - r)*0.35f, 1f - (1f - g)*0.35f, 1f - (1f - b)*0.35f, 0.85f);
+		
+		if(game.getPS().getState() == game.getPS().PLAY && MathUtils.random() < Gdx.graphics.getDeltaTime()*22f){
+			float d = MathUtils.random(0.08f, 0.6f)*length;
+			float white = MathUtils.random(0f, 0.5f);
+			Fx.emit(px + dx*d + MathUtils.random(-0.3f, 0.3f)*width, py + dy*d, MathUtils.random(-22f, 22f)*fxy(1), MathUtils.random(-10f, 26f)*fxy(1),
+					MathUtils.random(0.3f, 0.65f), MathUtils.random(3.5f, 7.5f)*fxy(1),
+					r + (1f - r)*white, g + (1f - g)*white, b + (1f - b)*white);
+		}
 	}
 	
 	public void effectRemove(){
