@@ -4,6 +4,7 @@ Run from the repo root:  python3 tools/art/energy.py
 - res/hud/lifeBar{3,4,5}Lifes.png   tube frame drawn over the liquid (opaque ring, glass highlight, ticks)
 - res/fx/tubeback{3,4,5}.png        dark glass interior, drawn behind the liquid
 - res/hud/upgradeBarFull|Empty.png   40x24 upgrade 'battery' cells (same tube design)
+- res/fx/upgrade_full.png            16-frame flowing-liquid loop of the full cell
 - res/fx/liquid.png                 64x16 horizontally tileable gold liquid (scrolled by EnergyBar)
 - res/fx/liquid_tip.png             soft glow at the liquid's leading edge
 Geometry (logical px, bar height 36): end caps x 1.5..12 and W-12..W-1.5 (y 3..33), liquid interior x 13..W-13, y 10..26.
@@ -279,7 +280,7 @@ def cell(full, K=8):
     return Image.alpha_composite(halo, out)
 
 
-def clean_cell(full, K=8):
+def clean_cell(full, K=8, shift=0.0):
     """One 40x24 upgrade 'battery': a clean glass capsule with a neutral neon outline, gold liquid if full."""
     W, H = 40, 24
     ox0, oy0, ox1, oy1 = 1.5, 3.5, W - 1.5, H - 3.5      # outer capsule
@@ -298,7 +299,7 @@ def clean_cell(full, K=8):
         t = np.asarray(tile, dtype=np.float32) / 255
         th, tw, _ = t.shape
         v = np.clip(((y - iy0) / (iy1 - iy0) * th).astype(int), 0, th - 1)
-        u = (xx.astype(int) + 7 * K) % tw
+        u = (xx.astype(int) + 7 * K + int(round(shift * tw))) % tw
         liq = t[v, u]
         rgb = liq
         alpha = inside
@@ -329,6 +330,13 @@ def build_cells():
     for name, full in (('upgradeBarFull', True), ('upgradeBarEmpty', False)):
         clean_cell(full).save(os.path.join(N.OUT, 'hud', name + '.png'))
         N.logical_sizes['res/hud/%s.png' % name] = (40, 24)
+    # 16-frame flowing-liquid loop for the full cells (the liquid shifts one tile width per loop, so it repeats seamlessly)
+    K = 8
+    sheet = Image.new('RGBA', (40 * K * 16, 24 * K), (0, 0, 0, 0))
+    for f in range(16):
+        sheet.paste(clean_cell(True, K, f / 16.0), (f * 40 * K, 0))
+    sheet.save(os.path.join(N.OUT, 'fx', 'upgrade_full.png'))
+    N.logical_sizes['res/fx/upgrade_full.png'] = (40 * 16, 24)
 
 
 if __name__ == '__main__':

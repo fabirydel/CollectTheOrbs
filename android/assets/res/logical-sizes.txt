@@ -21,6 +21,7 @@ res/fx/tail.png 64 256
 res/fx/tubeback3.png 102 36
 res/fx/tubeback4.png 122 36
 res/fx/tubeback5.png 143 36
+res/fx/upgrade_full.png 640 24
 res/gui/bBack.png 80 80
 res/gui/bControlsOff.png 80 80
 res/gui/bControlsOff120.png 120 120

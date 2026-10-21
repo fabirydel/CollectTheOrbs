@@ -10,7 +10,8 @@ import com.badlogic.gdx.math.MathUtils;
 public class Fx {
 	public static final String[] ASSETS = { "res/fx/tail.png", "res/fx/core.png", "res/fx/plume.png", "res/fx/plume_core.png",
 			"res/fx/spark_blue.png", "res/fx/spark_red.png", "res/fx/spark_gold.png", "res/fx/spark_purple.png", "res/fx/spark_white.png", "res/fx/bolt.png",
-			"res/fx/orb_blue.png", "res/fx/orb_red.png", "res/fx/orb_gold.png", "res/fx/orb_purple.png" };
+			"res/fx/orb_blue.png", "res/fx/orb_red.png", "res/fx/orb_gold.png", "res/fx/orb_purple.png",
+			"res/fx/upgrade_full.png" };
 
 	/** Flicker, surges, embers and sparkles on the engine plumes and orb tails. Off = steady glow. */
 	public static final boolean LIVELY = true;
@@ -28,6 +29,7 @@ public class Fx {
 	/** The orb frames are 32 px canvases whose orb body is 18 px: draw them 1.6x the 20 px orb sprite. */
 	public static final float ORB_DRAW_SCALE = 1.6f;
 	private static com.badlogic.gdx.graphics.g2d.TextureRegion[][] orbFrames;
+	private static com.badlogic.gdx.graphics.g2d.TextureRegion[] upgradeFrames;
 
 	// small additive embers shared by the ship engines and the orb tails
 	private static final int MAX = 400;
@@ -55,6 +57,7 @@ public class Fx {
 		sparks[SPARK_PURPLE] = am.get("res/fx/spark_purple.png", Texture.class);
 		dot = am.get("res/fx/spark_white.png", Texture.class);
 		bolt = am.get("res/fx/bolt.png", Texture.class);
+		upgradeFrames = com.badlogic.gdx.graphics.g2d.TextureRegion.split(am.get("res/fx/upgrade_full.png", Texture.class), 40, 24)[0];
 		orbFrames = new com.badlogic.gdx.graphics.g2d.TextureRegion[4][];
 		String[] orbs = { "blue", "red", "gold", "purple" };
 		for (int i = 0; i < 4; i++)
@@ -165,5 +168,10 @@ public class Fx {
 		sb.setColor(sprite.getColor());
 		sb.draw(r, cx - w/2, cy - h/2, w, h);
 		sb.setColor(1f, 1f, 1f, 1f);
+	}
+
+	/** Current frame of the flowing-liquid loop used by the full upgrade cells (one full flow every ~4.5 s). */
+	public static com.badlogic.gdx.graphics.g2d.TextureRegion upgradeFrame() {
+		return upgradeFrames[(int) (time*0.22f*upgradeFrames.length) % upgradeFrames.length];
 	}
 }

@@ -1347,6 +1347,14 @@ public class MainMenuScreen implements Screen {
 		slideBottomBlock();
 		Fx.init(game.assetManager);
 		Fx.update(Gdx.graphics.getDeltaTime());
+		if(upgradeFullImages != null){
+			// flowing liquid in the filled upgrade cells
+			com.badlogic.gdx.graphics.g2d.TextureRegion liquidFrame = Fx.upgradeFrame();
+			for(int i = 0; i < upgradeFullImages.length; i++){
+				if(upgradeFullImages[i] != null && upgradeFullImages[i].getDrawable() instanceof com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable)
+					((com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable) upgradeFullImages[i].getDrawable()).setRegion(liquidFrame);
+			}
+		}
 		if(drawCounters){
 			// draw counnters
 			Fx.init(game.assetManager);
