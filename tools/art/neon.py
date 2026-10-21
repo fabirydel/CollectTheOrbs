@@ -144,7 +144,8 @@ class Pen:
             m = m.rotate(angle, center=self.p(*center), resample=Image.BICUBIC)
         w = int(outline or self.w)
         m = m.point(lambda v: 255 if v > 127 else 0)
-        edge = ImageChops.subtract(m, m.filter(ImageFilter.MinFilter(2 * (w // 2) + 1)))
+        # MinFilter(2r+1) erodes by r px, so the inner outline is r px thick: r = stroke width
+        edge = ImageChops.subtract(m, m.filter(ImageFilter.MinFilter(2 * w + 1)))
         self.layer.paste((255, 255, 255, 255), (0, 0), edge)
 
     def p(self, x, y):
@@ -221,18 +222,19 @@ def glyph(name):
 
 @glyph('upgrades')
 def _(p):
+    # shapes are outlined with the standard stroke, so they are drawn wide enough to stay hollow
     def wrench(d, P):
-        d.rounded_rectangle((*P(-0.11, -0.12), *P(0.11, 0.9)), radius=p.s * 0.11, fill=255)
-        d.ellipse((*P(-0.34, -0.84), *P(0.34, -0.16)), fill=255)
-        d.rectangle((*P(-0.11, -1.0), *P(0.11, -0.52)), fill=0)
+        d.rounded_rectangle((*P(-0.2, -0.12), *P(0.2, 0.94)), radius=p.s * 0.2, fill=255)
+        d.ellipse((*P(-0.44, -1.0), *P(0.44, -0.12)), fill=255)
+        d.rectangle((*P(-0.17, -1.1), *P(0.17, -0.62)), fill=0)
 
     def hammer(d, P):
-        d.rounded_rectangle((*P(-0.1, -0.4), *P(0.1, 0.9)), radius=p.s * 0.1, fill=255)
-        d.rounded_rectangle((*P(-0.3, -0.86), *P(0.3, -0.38)), radius=p.s * 0.07, fill=255)
+        d.rounded_rectangle((*P(-0.2, -0.34), *P(0.2, 0.94)), radius=p.s * 0.2, fill=255)
+        d.rounded_rectangle((*P(-0.44, -0.98), *P(0.44, -0.3)), radius=p.s * 0.1, fill=255)
 
-    ox, oy = 0.44, 0.0
-    p.silhouette(lambda d, P: wrench(d, lambda x, y: P(x - ox, y + oy)), outline=p.w * 0.85)
-    p.silhouette(lambda d, P: hammer(d, lambda x, y: P(x + ox, y + oy)), outline=p.w * 0.85)
+    ox = 0.56
+    p.silhouette(lambda d, P: wrench(d, lambda x, y: P(x - ox, y)), outline=p.w)
+    p.silhouette(lambda d, P: hammer(d, lambda x, y: P(x + ox, y)), outline=p.w)
 
 
 @glyph('settings')
