@@ -5,6 +5,7 @@ Run from the repo root:  python3 tools/art/fx.py
 - res/fx/core.png       narrower, hotter tail core
 - res/fx/plume.png      engine flame, nozzle at the top, white (tinted in code)
 - res/fx/plume_core.png narrower flame core
+- res/fx/bolt.png       soft line for the shield electricity
 - res/fx/spark_*.png    small glow dots for the collect burst (spark_white is tinted in code for embers)
 - res/ships/nozzles.txt "id x y w [x y w ...]" per ship, in the 128px ship frame (y down), read
                         from the original white-pixel trail art (BASE commit)
@@ -69,6 +70,17 @@ def build_textures():
         save(spark(col), 'spark_%s.png' % name)
 
 
+def build_bolt():
+    """32x32 soft horizontal line (alpha falls off vertically), stretched along each bolt segment."""
+    n = 32
+    y = np.linspace(-1, 1, n)[:, None]
+    a = np.exp(-(y / 1.0) ** 2 * 3.2) * np.ones((1, n))
+    rgba = np.zeros((n, n, 4), dtype=np.float32)
+    rgba[..., :3] = 255
+    rgba[..., 3] = a * 255
+    save(rgba, 'bolt.png')
+
+
 def build_nozzles():
     lines = []
     for sheet in range(5):
@@ -100,6 +112,7 @@ def build_nozzles():
 if __name__ == '__main__':
     N.set_scale(1)
     build_textures()
+    build_bolt()
     build_nozzles()
     N.write_manifest()
     print('done')

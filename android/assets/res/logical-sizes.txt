@@ -2,6 +2,7 @@ res/bgs/bgsBought1.png 1100 298
 res/bgs/bgsBought2.png 1100 298
 res/bgs/bgsPrice1.png 1100 298
 res/bgs/bgsPrice2.png 1100 298
+res/fx/bolt.png 32 32
 res/fx/core.png 32 256
 res/fx/plume.png 64 256
 res/fx/plume_core.png 32 256
