@@ -297,11 +297,11 @@ def head(p, x, y, dx, dy, l=0.42):
 
 @glyph('retry')
 def _(p):
-    r, cy = 0.65, 0.05
-    p.arc(0, cy, r, 300, 585)
-    th = math.radians(225)
+    r, cy = 0.78, 0.04
+    p.arc(0, cy, r, 330, 560)
+    th = math.radians(330)
     x, y = r * math.cos(th), cy + r * math.sin(th)
-    head(p, x + 0.1, y - 0.1, -math.sin(th) * -1, math.cos(th) * -1 * -1)
+    head(p, x + 0.06, y - 0.08, 0.45, -0.9, 0.6)
 
 
 @glyph('pause')
