@@ -18,7 +18,7 @@ import com.badlogic.gdx.graphics.PixmapIO;
 
 /**
  * Development-only test driver, enabled with the CTO_DEV_DIR environment variable. It reads
- * commands from CTO_DEV_DIR/cmd (tap X Y | drag X1 Y1 X2 Y2 | hold X Y FRAMES [SHOT] | scroll X Y AMOUNT | wait MS | shot NAME | quit), replaces Gdx.input with a
+ * commands from CTO_DEV_DIR/cmd (tap X Y | drag X1 Y1 X2 Y2 | hold X Y FRAMES [SHOT] | speed ORB_SPEED (350..1250) | scroll X Y AMOUNT | wait MS | shot NAME | quit), replaces Gdx.input with a
  * proxy that reports scripted touches (the game polls Gdx.input), and saves screenshots of the
  * game's own framebuffer to CTO_DEV_DIR/NAME.png. It creates CTO_DEV_DIR/idle when the queue is empty.
  */
@@ -32,6 +32,7 @@ public class DevHarness {
 	private long waitUntil;
 	private String pendingShot;
 	private String holdShot;
+	public java.util.function.IntConsumer speedHook;
 
 	public DevHarness(File dir) {
 		this.dir = dir;
@@ -123,6 +124,9 @@ public class DevHarness {
 				frames.add(new int[] { 5, amount > 0 ? 1 : -1, y });
 				frames.add(new int[] { 3, x, y });
 			}
+		} else if (c[0].equals("speed")) {
+			int v = Integer.parseInt(c[1]);
+			if (speedHook != null) speedHook.accept(v);
 		} else if (c[0].equals("wait")) {
 			waitUntil = TimeUtils.millis() + Long.parseLong(c[1]);
 		} else if (c[0].equals("shot")) {

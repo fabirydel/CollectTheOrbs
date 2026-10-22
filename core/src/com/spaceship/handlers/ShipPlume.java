@@ -48,6 +48,12 @@ public class ShipPlume {
 	}
 
 	private float surge;
+	private float speed;
+
+	/** How fast the run feels, 0..1 (PlayScreen.getSpeedFactor): longer, narrower, hotter flames and busier embers. */
+	public void setSpeed(float s) {
+		speed += (MathUtils.clamp(s, 0f, 1f) - speed) * Math.min(1f, Gdx.graphics.getDeltaTime() * 4f);
+	}
 
 	/** Call between Fx.additiveOn/Off, before the ship sprite is drawn. */
 	public void draw(SpriteBatch sb, Sprite ship, int shipId, int shieldState, float alpha, boolean emit) {
@@ -83,18 +89,19 @@ public class ShipPlume {
 					+ MathUtils.random(-0.015f, 0.015f) + 0.15f * surge;
 			float pulse = !Fx.LIVELY ? 1f : 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
 			float sway = -lateral * 16f + (!Fx.WOBBLE ? 0f : 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f));
-			float length = (82f + w * 2.2f) * u * flicker * boost;
-			float width = (7f + w * 1.25f) * u * pulse;
+			float length = (82f + w * 2.2f) * u * flicker * boost * (1f + 1.15f * speed);
+			float width = (7f + w * 1.25f) * u * pulse * (1f - 0.14f * speed);
 			float a = alpha * (0.78f + 0.12f * flicker);
 			// long faint wake, then the glow, then the hot core
-			Fx.plume(sb, false, x, y, length * 1.5f, width * 1.1f, sway * 1.2f, cr, cg, cb, a * 0.38f);
+			Fx.plume(sb, false, x, y, length * (1.5f + 0.5f * speed), width * 1.1f, sway * 1.2f, cr, cg, cb, a * (0.38f + 0.12f * speed));
 			Fx.plume(sb, false, x, y, length, width * 1.5f, sway, cr, cg, cb, a);
-			Fx.plume(sb, true, x, y, length * 0.62f, width * 0.7f, sway, 1f - (1f - cr) * 0.35f, 1f - (1f - cg) * 0.35f, 1f - (1f - cb) * 0.35f, a);
+			float hot = 0.35f + 0.5f * speed; // the core goes whiter as the run speeds up
+			Fx.plume(sb, true, x, y, length * (0.62f + 0.1f * speed), width * 0.7f, sway, 1f - (1f - cr) * (1f - hot), 1f - (1f - cg) * (1f - hot), 1f - (1f - cb) * (1f - hot), Math.min(1f, a * (1f + 0.25f * speed)));
 
-			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f) {
+			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f * (1f + 2.5f * speed)) {
 				float white = MathUtils.random(0f, 0.55f);
 				Fx.emit(x + MathUtils.random(-w * 0.5f, w * 0.5f) * u, y - MathUtils.random(0f, 12f) * u,
-						-lateral * 90f * u + MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u,
+						-lateral * 90f * u + MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u * (1f + 1.6f * speed),
 						MathUtils.random(0.35f, 0.85f), MathUtils.random(5f, 12f) * u,
 						cr + (1f - cr) * white, cg + (1f - cg) * white, cb + (1f - cb) * white);
 			}

@@ -14,6 +14,7 @@ public class DevMain extends Main {
 	public void create() {
 		super.create();
 		harness.install();
+		harness.speedHook = v -> { getPS().velocityBg = v; getPS().velocityBall = v; };
 	}
 
 	@Override

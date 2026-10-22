@@ -1360,7 +1360,6 @@ public class PlayScreen implements Screen {
 						ballSpawnSpeed = 2;
 						for(Ball ball : balls){
 							ball.setVelocity(velocityBall/2);
-							ball.setAngle(ball.getAngle()/2);
 							ball.setVelocityChanged(true);
 						}	
 						velocityBg = velocityBg - 150;
@@ -1444,7 +1443,6 @@ public class PlayScreen implements Screen {
 					for(Ball ball : balls){
 						if(ball.isVelocityChanged()){
 							ball.setVelocity(velocityBall);
-							ball.setAngle(ball.getAngle2());
 							ball.setVelocityChanged(false);
 						}
 						ballSpawnSpeed = 1;
@@ -2085,30 +2083,30 @@ public class PlayScreen implements Screen {
 		bgs2.setPosition(-(bgs2.getWidth()-Gdx.graphics.getWidth())/2, 
 				currentBgY - bgs1.getHeight() - 2*bgs2.getHeight());
 		bgs2.draw(game.batch);
-		if(TimeUtils.nanoTime() - lastTimeBg > 25000000 && state == PLAY){
-			// move the separator
-			if(velocityBg <= 400) currentBgY -= 2;
-			else if(velocityBg > 400 && velocityBg <= 425) currentBgY -= 3;
-			else if(velocityBg > 425 && velocityBg <= 450) currentBgY -= 4;
-			else if(velocityBg > 450 && velocityBg <= 475) currentBgY -= 5;
-			else if(velocityBg > 475 && velocityBg <= 500) currentBgY -= 6;
-			else if(velocityBg > 500 && velocityBg <= 525) currentBgY -= 7;
-			else if(velocityBg > 525 && velocityBg <= 550) currentBgY -= 8;
-			else if(velocityBg > 550 && velocityBg <= 575) currentBgY -= 9;
-			else if(velocityBg > 575 && velocityBg <= 600) currentBgY -= 10;
-			else if(velocityBg > 600 && velocityBg <= 625) currentBgY -= 11;
-			else if(velocityBg > 625 && velocityBg <= 650) currentBgY -= 12;
-			else if(velocityBg > 650 && velocityBg <= 675) currentBgY -= 13;
-			else if(velocityBg > 675 && velocityBg <= 700) currentBgY -= 14;
-			else if(velocityBg > 700 && velocityBg <= 750) currentBgY -= 15;
-			else if(velocityBg > 750 && velocityBg <= 800) currentBgY -= 16;
-			else if(velocityBg > 800 && velocityBg <= 850) currentBgY -= 17;
-			else if(velocityBg > 850) currentBgY -= 18;
-			// set the current time to lastTimeBg
-			lastTimeBg = TimeUtils.nanoTime();
-		}		
+		if(state == PLAY){
+			// move the separator: speed follows the orbs' speed, frame-rate independent
+			currentBgY -= backgroundSpeed(velocityBg)*Gdx.graphics.getDeltaTime();
+		}
 		// if the separator reaches the screen edge, move it back to the first position
 		if(currentBgY <= bgs1.getHeight() - Gdx.graphics.getDeltaTime()) currentBgY = bgs1.getHeight() + 2*bgs2.getHeight();
+	}
+
+	/**
+	 * Background scroll speed in px/s for an orb speed. This is the old step table (2..17 px per 25 ms tick up to orb speed
+	 * 850) as a smooth curve, and past 850, where the table used to stop at 18, it keeps growing at the same rate, so the
+	 * background keeps pace with the orbs until they reach their top speed.
+	 */
+	public float backgroundSpeed(float v){
+		float step;
+		if(v <= 400) step = 2f;
+		else if(v <= 700) step = 2f + (v - 400f)/25f;
+		else step = 14f + (v - 700f)/50f;
+		return step*40f;
+	}
+
+	/** 0 at the starting orb speed, 1 at the top speed: how fast the run feels (drives the ship's engine trail). */
+	public float getSpeedFactor(){
+		return MathUtils.clamp((velocityBg - 350f)/900f, 0f, 1f);
 	}
 
 	public void loadBgs(int t){

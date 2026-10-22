@@ -31,6 +31,8 @@ public class Ball extends GameObject {
 	private int velocity;
 	private int angle;
 	private int angle2;
+	/** The starting fall speed (PlayScreen.velocityBall): `angle` is the sideways speed in px/s at this fall speed. */
+	private static final float BASE_VELOCITY = 350f;
 	private final float phase = MathUtils.random(0f, 6.28f);
 	private final float loopOffset = MathUtils.random();
 	// positions the orb has passed through (newest first): the tail follows this path, so it bends after a bounce
@@ -150,7 +152,8 @@ public class Ball extends GameObject {
 		
 		float yP = fxy(velocity*Gdx.graphics.getDeltaTime()); 
 		
-		float xP = (float) (angle*Gdx.graphics.getDeltaTime());
+		// sideways speed grows with the fall speed, so an orb keeps the same angle of descent for its whole fall
+		float xP = (float) (angle*(velocity/BASE_VELOCITY)*Gdx.graphics.getDeltaTime());
 		
 		this.setPosition(this.getPosition().x  - xP, this.getPosition().y -  yP);
 		
@@ -178,7 +181,7 @@ public class Ball extends GameObject {
 	public void renderTail(SpriteBatch sb) {
 		float px = this.getPosition().x;
 		float py = this.getPosition().y;
-		float vx = -angle;
+		float vx = -angle*(velocity/BASE_VELOCITY);
 		float vy = -fxy(velocity);
 		float speed = (float) Math.sqrt(vx*vx + vy*vy);
 		if(speed < 1f)
