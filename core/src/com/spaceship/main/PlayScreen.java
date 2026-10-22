@@ -2096,12 +2096,15 @@ public class PlayScreen implements Screen {
 	 * 850) as a smooth curve, and past 850, where the table used to stop at 18, it keeps growing at the same rate, so the
 	 * background keeps pace with the orbs until they reach their top speed.
 	 */
+	/** Overall background speed, to sell the sense of speed: 2 = twice the original table's speed at every orb speed. */
+	private static final float BACKGROUND_SPEED_MULTIPLIER = 2f;
+
 	public float backgroundSpeed(float v){
 		float step;
 		if(v <= 400) step = 2f;
 		else if(v <= 700) step = 2f + (v - 400f)/25f;
 		else step = 14f + (v - 700f)/50f;
-		return step*40f;
+		return step*40f*BACKGROUND_SPEED_MULTIPLIER;
 	}
 
 	/** 0 at the starting orb speed, 1 at the top speed: how fast the run feels (drives the ship's engine trail). */
