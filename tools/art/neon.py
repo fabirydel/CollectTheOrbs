@@ -163,8 +163,9 @@ class Pen:
     def arc(self, x, y, r, a0, a1, w=None):
         w = w or self.w
         cx, cy = self.p(x, y)
-        rr = r * self.s
-        self.d.arc((cx - rr, cy - rr, cx + rr, cy + rr), a0, a1, fill=(255, 255, 255, 255), width=int(w))
+        rr = r * self.s                       # radius of the stroke's centre line
+        ro = rr + w / 2                       # PIL draws the stroke inward from this outer radius
+        self.d.arc((cx - ro, cy - ro, cx + ro, cy + ro), a0, a1, fill=(255, 255, 255, 255), width=int(w))
         for a in (a0, a1):
             px, py = cx + rr * math.cos(math.radians(a)), cy + rr * math.sin(math.radians(a))
             e = w / 2
@@ -268,9 +269,11 @@ def _(p):
 
 @glyph('help')
 def _(p):
-    p.arc(0, -0.28, 0.42, 190, 440)
-    p.line([(0, 0.15), (0, 0.38)])
-    p.circle(0, 0.72, 0.09, fill=True)
+    cx, cy, r = 0.0, -0.32, 0.4
+    p.arc(cx, cy, r, 185, 392)                 # bowl: left, over the top, down the right side
+    end = (cx + r * math.cos(math.radians(32)), cy + r * math.sin(math.radians(32)))
+    p.line([end, (0.0, 0.14), (0.0, 0.3)])     # sweeps in to the stem, so there is no separate hook
+    p.circle(0, 0.7, 0.095, fill=True)
 
 
 @glyph('trophy')
@@ -321,19 +324,20 @@ def _(p):
 
 @glyph('retry')
 def _(p):
-    r = 0.7
-    start, end = 50, 325
-    p.arc(0, 0, r, start, end, w=p.w * 1.15)
+    r = 0.68
+    head = 226                                  # arrow tip position: top-left, travelling counterclockwise
+    p.arc(0, 0, r, head + 14, head + 305)       # the arc stops a little short of the head, which sits on the circle
+    th = math.radians(head)
+    cx, cy = r * math.cos(th), r * math.sin(th)
+    tx, ty = math.sin(th), -math.cos(th)        # counterclockwise tangent
+    nx, ny = -ty, tx
+    L, Wd = 0.34, 0.30
+    tip = (cx + tx * L, cy + ty * L)
+    base = (cx - tx * 0.12, cy - ty * 0.12)
+    p.poly([tip, (base[0] + nx * Wd, base[1] + ny * Wd), (base[0] - nx * Wd, base[1] - ny * Wd)])
 
-    def pt(rad, deg):
-        a = math.radians(deg)
-        return (rad * math.cos(a), rad * math.sin(a))
 
-    # head hugs the circle: radial base at `end`, tip on the circle 30 degrees further along
-    p.poly([pt(r + 0.3, end - 2), pt(r - 0.3, end - 2), pt(r, end + 34)])
-
-
-MIRROR = {'retry'}
+MIRROR = set()
 
 
 @glyph('pause')
