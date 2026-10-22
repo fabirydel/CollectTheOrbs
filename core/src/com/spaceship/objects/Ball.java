@@ -128,7 +128,7 @@ public class Ball extends GameObject {
 				Gdx.graphics.getHeight() + fxy(20));
 		trailCount = 0;
 		taken = false;
-		velocity = game.getPS().velocityBall;
+		velocity = game.getPS().currentBallVelocity();
 		angle = (int) MathUtils.random(-fxy(250), fxy(250));
 		angle2 = angle;
 		

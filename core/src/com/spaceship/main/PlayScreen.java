@@ -129,6 +129,8 @@ public class PlayScreen implements Screen {
 	public Sound object;
 	public Sound objectCount;
 	public Sound slowDown;
+	public Sound chargeSound;
+	public Sound boostSound;
 	public Sound slowDownReverse;
 	public Sound sword;
 	public Sound swordReverse;
@@ -154,6 +156,9 @@ public class PlayScreen implements Screen {
 
 	public int velocityBg;
 	public int velocityBall;
+	private final com.spaceship.handlers.SpeedDirector director = new com.spaceship.handlers.SpeedDirector();
+	private final com.spaceship.handlers.SpeedUpFx speedFx = new com.spaceship.handlers.SpeedUpFx();
+	private boolean chargeSoundStarted;
 	public int blues;
 	public int reds;
 	public int lifes;
@@ -277,6 +282,8 @@ public class PlayScreen implements Screen {
 		object = game.assetManager.get("audio/object.ogg", Sound.class);
 		objectCount = game.assetManager.get("audio/objectCount.ogg", Sound.class);
 		slowDown = game.assetManager.get("audio/slow.ogg", Sound.class);
+		chargeSound = game.assetManager.get("audio/charge.ogg", Sound.class);
+		boostSound = game.assetManager.get("audio/boost.ogg", Sound.class);
 		slowDownReverse = game.assetManager.get("audio/slowReverse.ogg", Sound.class);
 		sword = game.assetManager.get("audio/sword.ogg", Sound.class);
 		swordReverse = game.assetManager.get("audio/swordReverse.ogg", Sound.class);
@@ -545,6 +552,9 @@ public class PlayScreen implements Screen {
 			loadBgs(galaxySelected);
 
 			// set starting velocity
+			director.reset();
+			speedFx.reset();
+			chargeSoundStarted = false;
 			velocityBg = 350;
 			velocityBall = 350;
 
@@ -1359,11 +1369,9 @@ public class PlayScreen implements Screen {
 							slowDown.play(0.75f);
 						ballSpawnSpeed = 2;
 						for(Ball ball : balls){
-							ball.setVelocity(velocityBall/2);
+							ball.setVelocity(currentBallVelocity());
 							ball.setVelocityChanged(true);
 						}	
-						velocityBg = velocityBg - 150;
-						canIncreaseSpeed = false;
 					}else if(object1 == 5){
 						if(game.getMMS().sound == game.getMMS().ON)
 							sword.play(0.80f);
@@ -1440,16 +1448,12 @@ public class PlayScreen implements Screen {
 				redToBlue = false;
 				blueToRed = false;
 				if(slow){
-					for(Ball ball : balls){
-						if(ball.isVelocityChanged()){
-							ball.setVelocity(velocityBall);
-							ball.setVelocityChanged(false);
-						}
-						ballSpawnSpeed = 1;
-					}
-					velocityBg = velocityBg + 150;	
 					slow = false;
-					canIncreaseSpeed = true;
+					for(Ball ball : balls){
+						ball.setVelocity(currentBallVelocity());
+						ball.setVelocityChanged(false);
+					}
+					ballSpawnSpeed = 1;
 				}
 				if(redShield){
 					redShield = false;
@@ -1607,6 +1611,13 @@ public class PlayScreen implements Screen {
 					Fx.update(Gdx.graphics.getDeltaTime());
 				}
 				ship.render(game.batch);
+				{
+					float[] sc = shieldColor();
+					Sprite shs = ship.shipsSprites[ship.shipSelected];
+					Fx.additiveOn(game.batch);
+					speedFx.draw(game.batch, shipCenterX(), shipCenterY(), shs.getWidth()*shs.getScaleX(), director.getChargeTime(), sc[0], sc[1], sc[2]);
+					Fx.additiveOff(game.batch);
+				}
 	
 				// draw balls
 				if(state != PlayScreen.DEAD){
@@ -1762,19 +1773,8 @@ public class PlayScreen implements Screen {
 			stageHelp.draw();
 
 			if(state == PLAY){
-				// check if we need to create a new ball and increase ball spawn frequency
-				if(TimeUtils.nanoTime() - lastBallTime > timeBetweenBalls*ballSpawnSpeed){
-					spawnBall();
-					if(timeBetweenBalls > 275000000) timeBetweenBalls = timeBetweenBalls - 150000;
-					else if(timeBetweenBalls > 150000000) timeBetweenBalls = timeBetweenBalls - 200000;
-				}
-
-				// increase ball's velocity
-				if(TimeUtils.nanoTime() - lastVelocityIncrease > 750000000 && velocityBg < 1250 && canIncreaseSpeed){
-					lastVelocityIncrease = TimeUtils.nanoTime();
-					velocityBg = velocityBg + 2;
-					velocityBall = velocityBall + 2;
-				}
+				// the speed director owns the run's speed, the spawn rate and the charge-up before each speed tier
+				updateSpeedDirector();
 
 				// move the balls, remove any that hit the ship
 				Iterator<Ball> iter = dBalls.iterator();
@@ -1805,6 +1805,7 @@ public class PlayScreen implements Screen {
 					@Override
 					public void run(){
 						if(!balls[ballToAdd].taken){
+							balls[ballToAdd].setVelocity(currentBallVelocity());
 							dBalls.add(balls[ballToAdd]);
 							balls[ballToAdd].taken = true;
 						}	
@@ -1816,6 +1817,7 @@ public class PlayScreen implements Screen {
 			}else {}
 		}else{
 			if(!balls[ballToAdd].taken){
+				balls[ballToAdd].setVelocity(currentBallVelocity());
 				dBalls.add(balls[ballToAdd]);
 				balls[ballToAdd].taken = true;
 			}	
@@ -2091,20 +2093,123 @@ public class PlayScreen implements Screen {
 		if(currentBgY <= bgs1.getHeight() - Gdx.graphics.getDeltaTime()) currentBgY = bgs1.getHeight() + 2*bgs2.getHeight();
 	}
 
+	/** Orb fall speed right now: the run's speed, halved while the slow item is active. */
+	public int currentBallVelocity(){
+		return slow ? velocityBall/2 : velocityBall;
+	}
+
+	private float[] shieldColor(){
+		int st = ship.getState();
+		if(st == Spaceship.STATE_RED || st == Spaceship.STATE_REDBLUE)
+			return new float[]{1f, 0.23f, 0.36f};
+		if(st == Spaceship.STATE_GOLD)
+			return new float[]{1f, 0.75f, 0.18f};
+		return new float[]{0.13f, 0.83f, 0.93f};
+	}
+
+	private float shipCenterX(){
+		Sprite sp = ship.shipsSprites[ship.shipSelected];
+		return sp.getX() + sp.getWidth()/2;
+	}
+
+	private float shipCenterY(){
+		Sprite sp = ship.shipsSprites[ship.shipSelected];
+		return sp.getY() + sp.getHeight()/2;
+	}
+
+	/** Advances the speed director (play state only) and reacts to its events: orb spawning, the charge-up and the burst. */
+	private void updateSpeedDirector(){
+		float dt = Gdx.graphics.getDeltaTime();
+		if(debugKeepAlive && ship.getLifes() < barWidth)
+			ship.setLifes(barWidth);
+		director.update(dt);
+		velocityBall = Math.round(director.speed());
+		velocityBg = slow ? Math.round(velocityBall*0.6f) : velocityBall;
+
+		float ct = director.getChargeTime();
+		float[] c = shieldColor();
+		Sprite sp = ship.shipsSprites[ship.shipSelected];
+		float size = sp.getWidth()*sp.getScaleX();
+		speedFx.update(dt, shipCenterX(), shipCenterY(), size, ct, c[0], c[1], c[2]);
+
+		if(ct > 0f && !chargeSoundStarted){
+			chargeSoundStarted = true;
+			if(game.getMMS().sound == game.getMMS().ON)
+				chargeSound.play(0.8f);
+			if(game.getMMS().vibration == game.getMMS().ON)
+				vibrateRamp();
+		}
+		if(director.consumeBurst()){
+			speedFx.burst(shipCenterX(), shipCenterY(), director.getTier());
+			for(Ball ball : balls)
+				ball.setVelocity(currentBallVelocity());
+			if(game.getMMS().sound == game.getMMS().ON)
+				boostSound.play(0.9f);
+			if(game.getMMS().vibration == game.getMMS().ON)
+				Gdx.input.vibrate(140);
+		}
+		if(director.consumeResume()){
+			chargeSoundStarted = false;
+			lastBallTime = TimeUtils.nanoTime();
+		}
+		ship.setChargeFx(speedFx.plumeLength(ct), speedFx.plumeAlpha(ct), speedFx.plumeWhite(ct));
+
+		// orbs spawn on the director's schedule (and not at all during a charge-up)
+		if(director.isSpawning() && TimeUtils.nanoTime() - lastBallTime > director.spawnGap()*ballSpawnSpeed*1000000000d)
+			spawnBall();
+	}
+
+	/** Engine rumble that builds during the charge-up: short pulses that come faster and last longer. */
+	private void vibrateRamp(){
+		float t = 0f;
+		float gap = 0.30f;
+		int pulse = 22;
+		while(t < com.spaceship.handlers.SpeedDirector.BURST_AT - 0.15f){
+			final int ms = pulse;
+			Timer.schedule(new Task(){
+				@Override
+				public void run(){
+					if(state == PLAY && game.getMMS().vibration == game.getMMS().ON)
+						Gdx.input.vibrate(ms);
+				}
+			}, t);
+			t += gap;
+			gap = Math.max(0.09f, gap*0.82f);
+			pulse = Math.min(70, pulse + 5);
+		}
+	}
+
+	private boolean debugKeepAlive;
+
+	/** Test hook: keep the ship at full energy (dev driver). */
+	public void debugKeepAlive(boolean on){
+		debugKeepAlive = on;
+	}
+
+	/** Test hook: start the charge-up now (dev driver). */
+	public void debugCharge(){
+		director.debugCharge();
+	}
+
+	/** Test hook: jump straight to a speed tier (dev driver). */
+	public void debugSetTier(int t){
+		director.debugSetTier(t);
+	}
+
 	/**
 	 * Background scroll speed in px/s for an orb speed. This is the old step table (2..17 px per 25 ms tick up to orb speed
 	 * 850) as a smooth curve, and past 850, where the table used to stop at 18, it keeps growing at the same rate, so the
 	 * background keeps pace with the orbs until they reach their top speed.
 	 */
-	/** Overall background speed, to sell the sense of speed: 2 = twice the original table's speed at every orb speed. */
-	private static final float BACKGROUND_SPEED_MULTIPLIER = 2f;
+	/** Overall background speed relative to the orbs: 1 = the original table's curve (always well below the orbs' own speed). */
+	private static final float BACKGROUND_SPEED_MULTIPLIER = 1f;
 
 	public float backgroundSpeed(float v){
 		float step;
 		if(v <= 400) step = 2f;
 		else if(v <= 700) step = 2f + (v - 400f)/25f;
 		else step = 14f + (v - 700f)/50f;
-		return step*40f*BACKGROUND_SPEED_MULTIPLIER;
+		return step*40f*BACKGROUND_SPEED_MULTIPLIER*(1f + 1.6f*speedFx.backgroundBoost());
 	}
 
 	/** 0 at the starting orb speed, 1 at the top speed: how fast the run feels (drives the ship's engine trail). */
@@ -2164,6 +2269,8 @@ public class PlayScreen implements Screen {
 		energyBar.update(Gdx.graphics.getDeltaTime(), ship.getLifes()/(float)barWidth);
 		energyBar.draw(game.batch, lifeBarSprite, lifeSprites[ship.getLifes()].getColor());
 		lifeBarSprite.draw(game.batch);
+		speedFx.drawChevrons(game.batch, lifeBarSprite.getX() + lifeBarSprite.getWidth()/2, lifeBarSprite.getY() - fxy(22) - fxy(8),
+				fxy(22), director.getTier(), lifeBarSprite.getColor().a);
 	}
 	private final TweenCallback newHighScoreCallback = new TweenCallback() {
 		public void onEvent(int type, BaseTween<?> source) {

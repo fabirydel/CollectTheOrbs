@@ -70,6 +70,41 @@ def build_textures():
         save(spark(col), 'spark_%s.png' % name)
 
 
+def smooth(e0, e1, x):
+    t = np.clip((x - e0) / (e1 - e0), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def build_ring_and_chevron():
+    """ring_wave.png: soft expanding-shockwave ring (white). chevron.png: speed-tier marker (white, drawn tinted)."""
+    n = 128
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+    r = np.hypot(xx - (n - 1) / 2, yy - (n - 1) / 2) / (n / 2)
+    a = np.exp(-((r - 0.78) / 0.07) ** 2) * 1.0 + np.exp(-((r - 0.78) / 0.2) ** 2) * 0.3
+    a *= 1 - smooth(0.92, 1.0, r)
+    rgba = np.zeros((n, n, 4), dtype=np.float32)
+    rgba[..., :3] = 255
+    rgba[..., 3] = np.clip(a, 0, 1) * 255
+    save(rgba, 'ring_wave.png')
+    w, h = 48, 36
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    x = (xx + 0.5) / 2          # 24 x 18 logical, drawn 2x
+    y = (yy + 0.5) / 2
+    # a ">" shape: two strokes from (6,2) to (16,9) to (6,16)
+    def seg(px, py, ax, ay, bx, by):
+        dx, dy = bx - ax, by - ay
+        t = np.clip(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1)
+        return np.hypot(px - (ax + t * dx), py - (ay + t * dy))
+    d = np.minimum(seg(x, y, 6, 2.5, 16, 9, ), seg(x, y, 16, 9, 6, 15.5))
+    core = np.exp(-(d / 1.0) ** 2 * 1.4)
+    halo = np.exp(-(d / 2.6) ** 2) * 0.5
+    a = np.clip(core + halo, 0, 1)
+    rgba = np.zeros((h, w, 4), dtype=np.float32)
+    rgba[..., :3] = 255
+    rgba[..., 3] = a * 255
+    save(rgba, 'chevron.png')
+
+
 def build_bolt():
     """32x32 soft horizontal line (alpha falls off vertically), stretched along each bolt segment."""
     n = 32
@@ -113,6 +148,7 @@ if __name__ == '__main__':
     N.set_scale(1)
     build_textures()
     build_bolt()
+    build_ring_and_chevron()
     build_nozzles()
     N.write_manifest()
     print('done')

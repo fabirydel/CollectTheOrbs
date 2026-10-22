@@ -70,6 +70,12 @@ public class Spaceship{
 	private boolean[] enabled;
 	private int shadow;
 	private final ShipPlume plume = new ShipPlume();
+
+	/** Speed-up sequence control of the engine flames (length x, brightness x, extra whiteness). */
+	public void setChargeFx(float len, float alpha, float white){
+		plume.setCharge(len, alpha, white);
+	}
+
 	private Sprite[] shockBlue, shockRed;
 	private float shockTime = 1f;
 	private int[] shockFrame = new int[3];

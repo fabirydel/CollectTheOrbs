@@ -70,6 +70,8 @@ public class Splash implements Screen{
 		game.assetManager.load("audio/swap.ogg", Sound.class);
 		game.assetManager.load("audio/swapReverse.ogg", Sound.class);
 		game.assetManager.load("audio/mult.ogg", Sound.class);
+		game.assetManager.load("audio/charge.ogg", Sound.class);
+		game.assetManager.load("audio/boost.ogg", Sound.class);
 		game.assetManager.load("audio/multReverse.ogg", Sound.class);
 		game.assetManager.load("audio/music.ogg", Music.class);
 

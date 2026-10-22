@@ -10,7 +10,8 @@ import com.badlogic.gdx.math.MathUtils;
 public class Fx {
 	public static final String[] ASSETS = { "res/fx/tail.png", "res/fx/core.png", "res/fx/plume.png", "res/fx/plume_core.png",
 			"res/fx/spark_blue.png", "res/fx/spark_red.png", "res/fx/spark_gold.png", "res/fx/spark_purple.png", "res/fx/spark_white.png", "res/fx/bolt.png",
-			"res/fx/orb_blue.png", "res/fx/orb_red.png", "res/fx/orb_gold.png", "res/fx/orb_purple.png" };
+			"res/fx/orb_blue.png", "res/fx/orb_red.png", "res/fx/orb_gold.png", "res/fx/orb_purple.png",
+			"res/fx/ring_wave.png", "res/fx/chevron.png" };
 
 	/** Flicker, surges, embers and sparkles on the engine plumes and orb tails. Off = steady glow. */
 	public static final boolean LIVELY = true;
@@ -23,7 +24,7 @@ public class Fx {
 
 	private static Texture tail, core, plume, plumeCore;
 	private static Texture[] sparks = new Texture[4];
-	private static Texture dot, bolt;
+	private static Texture dot, bolt, ring, chevron;
 	public static final int ORB_FRAMES = 16;
 	/** The orb frames are 32 px canvases whose orb body is 18 px: draw them 1.6x the 20 px orb sprite. */
 	public static final float ORB_DRAW_SCALE = 1.6f;
@@ -61,10 +62,25 @@ public class Fx {
 		sparks[SPARK_PURPLE] = am.get("res/fx/spark_purple.png", Texture.class);
 		dot = am.get("res/fx/spark_white.png", Texture.class);
 		bolt = am.get("res/fx/bolt.png", Texture.class);
+		ring = am.get("res/fx/ring_wave.png", Texture.class);
+		chevron = am.get("res/fx/chevron.png", Texture.class);
 		orbFrames = new com.badlogic.gdx.graphics.g2d.TextureRegion[4][];
 		String[] orbs = { "blue", "red", "gold", "purple" };
 		for (int i = 0; i < 4; i++)
 			orbFrames[i] = com.badlogic.gdx.graphics.g2d.TextureRegion.split(am.get("res/fx/orb_" + orbs[i] + ".png", Texture.class), 32, 32)[0];
+	}
+
+	/** Soft white glow dot (tint it with SpriteBatch.setColor). */
+	public static Texture glow() {
+		return dot;
+	}
+
+	public static Texture ring() {
+		return ring;
+	}
+
+	public static Texture chevron() {
+		return chevron;
 	}
 
 	public static Texture spark(int kind) {
