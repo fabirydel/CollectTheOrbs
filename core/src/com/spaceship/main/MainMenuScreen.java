@@ -1351,16 +1351,9 @@ public class MainMenuScreen implements Screen {
 		Fx.init(game.assetManager);
 		Fx.update(Gdx.graphics.getDeltaTime());
 		if(drawCounters){
-			// draw counnters
-			Fx.init(game.assetManager);
-			Fx.drawOrb(game.batch, blueCounter, 0, 0f);
-			Fx.drawOrb(game.batch, redCounter, 1, 0.33f);
+			// blue counter - blue orb - red orb - red counter (the game-over screen draws this same row)
+			drawBlueRedRow(game.batch, String.valueOf(blueBalls), String.valueOf(redBalls), blueCounter.getY(), -1f);
 			Fx.drawOrb(game.batch, lifeCounter, 2, 0.66f);
-			// draw fonts		
-			bluesFont.draw(game.batch, String.valueOf(blueBalls), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).width - blueCounter.getWidth()/4,
-					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont, String.valueOf(blueBalls)).height);
-			redsFont.draw(game.batch, String.valueOf(redBalls), redCounter.getX() + 1.25f*redCounter.getWidth(),
-					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont, String.valueOf(redBalls)).height);
 			lifeFont.draw(game.batch, String.valueOf(lifeBalls), lifeCounter.getX() + 1.25f*lifeCounter.getWidth(),
 					blueCounter.getY() + 1.2f*com.spaceship.handlers.FontUtil.bounds(lifeFont, String.valueOf(lifeBalls)).height);
 		}
@@ -3741,6 +3734,46 @@ public class MainMenuScreen implements Screen {
 	 * row, counters and best score, so it stays compact on tall screens. The sub-menus keep the
 	 * full-height layout (counterBaseY/scoreBaseY); the counters and score slide between the two.
 	 */
+	/**
+	 * The counter row: blue number, animated blue orb, animated red orb, red number, with the number-to-orb gaps the
+	 * main menu uses. Used by the main menu and by the game-over screen so both always match.
+	 * @param y bottom of the orbs; alpha &lt; 0 keeps the sprites' and fonts' own colors, otherwise the row is drawn at that alpha
+	 * @param blueText / redText numbers to show (null skips that number)
+	 */
+	public void drawBlueRedRow(com.badlogic.gdx.graphics.g2d.SpriteBatch b, String blueText, String redText, float y, float alpha){
+		float oldBlueY = blueCounter.getY(), oldRedY = redCounter.getY();
+		com.badlogic.gdx.graphics.Color oldBlue = new com.badlogic.gdx.graphics.Color(blueCounter.getColor());
+		com.badlogic.gdx.graphics.Color oldRed = new com.badlogic.gdx.graphics.Color(redCounter.getColor());
+		com.badlogic.gdx.graphics.Color oldBluesFont = new com.badlogic.gdx.graphics.Color(bluesFont.getColor());
+		com.badlogic.gdx.graphics.Color oldRedsFont = new com.badlogic.gdx.graphics.Color(redsFont.getColor());
+		blueCounter.setY(y);
+		redCounter.setY(y);
+		if(alpha >= 0f){
+			blueCounter.setColor(1f, 1f, 1f, alpha);
+			redCounter.setColor(1f, 1f, 1f, alpha);
+			bluesFont.setColor(1f, 1f, 1f, alpha);
+			redsFont.setColor(1f, 1f, 1f, alpha);
+		}
+		Fx.init(game.assetManager);
+		Fx.drawOrb(b, blueCounter, 0, 0f);
+		Fx.drawOrb(b, redCounter, 1, 0.33f);
+		if(blueText != null){
+			float w = com.spaceship.handlers.FontUtil.bounds(bluesFont, blueText).width;
+			float h = com.spaceship.handlers.FontUtil.bounds(bluesFont, blueText).height;
+			bluesFont.draw(b, blueText, blueCounter.getX() - w - blueCounter.getWidth()/4, y + 1.2f*h);
+		}
+		if(redText != null){
+			float h = com.spaceship.handlers.FontUtil.bounds(redsFont, redText).height;
+			redsFont.draw(b, redText, redCounter.getX() + 1.25f*redCounter.getWidth(), y + 1.2f*h);
+		}
+		blueCounter.setY(oldBlueY);
+		redCounter.setY(oldRedY);
+		blueCounter.setColor(oldBlue);
+		redCounter.setColor(oldRed);
+		bluesFont.setColor(oldBluesFont);
+		redsFont.setColor(oldRedsFont);
+	}
+
 	/** Bottom anchor of the full-height sub-menu layout (the counters' resting y before the compact main-menu stack moves them up). */
 	public float getCounterBaseY(){
 		return counterBaseY;

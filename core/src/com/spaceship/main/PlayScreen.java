@@ -1519,9 +1519,9 @@ public class PlayScreen implements Screen {
 					}
 					if(reds > 1){
 						if(reds % 2 == 0)
-							bluesFont3.draw(game.batch, "+" + Integer.toString(reds/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, String.valueOf(blues) + "+").width - blueCounter.getWidth()/4, blueFont3Height);		
+							bluesFont3.draw(game.batch, "+" + Integer.toString(reds/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString(reds/2)).width - blueCounter.getWidth()/4, blueFont3Height);		
 						else
-							bluesFont3.draw(game.batch, "+" + Integer.toString((reds - 1)/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, String.valueOf(blues) + "+").width - blueCounter.getWidth()/4, blueFont3Height);		
+							bluesFont3.draw(game.batch, "+" + Integer.toString((reds - 1)/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString((reds - 1)/2)).width - blueCounter.getWidth()/4, blueFont3Height);		
 						bluesFont3.getData().setScale(x, y);
 						if(bluesFont3.getColor().a > 0){
 							blueFont3Height = blueFont3Height + 2.25f;
@@ -1535,7 +1535,7 @@ public class PlayScreen implements Screen {
 					}
 				}
 				if(upBlue && blues > 0){
-					bluesFont3.draw(game.batch, "+" + Integer.toString(blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, String.valueOf(blues) + "+").width - blueCounter.getWidth()/4, blueFont3Height);		
+					bluesFont3.draw(game.batch, "+" + Integer.toString(blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString(blues)).width - blueCounter.getWidth()/4, blueFont3Height);		
 					bluesFont3.getData().setScale(x, y);
 					if(bluesFont3.getColor().a > 0){
 						blueFont3Height = blueFont3Height + 2.25f;
@@ -1575,7 +1575,7 @@ public class PlayScreen implements Screen {
 							canTweenRedScore = false;
 						}	
 					}
-					bluesFont3.draw(game.batch, "+" + Integer.toString(blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, String.valueOf(blues) + "+").width - blueCounter.getWidth()/4, blueFont3Height);		
+					bluesFont3.draw(game.batch, "+" + Integer.toString(blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString(blues)).width - blueCounter.getWidth()/4, blueFont3Height);		
 					bluesFont3.getData().setScale(x, y);
 					if(bluesFont3.getColor().a > 0){
 						blueFont3Height = blueFont3Height + 2.25f;
@@ -1677,35 +1677,24 @@ public class PlayScreen implements Screen {
 								Gdx.graphics.getHeight()/10 + 3*adHeight/4);
 					}
 					greysFont.getData().setScale(x, y);
+					// the counter row is the main menu's own (same orbs, same animation, same spacing); the animation clock only runs by itself while playing
+					if(state == DEAD || state == DEADLEAVING)
+						Fx.update(Gdx.graphics.getDeltaTime());
+					MainMenuScreen mm = game.getMMS();
+					String blueText = null, redText = null;
 					if(changeRedScore){
-						redsFont2.draw(game.batch, String.valueOf(game.getMMS().redBalls + reds), redCounter.getX() + 1.25f*redCounter.getWidth(),
-								Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont2, String.valueOf(game.getMMS().redBalls)).height + 3*adHeight/4);
-						if(reds % 2 == 0)
-							bluesFont2.draw(game.batch, String.valueOf(game.getMMS().blueBalls + reds/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls + blues)).width - blueCounter.getWidth()/4,
-									Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls)).height + 3*adHeight/4);
-						else
-							bluesFont2.draw(game.batch, String.valueOf(game.getMMS().blueBalls + (reds - 1)/2 ), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls + blues)).width - blueCounter.getWidth()/4,
-									Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls)).height + 3*adHeight/4);
+						redText = String.valueOf(mm.redBalls + reds);
+						blueText = String.valueOf(mm.blueBalls + (reds % 2 == 0 ? reds/2 : (reds - 1)/2));
 					}
 					if(changeBlueScore){
-						bluesFont2.draw(game.batch, String.valueOf(game.getMMS().blueBalls + blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls + blues)).width - blueCounter.getWidth()/4,
-								Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls)).height + 3*adHeight/4);
-						if(blues % 2 == 0)
-							redsFont2.draw(game.batch, String.valueOf(game.getMMS().redBalls + blues/2), redCounter.getX() + 1.25f*redCounter.getWidth(),
-									Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont2, String.valueOf(game.getMMS().redBalls)).height + 3*adHeight/4);
-						else
-							redsFont2.draw(game.batch, String.valueOf(game.getMMS().redBalls + (blues - 1)/2), redCounter.getX() + 1.25f*redCounter.getWidth(),
-									Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont2, String.valueOf(game.getMMS().redBalls)).height + 3*adHeight/4);
+						blueText = String.valueOf(mm.blueBalls + blues);
+						redText = String.valueOf(mm.redBalls + (blues % 2 == 0 ? blues/2 : (blues - 1)/2));
 					}
 					if(changeBothScore){
-						bluesFont2.draw(game.batch, String.valueOf(game.getMMS().blueBalls + blues), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls + blues)).width - blueCounter.getWidth()/4,
-								Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(bluesFont2, String.valueOf(game.getMMS().blueBalls)).height + 3*adHeight/4);
-						redsFont2.draw(game.batch, String.valueOf(game.getMMS().redBalls + reds), redCounter.getX() + 1.25f*redCounter.getWidth(),
-								Gdx.graphics.getHeight()/8 + 1.2f*com.spaceship.handlers.FontUtil.bounds(redsFont2, String.valueOf(game.getMMS().redBalls)).height + 3*adHeight/4);
+						blueText = String.valueOf(mm.blueBalls + blues);
+						redText = String.valueOf(mm.redBalls + reds);
 					}
-					// draw counnters
-					blueCounter.draw(game.batch);
-					redCounter.draw(game.batch);
+					mm.drawBlueRedRow(game.batch, blueText, redText, mm.getCounterBaseY(), blueCounter.getColor().a);
 				}
 	
 				// draw pads
