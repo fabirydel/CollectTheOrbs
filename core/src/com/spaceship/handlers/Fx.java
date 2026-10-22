@@ -42,9 +42,15 @@ public class Fx {
 			am.load(a, Texture.class);
 	}
 
+	// the manager the cached textures came from: after the game quits (Gdx.app.exit disposes everything) Android can keep
+	// this process alive, and the next launch creates a new AssetManager, so the cached textures would be dead
+	private static AssetManager owner;
+
 	public static void init(AssetManager am) {
-		if (tail != null)
+		if (owner == am && tail != null)
 			return;
+		owner = am;
+		count = 0;
 		tail = am.get("res/fx/tail.png", Texture.class);
 		core = am.get("res/fx/core.png", Texture.class);
 		plume = am.get("res/fx/plume.png", Texture.class);
