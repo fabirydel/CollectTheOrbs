@@ -457,9 +457,58 @@ public class Spaceship{
 		shipsSprites[shipSelected].draw(sb);
 		ffSprites[forceFieldSelected].draw(sb);
 		ffgSprites[forceFieldSelected].draw(sb);
+		drawShieldLife(sb);
 		drawShock(sb);
 	}
 	
+	private float shieldTime, impactTime = 9f, impactAngle;
+
+	/** A ball touched the force field at (bx, by): flex the shield and send a ripple out from that side. */
+	public void shieldImpact(float bx, float by){
+		impactAngle = MathUtils.atan2(by - ship.y, bx - ship.x)*MathUtils.radiansToDegrees;
+		impactTime = 0f;
+	}
+
+	/** Idle life for the force field: a slow breathing glow, two highlights travelling around the rim, and the impact ripple. */
+	private void drawShieldLife(SpriteBatch sb){
+		float dt = Gdx.graphics.getDeltaTime();
+		shieldTime += dt;
+		impactTime += dt;
+		Sprite ff = ffSprites[forceFieldSelected];
+		float a = ff.getColor().a;
+		if(a <= 0.02f)
+			return;
+		boolean blue = forceFieldSelected == STATE_BLUE;
+		float r = blue ? 0.45f : 1f, g = blue ? 0.8f : 0.45f, b = blue ? 1f : 0.4f;
+		float full = ff.getWidth()*ff.getScaleX();
+		float pulse = 0.5f + 0.5f*MathUtils.sin(shieldTime*MathUtils.PI2/2.8f);
+		float flex = impactTime < 0.4f ? MathUtils.sin(impactTime/0.4f*MathUtils.PI) : 0f;
+		Fx.additiveOn(sb);
+		// breathing: the shield redrawn a touch larger and brighter, fading in and out
+		float sx = ff.getScaleX(), sy = ff.getScaleY();
+		float ar = ff.getColor().r, ag = ff.getColor().g, ab = ff.getColor().b, aa = ff.getColor().a;
+		ff.setScale(sx*(1f + 0.025f*pulse + 0.05f*flex), sy*(1f + 0.025f*pulse + 0.05f*flex));
+		ff.setColor(1f, 1f, 1f, a*(0.09f*pulse + 0.35f*flex));
+		ff.draw(sb);
+		ff.setScale(sx, sy);
+		ff.setColor(ar, ag, ab, aa);
+		// two highlights slowly circling the rim
+		sb.setColor(r, g, b, a*(0.30f + 0.12f*pulse));
+		sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f, 1f, shieldTime*38f, 0, 0, 256, 256, false, false);
+		sb.setColor(r, g, b, a*(0.20f + 0.10f*(1f - pulse)));
+		sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f, 1f, 180f + shieldTime*38f, 0, 0, 256, 256, false, false);
+		// impact: a flare at the hit point and a ring spreading off the rim
+		if(impactTime < 0.45f){
+			float t = impactTime/0.45f;
+			sb.setColor(1f, 1f, 1f, a*(1f - t)*0.9f);
+			sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f + 0.05f*t, 1f + 0.05f*t, impactAngle, 0, 0, 256, 256, false, false);
+			float ring = full*(1.05f + 0.35f*t);
+			sb.setColor(r, g, b, a*(1f - t)*0.45f);
+			sb.draw(Fx.ring(), ship.x - ring/2, ship.y - ring/2, ring, ring);
+		}
+		Fx.additiveOff(sb);
+	}
+
 	/** Electricity across the force field for a moment after a wrong-colored orb hits it. */
 	private void drawShock(SpriteBatch sb){
 		if(shockTime >= 0.34f)

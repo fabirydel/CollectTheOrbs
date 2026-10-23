@@ -1841,6 +1841,7 @@ public class PlayScreen implements Screen {
 		boolean hit = false;
 		if(ship.getCircle().overlaps(ball.getCircle())){	
 			hit = true;
+			ship.shieldImpact(ball.getPosition().x, ball.getPosition().y);
 			if(ship.getState() == Spaceship.STATE_BLUE || ship.getState() == Spaceship.STATE_BLUERED){
 				if (ball.getType() == Ball.B_BLUE){
 					if(game.getMMS().sound == game.getMMS().ON)

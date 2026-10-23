@@ -75,6 +75,22 @@ def smooth(e0, e1, x):
     return t * t * (3 - 2 * t)
 
 
+def build_shield_glint():
+    """shield_glint.png: a soft highlight arc along the force-field rim, centered on the +x axis (white)."""
+    n = 256
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+    dx, dy = xx - (n - 1) / 2, yy - (n - 1) / 2
+    r = np.hypot(dx, dy) / (n / 2)
+    ang = np.abs(np.arctan2(dy, dx))
+    along = np.exp(-(ang / 0.42) ** 2)
+    a = (np.exp(-((r - 0.945) / 0.035) ** 2) + 0.35 * np.exp(-((r - 0.93) / 0.09) ** 2)) * along
+    a *= 1 - smooth(0.985, 1.0, r)
+    rgba = np.zeros((n, n, 4), dtype=np.float32)
+    rgba[..., :3] = 255
+    rgba[..., 3] = np.clip(a, 0, 1) * 255
+    save(rgba, 'shield_glint.png')
+
+
 def build_ring_and_chevron():
     """ring_wave.png: soft expanding-shockwave ring (white). chevron.png: speed-tier marker (white, drawn tinted)."""
     n = 128
@@ -149,6 +165,7 @@ if __name__ == '__main__':
     build_textures()
     build_bolt()
     build_ring_and_chevron()
+    build_shield_glint()
     build_nozzles()
     N.write_manifest()
     print('done')
