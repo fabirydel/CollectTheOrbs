@@ -260,13 +260,13 @@ def launcher_icons(master):
     res = os.path.join(ROOT, 'android', 'res')
     os.makedirs(os.path.join(res, 'drawable-nodpi'), exist_ok=True)
     fg = Image.new('RGBA', (432, 432), (0, 0, 0, 0))
-    art = master.convert('RGBA').resize((340, 340), Image.LANCZOS)
-    yy, xx = np.mgrid[0:340, 0:340].astype(np.float32)
-    edge = np.minimum(np.minimum(xx, 339 - xx), np.minimum(yy, 339 - yy))
-    feather = np.clip(edge / 55.0, 0, 1) ** 1.5      # fade the art's edges into the near-black background layer
+    art = master.convert('RGBA').resize((280, 280), Image.LANCZOS)
+    yy, xx = np.mgrid[0:280, 0:280].astype(np.float32)
+    edge = np.minimum(np.minimum(xx, 279 - xx), np.minimum(yy, 279 - yy))
+    feather = np.clip(edge / 45.0, 0, 1) ** 1.5      # fade the art's edges into the near-black background layer
     a = np.asarray(art, dtype=np.float32).copy()
     a[..., 3] *= feather
-    fg.alpha_composite(Image.fromarray(a.astype(np.uint8)), (46, 46))
+    fg.alpha_composite(Image.fromarray(a.astype(np.uint8)), (76, 50))
     fg.save(os.path.join(res, 'drawable-nodpi', 'ic_launcher_foreground.png'))
     os.makedirs(os.path.join(res, 'mipmap-anydpi-v26'), exist_ok=True)
     open(os.path.join(res, 'mipmap-anydpi-v26', 'ic_launcher.xml'), 'w').write(
