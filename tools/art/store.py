@@ -97,19 +97,20 @@ def ship_layer(px, angle, ship_i=5):
     return sh.rotate(-angle, Image.BICUBIC, expand=True)
 
 
-def flame(base, tip, angle, length, width):
-    """Engine flame behind a ship pointing at `angle` (degrees clockwise from up): tapered additive glow, orange to white."""
+def flame(base, root, direction, length, width):
+    """Engine plume like the game's: cyan with a white-hot core, tapering away from the nozzle at `root`."""
     import math
-    dx, dy = math.sin(math.radians(angle)), -math.cos(math.radians(angle))
-    n = 40
+    dx, dy = direction
+    n = 60
     for k in range(n):
         f = k / n
-        px, py = tip[0] - dx * length * f, tip[1] - dy * length * f
-        sz = max(2, int(width * (1 - f * 0.8) * 2))
+        px, py = root[0] + dx * length * f, root[1] + dy * length * f
+        sz = max(2, int(width * (1 - f * 0.75) * 2))
         yy, xx = np.mgrid[0:sz, 0:sz].astype(np.float32)
         d = np.hypot(xx - sz / 2, yy - sz / 2) / (sz / 2)
-        al = np.clip(1 - d, 0, 1) ** 1.4 * (1 - f) * 255
-        col = (255, int(190 - 80 * f), int(90 - 60 * f))
+        al = np.clip(1 - d, 0, 1) ** 1.3 * (1 - f) ** 1.4 * 255
+        t = min(1.0, f * 2.2)
+        col = (int(235 - 195 * t), int(250 - 80 * t), 255)
         arr = np.dstack([np.full((sz, sz), col[0]), np.full((sz, sz), col[1]), np.full((sz, sz), col[2]), al]).astype(np.uint8)
         base = add(base, Image.fromarray(arr), (px, py))
     return base
@@ -131,28 +132,36 @@ ICON_ORBS = [
 ]
 
 
-def scene(w, h, orbs, ship_xy, scale=1.0, seed=3):
-    """The original blue fighter (tools/art/src/original_ship.png) with the neon orbs in the original positions."""
+SHIP_NOZZLES = [(395, 62), (52, 238), (52, 422)]   # engine rears in the 859x668 ship art
+SHIP_DIR = (-0.90, -0.43)                           # exhaust direction (away from the front)
+
+
+def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3):
+    """The original blue fighter (tools/art/src/original_ship.png) with game-style plumes and neon orbs in the original positions."""
     import math
     k = scale
     im = background(w, h, seed=seed, stars=1.3)
     sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9)}
     for (hx, hy), (tx, ty), dia, c in orbs:
         col, sheet, fi = sheets[c]
-        length = math.hypot(hx - tx, hy - ty) * k
-        ang = math.degrees(math.atan2(hy - ty, hx - tx))
         big = dia > 60
-        im = comet(im, (hx * k, hy * k), col, length, ang, dia * k * (0.55 if big else 0.42), sheet, fi, int(dia * k * 1.78))
+        length = math.hypot(hx - tx, hy - ty) * k * (1.6 if big else tail_mul)
+        ang = math.degrees(math.atan2(hy - ty, hx - tx))
+        im = comet(im, (hx * k, hy * k), col, length, ang, dia * k * (0.45 if big else 0.30), sheet, fi, int(dia * k * 1.78))
     ship = Image.open(os.path.join(os.path.dirname(__file__), 'src', 'original_ship.png')).convert('RGBA')
-    ship = ship.resize((int(ship.width * k), int(ship.height * k)), Image.LANCZOS)
-    aura = N.radial(int(ship.width * 1.5), [(0, (40, 120, 255, 70)), (0.6, (30, 90, 230, 30)), (1.0, (20, 60, 200, 0))])
-    cx, cy = ship_xy[0] * k + ship.width / 2, ship_xy[1] * k + ship.height / 2
-    im = add(im, aura, (cx, cy))
+    sc = ship_scale * k
+    ship = ship.resize((int(ship.width * sc), int(ship.height * sc)), Image.LANCZOS)
+    ox, oy = ship_xy[0] * k, ship_xy[1] * k
+    aura = N.radial(int(ship.width * 1.4), [(0, (40, 120, 255, 60)), (0.6, (30, 90, 230, 26)), (1.0, (20, 60, 200, 0))])
+    im = add(im, aura, (ox + ship.width / 2, oy + ship.height / 2))
+    for nx, ny in SHIP_NOZZLES:
+        im = flame(im, (ox + nx * sc, oy + ny * sc), SHIP_DIR, 210 * sc, 26 * sc)
     layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    layer.alpha_composite(ship, (int(ship_xy[0] * k), int(ship_xy[1] * k))) if ship_xy[0] >= 0 and ship_xy[1] >= 0 else layer.paste(
-        ship.crop((max(0, -int(ship_xy[0] * k)), max(0, -int(ship_xy[1] * k)), ship.width, ship.height)), (max(0, int(ship_xy[0] * k)), max(0, int(ship_xy[1] * k))))
-    im = Image.alpha_composite(im, layer)
-    return im
+    layer.alpha_composite(ship, (0, 0)) if False else None
+    big_layer = Image.new('RGBA', (im.width + 2 * ship.width, im.height + 2 * ship.height), (0, 0, 0, 0))
+    big_layer.alpha_composite(ship, (int(ox) + ship.width, int(oy) + ship.height))
+    layer = big_layer.crop((ship.width, ship.height, ship.width + im.width, ship.height + im.height))
+    return Image.alpha_composite(im, layer)
 
 
 def pad(mask, m=40):
@@ -162,11 +171,11 @@ def pad(mask, m=40):
 
 
 def composition(size=512):
-    return scene(size, size, ICON_ORBS, (-45, 137), size / 512.0)
+    return scene(size, size, ICON_ORBS, (-84, 105), 0.69, size / 512.0)
 
 
 def feature(w=1024, h=500):
-    im = scene(w, h, BANNER_ORBS, (35, 40), 1.0, seed=9)
+    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
     size = 40 * 610 / f.width('Collect The Orbs', 40)
