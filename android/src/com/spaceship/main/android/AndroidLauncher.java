@@ -77,7 +77,7 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 	};
 	private static final int RC_GAMES_UI = 9001;
 	private final Map<String, String> achievementIds = new HashMap<>();
-	private volatile boolean gamesSignedIn;
+	private volatile boolean gamesSignedIn, gamesSigningIn;
 
 	private BillingClient billing;
 	private ProductDetails removeAdsDetails;
@@ -120,21 +120,68 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 		}
 		PlayGamesSdk.initialize(this);
 		refreshGamesSignIn();
+		if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+			// debug builds only: adb shell am broadcast -a com.spaceship.DEBUG_UNLOCK_ALL  (unlocks every achievement, to test Platinum)
+			android.content.IntentFilter filter = new android.content.IntentFilter("com.spaceship.DEBUG_UNLOCK_ALL");
+			android.content.BroadcastReceiver receiver = new android.content.BroadcastReceiver() {
+				@Override
+				public void onReceive(android.content.Context c, Intent i) {
+					toast("Debug: unlocking all achievements");
+					for (String old : achievementIds.keySet())
+						unlockAchievement(old);
+				}
+			};
+			if (Build.VERSION.SDK_INT >= 33)
+				registerReceiver(receiver, filter, RECEIVER_EXPORTED);
+			else
+				registerReceiver(receiver, filter);
+		}
 	}
 
+	private void toast(String text) {
+		runOnUiThread(() -> android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_SHORT).show());
+	}
+
+	/** Checks the Play Games sign-in (the SDK signs in silently at launch) and lets the player know what is going on. */
 	private void refreshGamesSignIn() {
+		gamesSigningIn = true;
+		toast("Signing in to Google Play Games...");
 		PlayGames.getGamesSignInClient(this).isAuthenticated().addOnCompleteListener(task -> {
 			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
-			checkPlatinum();
+			gamesSigningIn = false;
+			if (gamesSignedIn)
+				onGamesSignedIn();
 		});
+	}
+
+	private void onGamesSignedIn() {
+		PlayGames.getPlayersClient(this).getCurrentPlayer().addOnCompleteListener(task -> {
+			if (task.isSuccessful() && task.getResult() != null)
+				toast("Signed in to Google Play Games as " + task.getResult().getDisplayName());
+			else
+				toast("Signed in to Google Play Games");
+		});
+		checkPlatinum();
 	}
 
 	@Override public boolean getSignedIn() { return gamesSignedIn; }
 
 	@Override
 	public void logIn() {
-		runOnUiThread(() -> PlayGames.getGamesSignInClient(this).signIn().addOnCompleteListener(task ->
-				gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated()));
+		if (gamesSigningIn) {
+			toast("Still signing in to Google Play Games...");
+			return;
+		}
+		gamesSigningIn = true;
+		toast("Signing in to Google Play Games...");
+		runOnUiThread(() -> PlayGames.getGamesSignInClient(this).signIn().addOnCompleteListener(task -> {
+			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
+			gamesSigningIn = false;
+			if (gamesSignedIn)
+				onGamesSignedIn();
+			else
+				toast("Could not sign in to Google Play Games");
+		}));
 	}
 
 	@Override
