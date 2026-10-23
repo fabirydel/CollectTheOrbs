@@ -455,14 +455,30 @@ public class Spaceship{
 		}
 		ship.setPosition(ship.x, ship.y);
 		shipsSprites[shipSelected].draw(sb);
-		ffSprites[forceFieldSelected].draw(sb);
-		ffgSprites[forceFieldSelected].draw(sb);
+		// while the gold flash is up the shield's own color fades out under it, so no edge of it shows through
+		float own = 1f - goldEnvelope();
+		Sprite ffs = ffSprites[forceFieldSelected], ffgs = ffgSprites[forceFieldSelected];
+		float ffa = ffs.getColor().a, ffga = ffgs.getColor().a;
+		ffs.setAlpha(ffa*own);
+		ffgs.setAlpha(ffga*own);
+		ffs.draw(sb);
+		ffgs.draw(sb);
+		ffs.setAlpha(ffa);
+		ffgs.setAlpha(ffga);
 		drawShieldLife(sb);
 		drawShock(sb);
 	}
 	
 	private static final float GOLD_FLASH = 0.6f;
 	private float shieldTime, impactTime = 9f, impactAngle, goldTime = 9f;
+
+	/** 0 when idle, up to 1 at the peak of the gold flash. */
+	private float goldEnvelope(){
+		if(goldTime >= GOLD_FLASH || forceFieldSelected == STATE_GOLD)
+			return 0f;
+		float t = goldTime/GOLD_FLASH;
+		return t < 0.3f ? MathUtils.sin(t/0.3f*MathUtils.PI/2f) : MathUtils.cos((t - 0.3f)/0.7f*MathUtils.PI/2f);
+	}
 
 	/** A yellow orb was caught: the force field briefly turns gold and settles back to its own color. */
 	public void goldFlash(){
@@ -485,6 +501,7 @@ public class Spaceship{
 		float a = ff.getColor().a;
 		if(a <= 0.02f)
 			return;
+		a *= 1f - goldEnvelope();
 		boolean blue = forceFieldSelected == STATE_BLUE;
 		float r = blue ? 0.45f : 1f, g = blue ? 0.8f : 0.45f, b = blue ? 1f : 0.4f;
 		float full = ff.getWidth()*ff.getScaleX();
@@ -516,18 +533,17 @@ public class Spaceship{
 		Fx.additiveOff(sb);
 		// yellow orb: ease the gold shield in over the current one, then back out
 		if(goldTime < GOLD_FLASH && forceFieldSelected != STATE_GOLD){
-			float t = goldTime/GOLD_FLASH;
-			float env = t < 0.3f ? MathUtils.sin(t/0.3f*MathUtils.PI/2f) : MathUtils.cos((t - 0.3f)/0.7f*MathUtils.PI/2f);
+			float env = goldEnvelope();
 			Sprite gold = ffSprites[STATE_GOLD], goldGlow = ffgSprites[STATE_GOLD], glow = ffgSprites[forceFieldSelected];
 			float gx = gold.getScaleX(), gy = gold.getScaleY(), lx = goldGlow.getScaleX(), ly = goldGlow.getScaleY();
 			com.badlogic.gdx.graphics.Color gc = new com.badlogic.gdx.graphics.Color(gold.getColor()), lc = new com.badlogic.gdx.graphics.Color(goldGlow.getColor());
 			gold.setScale(ff.getScaleX(), ff.getScaleY());
 			gold.setPosition(ship.x - gold.getWidth()/2, ship.y - gold.getHeight()/2);
-			gold.setColor(1f, 1f, 1f, a*env);
+			gold.setColor(1f, 1f, 1f, ff.getColor().a*env);
 			gold.draw(sb);
 			goldGlow.setScale(glow.getScaleX(), glow.getScaleY());
 			goldGlow.setPosition(ship.x - goldGlow.getWidth()/2, ship.y - goldGlow.getHeight()/2);
-			goldGlow.setColor(1f, 1f, 1f, a*env);
+			goldGlow.setColor(1f, 1f, 1f, ff.getColor().a*env);
 			goldGlow.draw(sb);
 			gold.setScale(gx, gy);
 			goldGlow.setScale(lx, ly);
