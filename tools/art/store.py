@@ -91,20 +91,58 @@ def neon_shield(px, color=N.CYAN):
     return N.shield(px / N.U, color).resize((px, px), Image.LANCZOS)
 
 
-def composition(size=432, shield_color=0, ship_i=3, safe=True):
-    """Ship in its force field with a blue and a red comet coming in (all inside the adaptive-icon safe circle)."""
-    k = size / 432.0
+def ship_layer(px, angle, ship_i=5):
     ships = img('ships/ships1.png')
-    fields = img('shapes/forceFields.png')
-    orb_b, orb_r = img('fx/orb_blue.png'), img('fx/orb_red.png')
-    im = background(size, size)
-    cx, cy = 216 * k, 238 * k
-    # comets first so the shield is in front of their tails
-    im = comet(im, (150 * k, 122 * k), (40, 190, 255), 70 * k, 105, 11 * k, orb_b, 4, int(62 * k))
-    im = comet(im, (282 * k, 112 * k), (255, 60, 90), 78 * k, 78, 11 * k, orb_r, 9, int(62 * k))
-    im = add(im, neon_shield(int(250 * k)), (cx, cy))
-    im = over(im, frame(ships, ship_i, int(190 * k)), (cx, cy))
+    sh = frame(ships, ship_i, px)
+    return sh.rotate(-angle, Image.BICUBIC, expand=True)
+
+
+def flame(base, tip, angle, length, width):
+    """Engine flame behind a ship pointing at `angle` (degrees clockwise from up): tapered additive glow, orange to white."""
+    import math
+    dx, dy = math.sin(math.radians(angle)), -math.cos(math.radians(angle))
+    n = 40
+    for k in range(n):
+        f = k / n
+        px, py = tip[0] - dx * length * f, tip[1] - dy * length * f
+        sz = max(2, int(width * (1 - f * 0.8) * 2))
+        yy, xx = np.mgrid[0:sz, 0:sz].astype(np.float32)
+        d = np.hypot(xx - sz / 2, yy - sz / 2) / (sz / 2)
+        al = np.clip(1 - d, 0, 1) ** 1.4 * (1 - f) * 255
+        col = (255, int(190 - 80 * f), int(90 - 60 * f))
+        arr = np.dstack([np.full((sz, sz), col[0]), np.full((sz, sz), col[1]), np.full((sz, sz), col[2]), al]).astype(np.uint8)
+        base = add(base, Image.fromarray(arr), (px, py))
+    return base
+
+
+def scene(w, h, ship_c, ship_px, ship_angle, orbs, smalls, seed=3):
+    """Shared composition: blue ship with a neon shield flying toward falling comets."""
+    import math
+    im = background(w, h, seed=seed, stars=1.3)
+    sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9),
+              'g': ((255, 190, 40), img('fx/orb_gold.png'), 6)}
+    for (x, y), c, size, ang in smalls:
+        col, sheet, fi = sheets[c]
+        im = comet(im, (x, y), col, size * 3.2, ang, size * 0.16, sheet, fi, int(size))
+    sl = ship_layer(ship_px, ship_angle)
+    im = add(im, neon_shield(int(ship_px * 1.18)), ship_c)
+    ra = math.radians(ship_angle)
+    tail = (ship_c[0] - math.sin(ra) * ship_px * 0.30, ship_c[1] + math.cos(ra) * ship_px * 0.30)
+    im = flame(im, tail, ship_angle, ship_px * 0.7, ship_px * 0.09)
+    im = over(im, sl, ship_c)
+    for (x, y), c, size, ang in orbs:
+        col, sheet, fi = sheets[c]
+        im = comet(im, (x, y), col, size * 2.1, ang, size * 0.30, sheet, fi, int(size * 1.3))
     return im
+
+
+def composition(size=512):
+    k = size / 512.0
+    s = lambda v: v * k
+    smalls = [((s(70), s(60)), 'r', s(30), 72), ((s(150), s(40)), 'b', s(28), 70), ((s(40), s(160)), 'b', s(26), 74),
+              ((s(205), s(120)), 'r', s(24), 68)]
+    orbs = [((s(345), s(205)), 'r', s(150), 66), ((s(420), s(400)), 'b', s(130), 72)]
+    return scene(size, size, (s(165), s(345)), int(s(340)), 38, orbs, smalls)
 
 
 def pad(mask, m=40):
@@ -114,34 +152,14 @@ def pad(mask, m=40):
 
 
 def feature(w=1024, h=500):
-    im = background(w, h, seed=9, stars=1.3)
-    ships = img('ships/ships1.png')
-    fields = img('shapes/forceFields.png')
-    orb_b, orb_r, orb_g = img('fx/orb_blue.png'), img('fx/orb_red.png'), img('fx/orb_gold.png')
-    # streaming comets across the right side
-    spots = [((640, 60), 'b', 100), ((780, 140), 'r', 105), ((905, 60), 'b', 98), ((960, 250), 'r', 100),
-             ((700, 280), 'b', 103), ((850, 350), 'g', 97), ((590, 190), 'r', 102)]
-    cols = {'b': ((40, 190, 255), orb_b, 4), 'r': ((255, 60, 90), orb_r, 9), 'g': ((255, 190, 40), orb_g, 6)}
-    for (x, y), c, ang in spots:
-        col, sheet, fi = cols[c]
-        im = comet(im, (x, y + 70), col, 120, ang, 10, sheet, fi, 50)
-    # ship + shield on the right-centre
-    cx, cy = 790, 330
-    im = add(im, neon_shield(220), (cx, cy))
-    im = over(im, frame(ships, 3, 160), (cx, cy))
-    # title
+    smalls = [((70, 110), 'r', 26, 70), ((120, 60), 'b', 26, 74), ((40, 240), 'b', 24, 72), ((175, 150), 'r', 30, 68), ((300, 50), 'b', 28, 72)]
+    orbs = [((730, 255), 'r', 165, 66), ((895, 395), 'b', 140, 72), ((560, 345), 'b', 62, 70)]
+    im = scene(w, h, (255, 300), 360, 36, orbs, smalls, seed=9)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
-
-    def title(text, target_w):
-        size = 40
-        size = size * target_w / f.width(text, size)
-        return UI.neon_text(pad(f.mask(text, size)), UI.NEUTRAL, 2.5)
-
-    t1 = title('Collect The', 430)
-    t2 = title('Orbs', 330)
-    im = add(im, t1, (270, 160))
-    im = add(im, t2, (270, 290))
+    size = 40 * 620 / f.width('Collect The Orbs', 40)
+    t = UI.neon_text(pad(f.mask('Collect The Orbs', size)), UI.NEUTRAL, 2.5)
+    im = add(im, t, (700, 62))
     return im
 
 
@@ -153,10 +171,7 @@ def launcher_icons(master):
 
 
 if __name__ == '__main__':
-    comp = composition(432)
-    # the store icon crops the centre so the art fills the square
-    big = composition(432 * 4)
-    crop = big.crop((int(big.width * 0.1), int(big.height * 0.1), int(big.width * 0.9), int(big.height * 0.9))).resize((512, 512), Image.LANCZOS)
+    crop = composition(1024).resize((512, 512), Image.LANCZOS)
     crop.convert('RGB').save(os.path.join(OUT, 'icon-512.png'))
     feature().convert('RGB').save(os.path.join(OUT, 'feature-1024x500.png'))
     launcher_icons(crop)
