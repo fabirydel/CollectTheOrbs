@@ -50,6 +50,61 @@ ACH = [
 SINGULAR = {'SHIPS': 'SHIP', 'GALAXIES': 'GALAXY', 'GAMES': 'GAME', 'UPGRADES': 'UPGRADE', 'ORBS': 'ORB'}
 
 
+def trophy_layer(h, color):
+    """A filled, glowing platinum trophy (cup with handles and a star, stem, base), about h px tall; RGBA with transparent background."""
+    import math
+    W = 1000
+    ss = 2
+    m = Image.new('L', (W * ss, W * ss), 0)
+    d = ImageDraw.Draw(m)
+    X = lambda v: v * ss
+    cx = 500
+    top, bot = 120, 430
+    pts = []
+    for i in range(0, 101):
+        t = i / 100.0
+        y = top + (bot - top) * t
+        hw = 46 + 150 * math.sqrt(max(0.0, 1 - t ** 2.0))
+        pts.append((cx - hw, y))
+    right = [(2 * cx - x, y) for x, y in pts]
+    d.polygon([(X(x), X(y)) for x, y in pts + right[::-1]], fill=255)
+    for sgn in (-1, 1):   # handles: open rings hugging the cup
+        x0 = cx + sgn * 150
+        d.arc((X(x0 - 120), X(150), X(x0 + 120), X(360)), 90 if sgn < 0 else 270, 270 if sgn < 0 else 90, fill=255, width=X(34))
+    d.rectangle((X(cx - 30), X(bot - 10), X(cx + 30), X(bot + 120)), fill=255)
+    d.rounded_rectangle((X(cx - 120), X(bot + 105), X(cx + 120), X(bot + 148)), radius=X(14), fill=255)
+    m = m.resize((W, W), Image.LANCZOS)
+    # silver gradient with a bright left edge
+    yy, xx = np.mgrid[0:W, 0:W].astype(np.float32)
+    v = np.clip((yy - 110) / 480.0, 0, 1)
+    base = np.stack([245 - 90 * v, 248 - 70 * v, 255 - 30 * v], -1)
+    spec = np.exp(-((xx - (cx - 95)) / 28.0) ** 2) * (yy > 150) * (yy < 440) * 0.55
+    base = np.clip(base + spec[..., None] * 90, 0, 255)
+    fill = Image.fromarray(np.dstack([base, np.asarray(m, dtype=np.float32)]).astype(np.uint8))
+    # star emblem cut into the cup
+    star = Image.new('L', (W, W), 0)
+    sd = ImageDraw.Draw(star)
+    sp = []
+    for i in range(10):
+        r = 78 if i % 2 == 0 else 32
+        a = -math.pi / 2 + i * math.pi / 5
+        sp.append((cx + r * math.cos(a), 285 + r * math.sin(a)))
+    sd.polygon(sp, fill=255)
+    fa = np.asarray(fill, dtype=np.float32).copy()
+    fa[..., :3] = np.where(np.asarray(star)[..., None] > 0, np.array([90, 125, 190], np.float32), fa[..., :3])
+    fill = Image.fromarray(fa.astype(np.uint8))
+    halo = m.filter(ImageFilter.GaussianBlur(20)).point(lambda a: min(255, int(a * 1.2)))
+    out = Image.new('RGBA', (W, W), (0, 0, 0, 0))
+    glow = Image.new('RGBA', (W, W), color + (0,))
+    glow.putalpha(halo)
+    out = Image.alpha_composite(out, glow)
+    out = Image.alpha_composite(out, fill)
+    box = out.getbbox()
+    out = out.crop((box[0] - 60, box[1] - 60, box[2] + 60, box[3] + 60))
+    k = h / (box[3] - box[1] + 120)
+    return out.resize((int(out.width * k), int(out.height * k)), Image.LANCZOS)
+
+
 def platinum_icon(color):
     size = 512
     im = S.background(size, size, seed=77, stars=0.6)
@@ -57,20 +112,7 @@ def platinum_icon(color):
         ring = Image.new('L', (size, size), 0)
         ImageDraw.Draw(ring).ellipse((inset, inset, size - inset, size - inset), outline=255, width=width)
         im = S.add(im, UI.neon_text(ring, color, 8.0), (size / 2, size / 2))
-    # trophy: cup with two handles, stem and base
-    m = Image.new('L', (size, size), 0)
-    d = ImageDraw.Draw(m)
-    w = 11
-    cx = size / 2
-    d.line([(cx - 64, 128), (cx + 64, 128)], fill=255, width=w, joint='curve')
-    d.line([(cx - 64, 128), (cx - 64, 178)], fill=255, width=w)
-    d.line([(cx + 64, 128), (cx + 64, 178)], fill=255, width=w)
-    d.arc((cx - 64, 118, cx + 64, 238), 0, 180, fill=255, width=w)
-    d.arc((cx - 100, 136, cx - 28, 190), 90, 270, fill=255, width=w)
-    d.arc((cx + 28, 136, cx + 100, 190), 270, 90, fill=255, width=w)
-    d.line([(cx, 238), (cx, 280)], fill=255, width=w)
-    d.rounded_rectangle((cx - 48, 280, cx + 48, 306), radius=8, outline=255, width=w)
-    im = S.add(im, UI.neon_text(m, color, 5.0), (size / 2, size / 2))
+    im = S.add(im, trophy_layer(236, color), (size / 2, 212))
     f = UI.BMFont('fonts/prototype128blueWhite')
     t = UI.neon_text(S.pad(f.mask('PLATINUM', 26), 40), color, 3.0)
     im = S.add(im, t, (size / 2, 352))
