@@ -243,7 +243,7 @@ def scene_icon(size=512):
 
 
 def feature(w=1024, h=500):
-    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9, shield=None)
+    im = scene(w, h, BANNER_ORBS, (29, 38), 0.65, 1.0, seed=9, shield=None)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
     size = 40 * 610 / f.width('Collect The Orbs', 40)
