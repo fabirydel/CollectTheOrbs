@@ -179,6 +179,7 @@ def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plum
     big_layer = Image.new('RGBA', (im.width + 2 * ship.width, im.height + 2 * ship.height), (0, 0, 0, 0))
     big_layer.alpha_composite(ship, (int(ox) + ship.width, int(oy) + ship.height))
     layer = big_layer.crop((ship.width, ship.height, ship.width + im.width, ship.height + im.height))
+    im = outline_glow(im, layer, sc)
     im = Image.alpha_composite(im, layer)
     if shield_img is not None:
         # the field is translucent and sits in front of the ship (only over the ship, so the orbs stay clean)
@@ -188,6 +189,19 @@ def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plum
         fa[..., 3] *= np.asarray(layer, dtype=np.float32)[..., 3] / 255.0
         im = add(im, Image.fromarray(fa.astype(np.uint8)), (im.width / 2, im.height / 2))
     return im
+
+
+def outline_glow(im, ship_layer, sc):
+    """Blue neon glow hugging the ship's silhouette: a tight bright rim plus softer halos, added behind the ship."""
+    alpha = ship_layer.split()[3]
+    out = im
+    for radius, strength in ((2.5, 0.95), (7, 0.7), (16, 0.55), (34, 0.35)):
+        blur = alpha.filter(ImageFilter.GaussianBlur(radius * max(0.6, sc / 0.65)))
+        a = np.asarray(blur, dtype=np.float32) / 255.0 * strength
+        a = np.clip(a * 1.6, 0, 1)
+        rgba = np.dstack([np.full(a.shape, 70), np.full(a.shape, 185), np.full(a.shape, 255), a * 255]).astype(np.uint8)
+        out = add(out, Image.fromarray(rgba), (im.width / 2, im.height / 2))
+    return out
 
 
 def _fade(layer, f):
@@ -219,11 +233,11 @@ def composition(size=512):
 
 
 def scene_icon(size=512):
-    return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210, shield=((205, 355), 500))
+    return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210, shield=None)
 
 
 def feature(w=1024, h=500):
-    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9, shield=((315, 235), 620))
+    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9, shield=None)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
     size = 40 * 610 / f.width('Collect The Orbs', 40)
