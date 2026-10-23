@@ -115,21 +115,19 @@ def flame(base, tip, angle, length, width):
     return base
 
 
-def scene(w, h, ship_c, ship_px, ship_angle, orbs, smalls, seed=3):
-    """Shared composition: blue ship with a neon shield flying toward falling comets."""
-    import math
+def scene(w, h, ship_c, ship_w, orbs, smalls, seed=3):
+    """Shared composition: the original blue fighter (tools/art/src/original_ship.png) with falling neon comets."""
     im = background(w, h, seed=seed, stars=1.3)
     sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9),
               'g': ((255, 190, 40), img('fx/orb_gold.png'), 6)}
     for (x, y), c, size, ang in smalls:
         col, sheet, fi = sheets[c]
         im = comet(im, (x, y), col, size * 3.2, ang, size * 0.16, sheet, fi, int(size))
-    sl = ship_layer(ship_px, ship_angle)
-    im = add(im, neon_shield(int(ship_px * 1.18)), ship_c)
-    ra = math.radians(ship_angle)
-    tail = (ship_c[0] - math.sin(ra) * ship_px * 0.30, ship_c[1] + math.cos(ra) * ship_px * 0.30)
-    im = flame(im, tail, ship_angle, ship_px * 0.7, ship_px * 0.09)
-    im = over(im, sl, ship_c)
+    ship = Image.open(os.path.join(os.path.dirname(__file__), 'src', 'original_ship.png')).convert('RGBA')
+    ship = ship.resize((int(ship_w), int(ship_w * ship.height / ship.width)), Image.LANCZOS)
+    aura = N.radial(int(ship_w * 1.5), [(0, (40, 120, 255, 90)), (0.6, (30, 90, 230, 40)), (1.0, (20, 60, 200, 0))])
+    im = add(im, aura, ship_c)
+    im = over(im, ship, ship_c)
     for (x, y), c, size, ang in orbs:
         col, sheet, fi = sheets[c]
         im = comet(im, (x, y), col, size * 2.1, ang, size * 0.30, sheet, fi, int(size * 1.3))
@@ -141,8 +139,8 @@ def composition(size=512):
     s = lambda v: v * k
     smalls = [((s(70), s(60)), 'r', s(30), 72), ((s(150), s(40)), 'b', s(28), 70), ((s(40), s(160)), 'b', s(26), 74),
               ((s(205), s(120)), 'r', s(24), 68)]
-    orbs = [((s(345), s(205)), 'r', s(150), 66), ((s(420), s(400)), 'b', s(130), 72)]
-    return scene(size, size, (s(165), s(345)), int(s(340)), 38, orbs, smalls)
+    orbs = [((s(385), s(165)), 'r', s(140), 66), ((s(430), s(400)), 'b', s(125), 72)]
+    return scene(size, size, (s(215), s(330)), s(470), orbs, smalls)
 
 
 def pad(mask, m=40):
@@ -153,8 +151,8 @@ def pad(mask, m=40):
 
 def feature(w=1024, h=500):
     smalls = [((70, 110), 'r', 26, 70), ((120, 60), 'b', 26, 74), ((40, 240), 'b', 24, 72), ((175, 150), 'r', 30, 68), ((300, 50), 'b', 28, 72)]
-    orbs = [((730, 255), 'r', 165, 66), ((895, 395), 'b', 140, 72), ((560, 345), 'b', 62, 70)]
-    im = scene(w, h, (255, 300), 360, 36, orbs, smalls, seed=9)
+    orbs = [((760, 250), 'r', 165, 66), ((910, 400), 'b', 140, 72), ((620, 420), 'b', 58, 70)]
+    im = scene(w, h, (290, 300), 520, orbs, smalls, seed=9)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
     size = 40 * 620 / f.width('Collect The Orbs', 40)
