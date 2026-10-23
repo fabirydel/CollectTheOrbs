@@ -17,12 +17,12 @@ CYAN, RED, GOLD, PURPLE, WHITE = (40, 200, 255), (255, 40, 60), (255, 190, 40), 
 
 # (key, group word, threshold, color, name, description, points)
 ACH = [
-    ('score_25', 'SCORE', 25, CYAN, 'First Glow', 'Reach a score of 25 in a single game.', 10),
-    ('score_50', 'SCORE', 50, CYAN, 'Rising Star', 'Reach a score of 50 in a single game.', 15),
-    ('score_75', 'SCORE', 75, CYAN, 'Orb Hunter', 'Reach a score of 75 in a single game.', 20),
-    ('score_100', 'SCORE', 100, CYAN, 'Century', 'Reach a score of 100 in a single game.', 30),
-    ('score_200', 'SCORE', 200, CYAN, 'Orb Master', 'Reach a score of 200 in a single game.', 45),
-    ('score_300', 'SCORE', 300, CYAN, 'Orb Legend', 'Reach a score of 300 in a single game.', 60),
+    ('score_25', 'ORBS', 25, CYAN, 'First Glow', 'Collect 25 orbs of each color in a single game.', 10),
+    ('score_50', 'ORBS', 50, CYAN, 'Rising Star', 'Collect 50 orbs of each color in a single game.', 15),
+    ('score_75', 'ORBS', 75, CYAN, 'Orb Hunter', 'Collect 75 orbs of each color in a single game.', 20),
+    ('score_100', 'ORBS', 100, CYAN, 'Century', 'Collect 100 orbs of each color in a single game.', 30),
+    ('score_200', 'ORBS', 200, CYAN, 'Orb Master', 'Collect 200 orbs of each color in a single game.', 45),
+    ('score_300', 'ORBS', 300, CYAN, 'Orb Legend', 'Collect 300 orbs of each color in a single game.', 60),
     ('ships_1', 'SHIPS', 1, WHITE, 'Hangar Door', 'Unlock your first extra ship.', 5),
     ('ships_5', 'SHIPS', 5, WHITE, 'Small Squadron', 'Unlock 5 ships.', 10),
     ('ships_10', 'SHIPS', 10, WHITE, 'Fleet Captain', 'Unlock 10 ships.', 15),
@@ -45,10 +45,15 @@ ACH = [
 ]
 
 
+SINGULAR = {'SHIPS': 'SHIP', 'GALAXIES': 'GALAXY', 'GAMES': 'GAME', 'UPGRADES': 'UPGRADE', 'ORBS': 'ORB'}
+
+
 def icon(group, number, color):
+    if number == 1:
+        group = SINGULAR[group]
     N.set_scale(1)
     size = 512
-    im = S.background(size, size, seed=hash(group) % 1000 + number, stars=0.6)
+    im = S.background(size, size, seed=sum(map(ord, group[:3])) + number, stars=0.6)
     ring = Image.new('L', (size, size), 0)
     d = ImageDraw.Draw(ring)
     d.ellipse((46, 46, size - 46, size - 46), outline=255, width=14)
@@ -57,7 +62,7 @@ def icon(group, number, color):
     f = UI.BMFont('fonts/prototype128blueWhite')
     num = str(number)
     h = 100 if len(num) < 3 else 78
-    t = UI.neon_text(S.pad(f.mask(num, h), 40), UI.NEUTRAL, 3.0)
+    t = UI.neon_text(S.pad(f.mask(num, h), 40), color, 3.0)
     im = S.add(im, t, (size / 2, size / 2 - 18))
     lab = UI.neon_text(S.pad(f.mask(group, 22), 30), color, 2.5)
     im = S.add(im, lab, (size / 2, size / 2 + 78))

@@ -1,10 +1,10 @@
 key,name,description,points,icon
-score_25,First Glow,Reach a score of 25 in a single game.,10,score_25.png
-score_50,Rising Star,Reach a score of 50 in a single game.,15,score_50.png
-score_75,Orb Hunter,Reach a score of 75 in a single game.,20,score_75.png
-score_100,Century,Reach a score of 100 in a single game.,30,score_100.png
-score_200,Orb Master,Reach a score of 200 in a single game.,45,score_200.png
-score_300,Orb Legend,Reach a score of 300 in a single game.,60,score_300.png
+score_25,First Glow,Collect 25 orbs of each color in a single game.,10,score_25.png
+score_50,Rising Star,Collect 50 orbs of each color in a single game.,15,score_50.png
+score_75,Orb Hunter,Collect 75 orbs of each color in a single game.,20,score_75.png
+score_100,Century,Collect 100 orbs of each color in a single game.,30,score_100.png
+score_200,Orb Master,Collect 200 orbs of each color in a single game.,45,score_200.png
+score_300,Orb Legend,Collect 300 orbs of each color in a single game.,60,score_300.png
 ships_1,Hangar Door,Unlock your first extra ship.,5,ships_1.png
 ships_5,Small Squadron,Unlock 5 ships.,10,ships_5.png
 ships_10,Fleet Captain,Unlock 10 ships.,15,ships_10.png
