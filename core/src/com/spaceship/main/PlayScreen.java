@@ -180,6 +180,11 @@ public class PlayScreen implements Screen {
 	public int redsValue;
 	public int auxObj;
 	public int life1x;
+	private static final int POPUPS = 8;
+	private final float[] popX = new float[POPUPS], popY = new float[POPUPS], popA = new float[POPUPS];
+	private final int[] popValue = new int[POPUPS];
+	private final boolean[] popBlue = new boolean[POPUPS];
+	private int popNext;
 	public int life1y;
 	public int deathAngle;
 	public int deathAngle2;
@@ -534,6 +539,7 @@ public class PlayScreen implements Screen {
 			canTweenBlueScore = true;
 			canIncreaseSpeed = true;
 			drawLife = false;
+			java.util.Arrays.fill(popA, 0f);
 			
 			redToBlue = false;
 			blueToRed = false;
@@ -1590,6 +1596,7 @@ public class PlayScreen implements Screen {
 					}
 				}
 	
+				drawCatchPopups();
 				if(drawLife){
 					if(goldShield)
 						lifesFont.draw(game.batch, "+2", life1x, life1y);
@@ -1843,6 +1850,7 @@ public class PlayScreen implements Screen {
 					else
 						ship.tweenBlueRedFF();
 					blues = blues + bluesValue;
+						addCatchPopup(ball, bluesValue, true);
 					for(int h = 0; h < 5; h++){
 						blueParticles[h + blueP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						blueParticles[h + blueP].setColor(1f, 1f, 1f, 1f);
@@ -1894,6 +1902,7 @@ public class PlayScreen implements Screen {
 					else
 						ship.tweenRedBlueFF();
 					reds = reds + redsValue;
+						addCatchPopup(ball, redsValue, false);
 					for(int h = 0; h < 5; h++){
 						redParticles[h + redP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						redParticles[h + redP].setColor(1f, 1f, 1f, 1f);
@@ -1942,6 +1951,7 @@ public class PlayScreen implements Screen {
 						absorb.play(0.90f);
 					ship.tweenGoldFF();
 					reds = reds + redsValue;
+						addCatchPopup(ball, redsValue, false);
 					for(int h = 0; h < 5; h++){
 						redParticles[h + redP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						redParticles[h + redP].setColor(1f, 1f, 1f, 1f);
@@ -1962,6 +1972,7 @@ public class PlayScreen implements Screen {
 						absorb.play(0.90f);
 					ship.tweenGoldFF();
 					blues = blues + bluesValue;
+						addCatchPopup(ball, bluesValue, true);
 					for(int h = 0; h < 5; h++){
 						blueParticles[h + blueP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						blueParticles[h + blueP].setColor(1f, 1f, 1f, 1f);
@@ -2260,6 +2271,30 @@ public class PlayScreen implements Screen {
 		}
 		bgs1.setSize(Gdx.graphics.getWidth(), bgs1.getHeight()*y);
 		bgs2.setSize(Gdx.graphics.getWidth(), bgs2.getHeight()*y);
+	}
+
+	private void addCatchPopup(Ball ball, int value, boolean blue){
+		if(value <= 1) return;
+		popX[popNext] = ball.getPosition().x;
+		popY[popNext] = ball.getPosition().y + com.spaceship.handlers.FontUtil.bounds(lifesFont, "+1").height;
+		popA[popNext] = 1f;
+		popValue[popNext] = value;
+		popBlue[popNext] = blue;
+		popNext = (popNext + 1) % POPUPS;
+	}
+
+	private void drawCatchPopups(){
+		for(int i = 0; i < POPUPS; i++){
+			if(popA[i] <= 0) continue;
+			BitmapFont font = popBlue[i] ? bluesFont3 : redsFont3;
+			float oldA = font.getColor().a;
+			font.setColor(1f, 1f, 1f, popA[i]);
+			font.getData().setScale(x, y);
+			font.draw(game.batch, "+" + popValue[i], popX[i], popY[i]);
+			font.setColor(1f, 1f, 1f, oldA);
+			popY[i] += 2.5f;
+			popA[i] -= 0.025f;
+		}
 	}
 
 	public void drawLifeMeter(){
