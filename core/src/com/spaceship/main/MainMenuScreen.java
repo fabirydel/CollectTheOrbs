@@ -2324,6 +2324,13 @@ public class MainMenuScreen implements Screen {
 		else
 			imgsHelp.add(itemsES).padBottom(helpPad).width(containerHelp.getWidth() - helpPad).height(((containerHelp.getWidth() - helpPad)*itemsES.getHeight())/itemsES.getWidth());
 		imgsHelp.row();
+		// the ship art is CC BY 4.0: credit the author (main-menu Help only, not the pause Help)
+		Label creditsLabel = new Label("Credits\nShip art by MillionthVector (Alan Guyant), CC BY 4.0, modified.\nmillionthvector.blogspot.com", skin);
+		creditsLabel.setFontScale(x/4.5f, y/4.5f);
+		creditsLabel.setWrap(true);
+		creditsLabel.setAlignment(Align.left);
+		imgsHelp.add(creditsLabel).left().fillX().width(containerHelp.getWidth() - helpPad).padBottom(helpPad);
+		imgsHelp.row();
 		
 		Image bBackITuto = new Image(bBack);
 		containerHelp.add(bBackITuto).width(bBack.getWidth()).height(bBack.getHeight()).left();
@@ -2939,13 +2946,6 @@ public class MainMenuScreen implements Screen {
 		}else{
 			imgsSttngs.add(iEspanol).width(iEspanol.getWidth()).height(iEspanol.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
 		}
-		imgsSttngs.row();
-		// the ship art is CC BY 4.0: credit the author
-		Label creditsLabel = new Label("Credits\nShip art by MillionthVector (Alan Guyant), CC BY 4.0, modified.\nmillionthvector.blogspot.com", skin);
-		creditsLabel.setFontScale(x/2.4f, y/2.4f);
-		creditsLabel.setWrap(true);
-		creditsLabel.setAlignment(Align.left);
-		imgsSttngs.add(creditsLabel).colspan(2).left().expandX().fillX().padTop(iSoundOn.getHeight()/2);
 	
 		iSoundOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){
