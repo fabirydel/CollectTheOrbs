@@ -545,6 +545,14 @@ public class Spaceship{
 			goldGlow.setPosition(ship.x - goldGlow.getWidth()/2, ship.y - goldGlow.getHeight()/2);
 			goldGlow.setColor(1f, 1f, 1f, ff.getColor().a*env);
 			goldGlow.draw(sb);
+			// brighten the peak: the same gold shield and glow added on top, a little larger
+			Fx.additiveOn(sb);
+			gold.setScale(ff.getScaleX()*(1f + 0.04f*env), ff.getScaleY()*(1f + 0.04f*env));
+			gold.setColor(1f, 1f, 1f, ff.getColor().a*env*0.9f);
+			gold.draw(sb);
+			goldGlow.setColor(1f, 1f, 1f, ff.getColor().a*env*0.8f);
+			goldGlow.draw(sb);
+			Fx.additiveOff(sb);
 			gold.setScale(gx, gy);
 			goldGlow.setScale(lx, ly);
 			gold.setColor(gc);
