@@ -252,10 +252,29 @@ def feature(w=1024, h=500):
 
 
 def launcher_icons(master):
-    """Legacy square launcher PNGs (replace android/res/drawable-*/img.png) from the store composition."""
+    """Legacy square PNGs plus an adaptive icon (full-bleed art inside the 66/108 safe zone on a near-black layer),
+    so Android does not put the icon on a white circle."""
     sizes = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144}
     for d, s in sizes.items():
         master.convert('RGBA').resize((s, s), Image.LANCZOS).save(os.path.join(ROOT, 'android', 'res', 'drawable-' + d, 'img.png'))
+    res = os.path.join(ROOT, 'android', 'res')
+    os.makedirs(os.path.join(res, 'drawable-nodpi'), exist_ok=True)
+    fg = Image.new('RGBA', (432, 432), (0, 0, 0, 0))
+    art = master.convert('RGBA').resize((340, 340), Image.LANCZOS)
+    yy, xx = np.mgrid[0:340, 0:340].astype(np.float32)
+    edge = np.minimum(np.minimum(xx, 339 - xx), np.minimum(yy, 339 - yy))
+    feather = np.clip(edge / 55.0, 0, 1) ** 1.5      # fade the art's edges into the near-black background layer
+    a = np.asarray(art, dtype=np.float32).copy()
+    a[..., 3] *= feather
+    fg.alpha_composite(Image.fromarray(a.astype(np.uint8)), (46, 46))
+    fg.save(os.path.join(res, 'drawable-nodpi', 'ic_launcher_foreground.png'))
+    os.makedirs(os.path.join(res, 'mipmap-anydpi-v26'), exist_ok=True)
+    open(os.path.join(res, 'mipmap-anydpi-v26', 'ic_launcher.xml'), 'w').write(
+        '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '    <background android:drawable="@color/ic_launcher_background"/>\n'
+        '    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n</adaptive-icon>\n')
+    open(os.path.join(res, 'values', 'ic_launcher_background.xml'), 'w').write(
+        '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#030305</color>\n</resources>\n')
 
 
 if __name__ == '__main__':
