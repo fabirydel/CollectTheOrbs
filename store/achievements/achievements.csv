@@ -1,0 +1,26 @@
+key,name,description,points,icon
+score_25,First Glow,Reach a score of 25 in a single game.,10,score_25.png
+score_50,Rising Star,Reach a score of 50 in a single game.,15,score_50.png
+score_75,Orb Hunter,Reach a score of 75 in a single game.,20,score_75.png
+score_100,Century,Reach a score of 100 in a single game.,30,score_100.png
+score_200,Orb Master,Reach a score of 200 in a single game.,45,score_200.png
+score_300,Orb Legend,Reach a score of 300 in a single game.,60,score_300.png
+ships_1,Hangar Door,Unlock your first extra ship.,5,ships_1.png
+ships_5,Small Squadron,Unlock 5 ships.,10,ships_5.png
+ships_10,Fleet Captain,Unlock 10 ships.,15,ships_10.png
+ships_25,Admiral,Unlock 25 ships.,25,ships_25.png
+ships_50,Armada,Unlock 50 ships.,40,ships_50.png
+ships_74,Complete Fleet,Unlock 74 ships.,60,ships_74.png
+galaxies_1,Stargazer,Unlock your first extra galaxy.,15,galaxies_1.png
+galaxies_5,Voyager,Unlock 5 galaxies.,30,galaxies_5.png
+galaxies_9,Galaxy Hopper,Unlock 9 galaxies.,50,galaxies_9.png
+games_1,Lift Off,Play your first game.,5,games_1.png
+games_10,Getting Hooked,Play 10 games.,10,games_10.png
+games_25,Regular,Play 25 games.,15,games_25.png
+games_50,Dedicated Pilot,Play 50 games.,25,games_50.png
+games_100,Veteran,Play 100 games.,40,games_100.png
+games_500,Orbital Lifer,Play 500 games.,60,games_500.png
+upgrades_1,Tinkerer,Buy your first upgrade.,10,upgrades_1.png
+upgrades_5,Mechanic,Buy 5 upgrades.,20,upgrades_5.png
+upgrades_10,Engineer,Buy 10 upgrades.,40,upgrades_10.png
+upgrades_18,Fully Upgraded,Buy 18 upgrades.,60,upgrades_18.png
