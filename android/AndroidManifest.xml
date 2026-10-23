@@ -11,10 +11,10 @@
         android:label="${appLabel}"
         android:theme="@style/GdxTheme" >
 
-        <!-- Google test AdMob app id: replace with the real one from the AdMob console before release -->
+        <!-- AdMob app id: the real one in release builds, Google's test id in debug (see android/build.gradle) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name="com.spaceship.main.android.AndroidLauncher"

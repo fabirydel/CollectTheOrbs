@@ -43,8 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class AndroidLauncher extends AndroidApplication implements ActionResolver {
 
-	// Google's public test ids: replace with the real AdMob interstitial unit id (and the app id in the manifest) before release
-	private static final String INTERSTITIAL_UNIT_ID = "ca-app-pub-3940256099942544/1033173712";
+	// the interstitial unit id comes from android/build.gradle: the real one in release, Google's test id in debug
 	private static final String REMOVE_ADS_SKU = "remove_ads";
 	/** One interstitial every this many game overs. */
 	private static final int GAMES_PER_AD = 3;
@@ -109,7 +108,7 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			if (adsRemoved || !adsInitialized.get() || interstitial != null || loadingAd)
 				return;
 			loadingAd = true;
-			InterstitialAd.load(this, INTERSTITIAL_UNIT_ID, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
+			InterstitialAd.load(this, getString(R.string.admob_interstitial_id), new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
 				@Override
 				public void onAdLoaded(InterstitialAd ad) {
 					interstitial = ad;

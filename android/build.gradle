@@ -14,9 +14,14 @@ android {
         applicationId 'com.fabirydel.collecttheorbs'
         minSdk 24
         targetSdk 36
-        versionCode 4
-        versionName '2.0.3'
-        manifestPlaceholders = [appLabel: '@string/app_name']
+        versionCode 5
+        versionName '2.0.4'
+        manifestPlaceholders = [appLabel: '@string/app_name', admobAppId: 'ca-app-pub-6364399383456402~4696765155']
+        resValue 'string', 'admob_interstitial_id', 'ca-app-pub-6364399383456402/9451106223'
+    }
+
+    buildFeatures {
+        resValues true
     }
 
     compileOptions {
@@ -55,7 +60,9 @@ android {
         debug {
             // installs next to the Play Store build instead of clashing with its signature
             applicationIdSuffix '.debug'
-            manifestPlaceholders = [appLabel: 'Orbs (dev)']
+            // debug builds use Google's test ads: never show (or tap) real ads while developing
+            manifestPlaceholders = [appLabel: 'Orbs (dev)', admobAppId: 'ca-app-pub-3940256099942544~3347511713']
+            resValue 'string', 'admob_interstitial_id', 'ca-app-pub-3940256099942544/1033173712'
         }
         release {
             minifyEnabled false
