@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Google Play Games Services ids (Play Console > Grow users > Play Games Services > Configuration).
-     Replace each TODO with the id from the console; ids left as TODO are skipped. -->
+     An id left as TODO is skipped. -->
 <resources>
     <string name="game_services_project_id" translatable="false">751260217317</string>
     <string name="leaderboard_high_score" translatable="false">CgkI5d_k1O4VEAIQAQ</string>
 
-    <string name="achievement_score_25" translatable="false">TODO</string>
-    <string name="achievement_score_50" translatable="false">TODO</string>
-    <string name="achievement_score_75" translatable="false">TODO</string>
-    <string name="achievement_score_100" translatable="false">TODO</string>
-    <string name="achievement_score_200" translatable="false">TODO</string>
-    <string name="achievement_score_300" translatable="false">TODO</string>
-    <string name="achievement_ships_1" translatable="false">TODO</string>
-    <string name="achievement_ships_5" translatable="false">TODO</string>
-    <string name="achievement_ships_10" translatable="false">TODO</string>
-    <string name="achievement_ships_25" translatable="false">TODO</string>
-    <string name="achievement_ships_50" translatable="false">TODO</string>
-    <string name="achievement_ships_74" translatable="false">TODO</string>
-    <string name="achievement_galaxies_1" translatable="false">TODO</string>
-    <string name="achievement_galaxies_5" translatable="false">TODO</string>
-    <string name="achievement_galaxies_9" translatable="false">TODO</string>
-    <string name="achievement_games_1" translatable="false">TODO</string>
-    <string name="achievement_games_10" translatable="false">TODO</string>
-    <string name="achievement_games_25" translatable="false">TODO</string>
-    <string name="achievement_games_50" translatable="false">TODO</string>
-    <string name="achievement_games_100" translatable="false">TODO</string>
-    <string name="achievement_games_500" translatable="false">TODO</string>
-    <string name="achievement_upgrades_1" translatable="false">TODO</string>
-    <string name="achievement_upgrades_5" translatable="false">TODO</string>
-    <string name="achievement_upgrades_10" translatable="false">TODO</string>
-    <string name="achievement_upgrades_18" translatable="false">TODO</string>
+    <string name="achievement_score_25" translatable="false">CgkI5d_k1O4VEAIQCQ</string>
+    <string name="achievement_score_50" translatable="false">CgkI5d_k1O4VEAIQGg</string>
+    <string name="achievement_score_75" translatable="false">CgkI5d_k1O4VEAIQGw</string>
+    <string name="achievement_score_100" translatable="false">CgkI5d_k1O4VEAIQFQ</string>
+    <string name="achievement_score_200" translatable="false">CgkI5d_k1O4VEAIQDQ</string>
+    <string name="achievement_score_300" translatable="false">CgkI5d_k1O4VEAIQEg</string>
+    <string name="achievement_ships_1" translatable="false">CgkI5d_k1O4VEAIQBA</string>
+    <string name="achievement_ships_5" translatable="false">CgkI5d_k1O4VEAIQBQ</string>
+    <string name="achievement_ships_10" translatable="false">CgkI5d_k1O4VEAIQEA</string>
+    <string name="achievement_ships_25" translatable="false">CgkI5d_k1O4VEAIQDw</string>
+    <string name="achievement_ships_50" translatable="false">CgkI5d_k1O4VEAIQBg</string>
+    <string name="achievement_ships_74" translatable="false">CgkI5d_k1O4VEAIQEw</string>
+    <string name="achievement_galaxies_1" translatable="false">CgkI5d_k1O4VEAIQCg</string>
+    <string name="achievement_galaxies_5" translatable="false">CgkI5d_k1O4VEAIQCA</string>
+    <string name="achievement_galaxies_9" translatable="false">CgkI5d_k1O4VEAIQFA</string>
+    <string name="achievement_games_1" translatable="false">CgkI5d_k1O4VEAIQCw</string>
+    <string name="achievement_games_10" translatable="false">CgkI5d_k1O4VEAIQGQ</string>
+    <string name="achievement_games_25" translatable="false">CgkI5d_k1O4VEAIQBw</string>
+    <string name="achievement_games_50" translatable="false">CgkI5d_k1O4VEAIQDA</string>
+    <string name="achievement_games_100" translatable="false">CgkI5d_k1O4VEAIQEQ</string>
+    <string name="achievement_games_500" translatable="false">CgkI5d_k1O4VEAIQFg</string>
+    <string name="achievement_upgrades_1" translatable="false">CgkI5d_k1O4VEAIQGA</string>
+    <string name="achievement_upgrades_5" translatable="false">CgkI5d_k1O4VEAIQAw</string>
+    <string name="achievement_upgrades_10" translatable="false">CgkI5d_k1O4VEAIQDg</string>
+    <string name="achievement_upgrades_18" translatable="false">CgkI5d_k1O4VEAIQFw</string>
     <!-- unlocked by the app once all the achievements above are unlocked -->
-    <string name="achievement_platinum" translatable="false">TODO</string>
+    <string name="achievement_platinum" translatable="false">CgkI5d_k1O4VEAIQHA</string>
 </resources>
