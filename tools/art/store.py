@@ -115,32 +115,44 @@ def flame(base, tip, angle, length, width):
     return base
 
 
-def scene(w, h, ship_c, ship_w, orbs, smalls, seed=3):
-    """Shared composition: the original blue fighter (tools/art/src/original_ship.png) with falling neon comets."""
+# Orb placements copied from the original icon (512 px) and banner (1024x500): head centre, end of the tail, orb diameter.
+BANNER_ORBS = [
+    ((754, 239), (607, 0), 118, 'r'), ((889, 421), (1024, 164), 122, 'b'),
+    ((44, 84), (60, 50), 12, 'r'), ((146, 68), (193, 29), 18, 'r'), ((125, 118), (96, 89), 12, 'b'),
+    ((225, 123), (193, 68), 18, 'b'), ((114, 143), (61, 118), 16, 'r'), ((504, 211), (514, 136), 14, 'r'),
+    ((29, 256), (32, 193), 14, 'b'), ((256, 418), (268, 336), 26, 'r'), ((427, 451), (389, 371), 30, 'b'),
+    ((25, 457), (121, 368), 28, 'b'),
+]
+ICON_ORBS = [
+    ((367, 115), (290, 10), 104, 'r'), ((420, 272), (500, 95), 100, 'b'),
+    ((27, 74), (47, 35), 14, 'r'), ((115, 49), (87, 22), 14, 'b'), ((241, 72), (212, 32), 18, 'b'),
+    ((171, 93), (185, 55), 16, 'b'), ((125, 116), (150, 77), 18, 'r'), ((40, 142), (77, 117), 16, 'b'),
+    ((120, 220), (137, 145), 26, 'r'), ((36, 244), (46, 190), 20, 'r'),
+]
+
+
+def scene(w, h, orbs, ship_xy, scale=1.0, seed=3):
+    """The original blue fighter (tools/art/src/original_ship.png) with the neon orbs in the original positions."""
+    import math
+    k = scale
     im = background(w, h, seed=seed, stars=1.3)
-    sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9),
-              'g': ((255, 190, 40), img('fx/orb_gold.png'), 6)}
-    for (x, y), c, size, ang in smalls:
+    sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9)}
+    for (hx, hy), (tx, ty), dia, c in orbs:
         col, sheet, fi = sheets[c]
-        im = comet(im, (x, y), col, size * 3.2, ang, size * 0.16, sheet, fi, int(size))
+        length = math.hypot(hx - tx, hy - ty) * k
+        ang = math.degrees(math.atan2(hy - ty, hx - tx))
+        big = dia > 60
+        im = comet(im, (hx * k, hy * k), col, length, ang, dia * k * (0.55 if big else 0.42), sheet, fi, int(dia * k * 1.78))
     ship = Image.open(os.path.join(os.path.dirname(__file__), 'src', 'original_ship.png')).convert('RGBA')
-    ship = ship.resize((int(ship_w), int(ship_w * ship.height / ship.width)), Image.LANCZOS)
-    aura = N.radial(int(ship_w * 1.5), [(0, (40, 120, 255, 90)), (0.6, (30, 90, 230, 40)), (1.0, (20, 60, 200, 0))])
-    im = add(im, aura, ship_c)
-    im = over(im, ship, ship_c)
-    for (x, y), c, size, ang in orbs:
-        col, sheet, fi = sheets[c]
-        im = comet(im, (x, y), col, size * 2.1, ang, size * 0.30, sheet, fi, int(size * 1.3))
+    ship = ship.resize((int(ship.width * k), int(ship.height * k)), Image.LANCZOS)
+    aura = N.radial(int(ship.width * 1.5), [(0, (40, 120, 255, 70)), (0.6, (30, 90, 230, 30)), (1.0, (20, 60, 200, 0))])
+    cx, cy = ship_xy[0] * k + ship.width / 2, ship_xy[1] * k + ship.height / 2
+    im = add(im, aura, (cx, cy))
+    layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    layer.alpha_composite(ship, (int(ship_xy[0] * k), int(ship_xy[1] * k))) if ship_xy[0] >= 0 and ship_xy[1] >= 0 else layer.paste(
+        ship.crop((max(0, -int(ship_xy[0] * k)), max(0, -int(ship_xy[1] * k)), ship.width, ship.height)), (max(0, int(ship_xy[0] * k)), max(0, int(ship_xy[1] * k))))
+    im = Image.alpha_composite(im, layer)
     return im
-
-
-def composition(size=512):
-    k = size / 512.0
-    s = lambda v: v * k
-    smalls = [((s(70), s(60)), 'r', s(30), 72), ((s(150), s(40)), 'b', s(28), 70), ((s(40), s(160)), 'b', s(26), 74),
-              ((s(205), s(120)), 'r', s(24), 68)]
-    orbs = [((s(385), s(165)), 'r', s(140), 66), ((s(430), s(400)), 'b', s(125), 72)]
-    return scene(size, size, (s(215), s(330)), s(470), orbs, smalls)
 
 
 def pad(mask, m=40):
@@ -149,16 +161,17 @@ def pad(mask, m=40):
     return out
 
 
+def composition(size=512):
+    return scene(size, size, ICON_ORBS, (-45, 137), size / 512.0)
+
+
 def feature(w=1024, h=500):
-    smalls = [((70, 110), 'r', 26, 70), ((120, 60), 'b', 26, 74), ((40, 240), 'b', 24, 72), ((175, 150), 'r', 30, 68), ((300, 50), 'b', 28, 72)]
-    orbs = [((760, 250), 'r', 165, 66), ((910, 400), 'b', 140, 72), ((620, 420), 'b', 58, 70)]
-    im = scene(w, h, (290, 300), 520, orbs, smalls, seed=9)
+    im = scene(w, h, BANNER_ORBS, (35, 40), 1.0, seed=9)
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
-    size = 40 * 620 / f.width('Collect The Orbs', 40)
+    size = 40 * 610 / f.width('Collect The Orbs', 40)
     t = UI.neon_text(pad(f.mask('Collect The Orbs', size)), UI.NEUTRAL, 2.5)
-    im = add(im, t, (700, 62))
-    return im
+    return add(im, t, (705, 48))
 
 
 def launcher_icons(master):
