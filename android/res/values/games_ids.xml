@@ -3,7 +3,7 @@
      Replace each TODO with the id from the console; ids left as TODO are skipped. -->
 <resources>
     <string name="game_services_project_id" translatable="false">751260217317</string>
-    <string name="leaderboard_high_score" translatable="false">TODO</string>
+    <string name="leaderboard_high_score" translatable="false">CgkI5d_k1O4VEAIQAQ</string>
 
     <string name="achievement_score_25" translatable="false">TODO</string>
     <string name="achievement_score_50" translatable="false">TODO</string>
