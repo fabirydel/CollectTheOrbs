@@ -186,7 +186,24 @@ def pad(mask, m=40):
     return out
 
 
+def neon_border(size, inset=0.03, radius=0.17, stroke=0.012):
+    """Gray-white neon rounded-rectangle outline, like the game's UI cards."""
+    from PIL import ImageDraw
+    N.set_scale(1)
+    m = Image.new('L', (size, size), 0)
+    d = ImageDraw.Draw(m)
+    i = int(size * inset)
+    d.rounded_rectangle((i, i, size - 1 - i, size - 1 - i), radius=int(size * radius), outline=255, width=max(2, int(size * stroke)))
+    layer = UI.neon_text(m, UI.NEUTRAL, size / 170.0)
+    return layer
+
+
 def composition(size=512):
+    im = scene_icon(size)
+    return add(im, neon_border(size), (size / 2, size / 2))
+
+
+def scene_icon(size=512):
     return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210)
 
 
