@@ -119,4 +119,53 @@ public class EnergyBar {
 		}
 		sb.setColor(1f, 1f, 1f, 1f);
 	}
+
+	/**
+	 * Call right after the frame is drawn: light from the liquid shining through the glass window only (the metal rails and
+	 * end caps stay unlit): scatter into the empty part of the tube, light catching the glass edges, and a slow glint.
+	 */
+	public void drawGlass(SpriteBatch sb, Sprite frame, Color tint) {
+		float level = MathUtils.clamp(shown, 0f, 1f);
+		if (level <= 0.002f)
+			return;
+		float t = Fx.time();
+		float sx = frame.getWidth()/(cells == 3 ? 102f : cells == 4 ? 122f : 143f);
+		float sy = frame.getHeight()/BAR_H;
+		float a = frame.getColor().a;
+		float fullW = frame.getWidth()/sx - 2f*IN_X0;
+		float w = fullW*level;
+		float lx = frame.getX() + IN_X0*sx, ly = frame.getY() + IN_Y0*sy, lh = (IN_Y1 - IN_Y0)*sy;
+		float tipX = lx + w*sx;
+		float pulse = 0.5f + 0.5f*MathUtils.sin(t*1.3f);
+		Fx.additiveOn(sb);
+		// light scattering into the empty glass beyond the liquid
+		float room = lx + fullW*sx - tipX;
+		float reach = Math.min(44f*sx, room);
+		if (reach > 1f) {
+			sb.setColor(tint.r, tint.g, tint.b, a*(0.50f + 0.12f*pulse));
+			sb.draw(tip, tipX, ly, reach, lh, 1f, 0f, 0f, 1f);
+			float near = Math.min(16f*sx, room);
+			sb.setColor(1f, 0.9f, 0.55f, a*(0.45f + 0.1f*pulse));
+			sb.draw(tip, tipX, ly, near, lh, 1f, 0f, 0f, 1f);
+		}
+		// the whole window glows a little, strongest toward the middle of the liquid
+		sb.setColor(tint.r, tint.g, tint.b, a*(0.10f + 0.04f*pulse));
+		sb.draw(Fx.glow(), lx, ly, w*sx, lh);
+		// light catching the glass edges, top and bottom
+		sb.setColor(1f, 0.93f, 0.62f, a*(0.34f + 0.1f*pulse));
+		sb.draw(Fx.glow(), lx, ly + lh - 2.4f*sy, w*sx, 3.6f*sy);
+		sb.setColor(tint.r, tint.g, tint.b, a*0.30f);
+		sb.draw(Fx.glow(), lx, ly - 1.2f*sy, w*sx, 3.4f*sy);
+		// a soft glint sliding along the glass now and then
+		float gp = (t*0.2f) % 1.6f;
+		if (gp < 1f) {
+			float gw = 16f*sx, gx = lx + gp*(w*sx + gw) - gw;
+			float x0 = Math.max(gx, lx), x1 = Math.min(gx + gw, lx + w*sx);
+			if (x1 > x0) {
+				sb.setColor(1f, 0.98f, 0.85f, a*0.16f*(float) Math.sin(gp*Math.PI));
+				sb.draw(Fx.glow(), x0, ly, x1 - x0, lh);
+			}
+		}
+		Fx.additiveOff(sb);
+	}
 }

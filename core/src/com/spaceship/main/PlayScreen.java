@@ -2304,6 +2304,7 @@ public class PlayScreen implements Screen {
 		energyBar.update(Gdx.graphics.getDeltaTime(), ship.getLifes()/(float)barWidth);
 		energyBar.draw(game.batch, lifeBarSprite, lifeSprites[ship.getLifes()].getColor());
 		lifeBarSprite.draw(game.batch);
+		energyBar.drawGlass(game.batch, lifeBarSprite, lifeSprites[ship.getLifes()].getColor());
 		speedFx.drawChevrons(game.batch, lifeBarSprite.getX() + lifeBarSprite.getWidth()/2, lifeBarSprite.getY() - fxy(22) - fxy(8),
 				fxy(22), director.getTier(), lifeBarSprite.getColor().a);
 	}
