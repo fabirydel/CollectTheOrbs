@@ -182,8 +182,9 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 						QueryProductDetailsParams.Product.newBuilder().setProductId(REMOVE_ADS_SKU)
 								.setProductType(BillingClient.ProductType.INAPP).build())).build(),
 						(r, details) -> {
-							if (r.getResponseCode() == BillingClient.BillingResponseCode.OK && details != null && !details.isEmpty())
-								removeAdsDetails = details.get(0);
+							List<ProductDetails> list = details == null ? null : details.getProductDetailsList();
+							if (r.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null && !list.isEmpty())
+								removeAdsDetails = list.get(0);
 						});
 				if (then != null)
 					then.run();
