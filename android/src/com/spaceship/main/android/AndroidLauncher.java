@@ -123,8 +123,10 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 	}
 
 	private void refreshGamesSignIn() {
-		PlayGames.getGamesSignInClient(this).isAuthenticated().addOnCompleteListener(task ->
-				gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated());
+		PlayGames.getGamesSignInClient(this).isAuthenticated().addOnCompleteListener(task -> {
+			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
+			checkPlatinum();
+		});
 	}
 
 	@Override public boolean getSignedIn() { return gamesSignedIn; }
@@ -146,7 +148,29 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 	public void unlockAchievement(String achievementId) {
 		String id = achievementIds.get(achievementId);
 		if (gamesSignedIn && id != null)
-			PlayGames.getAchievementsClient(this).unlock(id);
+			PlayGames.getAchievementsClient(this).unlockImmediate(id).addOnSuccessListener(v -> checkPlatinum());
+	}
+
+	/** Platinum: unlocked once every other achievement is unlocked. */
+	private void checkPlatinum() {
+		String platinum = gamesId("achievement_platinum");
+		if (!gamesSignedIn || platinum == null || achievementIds.isEmpty())
+			return;
+		PlayGames.getAchievementsClient(this).load(false).addOnSuccessListener(data -> {
+			com.google.android.gms.games.achievement.AchievementBuffer buffer = data.get();
+			if (buffer == null)
+				return;
+			int unlocked = 0;
+			try {
+				for (com.google.android.gms.games.achievement.Achievement a : buffer)
+					if (!a.getAchievementId().equals(platinum) && a.getState() == com.google.android.gms.games.achievement.Achievement.STATE_UNLOCKED)
+						unlocked++;
+			} finally {
+				buffer.release();
+			}
+			if (unlocked >= achievementIds.size())
+				PlayGames.getAchievementsClient(this).unlock(platinum);
+		});
 	}
 
 	@Override

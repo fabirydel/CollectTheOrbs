@@ -30,4 +30,6 @@
     <string name="achievement_upgrades_5" translatable="false">TODO</string>
     <string name="achievement_upgrades_10" translatable="false">TODO</string>
     <string name="achievement_upgrades_18" translatable="false">TODO</string>
+    <!-- unlocked by the app once all the achievements above are unlocked -->
+    <string name="achievement_platinum" translatable="false">TODO</string>
 </resources>

@@ -14,6 +14,7 @@ import store as S
 OUT = os.path.join(UI.ROOT, 'store', 'achievements')
 os.makedirs(OUT, exist_ok=True)
 CYAN, RED, GOLD, PURPLE, WHITE = (40, 200, 255), (255, 40, 60), (255, 190, 40), (180, 90, 255), (235, 235, 240)
+PLATINUM = (170, 205, 255)
 
 # (key, group word, threshold, color, name, description, points)
 ACH = [
@@ -42,13 +43,29 @@ ACH = [
     ('upgrades_5', 'UPGRADES', 5, GOLD, 'Mechanic', 'Buy 5 upgrades.', 20),
     ('upgrades_10', 'UPGRADES', 10, GOLD, 'Engineer', 'Buy 10 upgrades.', 40),
     ('upgrades_18', 'UPGRADES', 18, GOLD, 'Fully Upgraded', 'Buy 18 upgrades.', 60),
+    ('platinum', 'PLATINUM', 0, PLATINUM, 'Platinum', 'Unlock all the other achievements.', 100),
 ]
 
 
 SINGULAR = {'SHIPS': 'SHIP', 'GALAXIES': 'GALAXY', 'GAMES': 'GAME', 'UPGRADES': 'UPGRADE', 'ORBS': 'ORB'}
 
 
+def platinum_icon(color):
+    size = 512
+    im = S.background(size, size, seed=77, stars=0.6)
+    for inset, width in ((40, 12), (74, 8)):
+        ring = Image.new('L', (size, size), 0)
+        ImageDraw.Draw(ring).ellipse((inset, inset, size - inset, size - inset), outline=255, width=width)
+        im = S.add(im, UI.neon_text(ring, color, 8.0), (size / 2, size / 2))
+    f = UI.BMFont('fonts/prototype128blueWhite')
+    t = UI.neon_text(S.pad(f.mask('PLATINUM', 34), 40), color, 3.0)
+    im = S.add(im, t, (size / 2, size / 2))
+    return im.convert('RGB')
+
+
 def icon(group, number, color):
+    if group == 'PLATINUM':
+        return platinum_icon(color)
     if number == 1:
         group = SINGULAR[group]
     N.set_scale(1)
