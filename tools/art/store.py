@@ -78,23 +78,22 @@ def background(w, h, seed=3, stars=1.0):
     return Image.fromarray(arr.clip(0, 255).astype(np.uint8))
 
 
-def comet(base, head, color, length, angle_deg, width, orb_frames, frame_i, orb_px):
+def comet(base, head, color, length, angle_deg, width, orb_frames, frame_i, orb_px, taper=0.85, fade=1.7, n=60):
     """Orb with a tapered additive tail pointing away from the direction of travel (angle in degrees, 0 = right)."""
     import math
     ca, sa = math.cos(math.radians(angle_deg)), math.sin(math.radians(angle_deg))
-    n = 60
     for k in range(n, 0, -1):
         f = k / n
         px, py = head[0] - ca * length * f, head[1] - sa * length * f
-        s = int(width * (1 - f * 0.85) * 2)
+        s = int(width * (1 - f * taper) * 2)
         if s < 2:
             continue
-        a = (1 - f) ** 1.7
+        a = (1 - f) ** fade
         blob = N.radial(s, [(0, color + (int(255 * a * 0.5),)), (1, color + (0,))]) if False else None
         g = Image.new('RGBA', (s, s), (0, 0, 0, 0))
         yy, xx = np.mgrid[0:s, 0:s].astype(np.float32)
         d = np.hypot(xx - s / 2, yy - s / 2) / (s / 2)
-        al = np.clip(1 - d, 0, 1) ** 1.6 * a * 255
+        al = np.clip(1 - d, 0, 1) ** 1.6 * a * 255 * (60.0 / n)
         arr = np.dstack([np.full((s, s), color[0]), np.full((s, s), color[1]), np.full((s, s), color[2]), al]).astype(np.uint8)
         base = add(base, Image.fromarray(arr), (px, py))
     halo = frame(orb_frames, frame_i, orb_px)
@@ -167,9 +166,16 @@ def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plum
     for (hx, hy), (tx, ty), dia, c in orbs:
         col, sheet, fi = sheets[c]
         big = dia > 60
-        length = math.hypot(hx - tx, hy - ty) * k * (1.6 if big else tail_mul)
         ang = math.degrees(math.atan2(hy - ty, hx - tx))
-        im = comet(im, (hx * k, hy * k), col, length, ang, dia * k * (0.45 if big else 0.30), sheet, fi, int(dia * k * 1.78))
+        if big:
+            # a steady band running off the image: length = distance to the canvas edge along the tail, plus some
+            ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+            edge = min([t for t in (((hx * k) / ca) if ca > 1e-6 else None, ((w - hx * k) / -ca) if ca < -1e-6 else None,
+                                    ((hy * k) / sa) if sa > 1e-6 else None, ((h - hy * k) / -sa) if sa < -1e-6 else None) if t is not None])
+            im = comet(im, (hx * k, hy * k), col, edge * 1.25, ang, dia * k * 0.42, sheet, fi, int(dia * k * 1.78), taper=0.1, fade=0.9, n=150)
+        else:
+            length = math.hypot(hx - tx, hy - ty) * k * tail_mul
+            im = comet(im, (hx * k, hy * k), col, length, ang, dia * k * 0.30, sheet, fi, int(dia * k * 1.78))
     ship = Image.open(os.path.join(os.path.dirname(__file__), 'src', 'original_ship.png')).convert('RGBA')
     sc = ship_scale * k
     ship = ship.resize((int(ship.width * sc), int(ship.height * sc)), Image.LANCZOS)
