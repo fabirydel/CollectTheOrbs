@@ -57,9 +57,23 @@ def platinum_icon(color):
         ring = Image.new('L', (size, size), 0)
         ImageDraw.Draw(ring).ellipse((inset, inset, size - inset, size - inset), outline=255, width=width)
         im = S.add(im, UI.neon_text(ring, color, 8.0), (size / 2, size / 2))
+    # trophy: cup with two handles, stem and base
+    m = Image.new('L', (size, size), 0)
+    d = ImageDraw.Draw(m)
+    w = 11
+    cx = size / 2
+    d.line([(cx - 64, 128), (cx + 64, 128)], fill=255, width=w, joint='curve')
+    d.line([(cx - 64, 128), (cx - 64, 178)], fill=255, width=w)
+    d.line([(cx + 64, 128), (cx + 64, 178)], fill=255, width=w)
+    d.arc((cx - 64, 118, cx + 64, 238), 0, 180, fill=255, width=w)
+    d.arc((cx - 100, 136, cx - 28, 190), 90, 270, fill=255, width=w)
+    d.arc((cx + 28, 136, cx + 100, 190), 270, 90, fill=255, width=w)
+    d.line([(cx, 238), (cx, 280)], fill=255, width=w)
+    d.rounded_rectangle((cx - 48, 280, cx + 48, 306), radius=8, outline=255, width=w)
+    im = S.add(im, UI.neon_text(m, color, 5.0), (size / 2, size / 2))
     f = UI.BMFont('fonts/prototype128blueWhite')
-    t = UI.neon_text(S.pad(f.mask('PLATINUM', 34), 40), color, 3.0)
-    im = S.add(im, t, (size / 2, size / 2))
+    t = UI.neon_text(S.pad(f.mask('PLATINUM', 26), 40), color, 3.0)
+    im = S.add(im, t, (size / 2, 352))
     return im.convert('RGB')
 
 
