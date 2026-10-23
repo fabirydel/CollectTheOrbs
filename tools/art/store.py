@@ -152,11 +152,17 @@ SHIP_NOZZLES = [(395, 62), (52, 238), (52, 422)]   # engine rears in the 859x668
 SHIP_DIR = (-0.90, -0.43)                           # exhaust direction (away from the front)
 
 
-def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plume=210):
-    """The original blue fighter (tools/art/src/original_ship.png) with game-style plumes and neon orbs in the original positions."""
+def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plume=210, shield=None):
+    """The original blue fighter (tools/art/src/original_ship.png) with game-style plumes, a blue shield and neon orbs in the original positions."""
     import math
     k = scale
     im = background(w, h, seed=seed, stars=1.3)
+    shield_img = None
+    if shield:
+        (scx, scy), sdia = shield
+        N.set_scale(1)
+        shield_img = N.shield(sdia * k / N.U, N.CYAN).resize((int(sdia * k), int(sdia * k)), Image.LANCZOS)
+        im = add(im, shield_img, (scx * k, scy * k))
     sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 20, 36), tint_red(img('fx/orb_red.png')), 9)}
     for (hx, hy), (tx, ty), dia, c in orbs:
         col, sheet, fi = sheets[c]
@@ -168,16 +174,26 @@ def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plum
     sc = ship_scale * k
     ship = ship.resize((int(ship.width * sc), int(ship.height * sc)), Image.LANCZOS)
     ox, oy = ship_xy[0] * k, ship_xy[1] * k
-    aura = N.radial(int(ship.width * 1.4), [(0, (40, 120, 255, 28)), (0.6, (30, 90, 230, 12)), (1.0, (20, 60, 200, 0))])
-    im = add(im, aura, (ox + ship.width / 2, oy + ship.height / 2))
     for nx, ny in SHIP_NOZZLES:
         im = flame(im, (ox + nx * sc, oy + ny * sc), SHIP_DIR, plume * sc, 26 * sc)
-    layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    layer.alpha_composite(ship, (0, 0)) if False else None
     big_layer = Image.new('RGBA', (im.width + 2 * ship.width, im.height + 2 * ship.height), (0, 0, 0, 0))
     big_layer.alpha_composite(ship, (int(ox) + ship.width, int(oy) + ship.height))
     layer = big_layer.crop((ship.width, ship.height, ship.width + im.width, ship.height + im.height))
-    return Image.alpha_composite(im, layer)
+    im = Image.alpha_composite(im, layer)
+    if shield_img is not None:
+        # the field is translucent and sits in front of the ship (only over the ship, so the orbs stay clean)
+        front = Image.new('RGBA', im.size, (0, 0, 0, 0))
+        front.paste(_fade(shield_img, 0.4), (int(scx * k - shield_img.width / 2), int(scy * k - shield_img.height / 2)))
+        fa = np.asarray(front, dtype=np.float32).copy()
+        fa[..., 3] *= np.asarray(layer, dtype=np.float32)[..., 3] / 255.0
+        im = add(im, Image.fromarray(fa.astype(np.uint8)), (im.width / 2, im.height / 2))
+    return im
+
+
+def _fade(layer, f):
+    a = np.asarray(layer, dtype=np.float32).copy()
+    a[..., 3] *= f
+    return Image.fromarray(a.astype(np.uint8))
 
 
 def pad(mask, m=40):
@@ -199,16 +215,15 @@ def neon_border(size, inset=0.03, radius=0.17, stroke=0.012):
 
 
 def composition(size=512):
-    im = scene_icon(size)
-    return add(im, neon_border(size), (size / 2, size / 2))
+    return scene_icon(size)
 
 
 def scene_icon(size=512):
-    return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210)
+    return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210, shield=((205, 355), 500))
 
 
 def feature(w=1024, h=500):
-    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9)
+    im = scene(w, h, BANNER_ORBS, (29, 23), 0.65, 1.0, seed=9, shield=((315, 235), 620))
     N.set_scale(2)
     f = UI.BMFont('fonts/prototype128blueWhite')
     size = 40 * 610 / f.width('Collect The Orbs', 40)
