@@ -69,6 +69,23 @@ def icon(group, number, color):
     return im.convert('RGB')
 
 
+def build_zip(mapping_name):
+    """ZIP for Play Console > Play Games Services > Achievements > Import (CSV files have no header row, no commas in text)."""
+    import io, zipfile
+    path = os.path.join(OUT, 'import-%s.zip' % ('console-name' if mapping_name == 'AchievementsIconsMappings.csv' else 'docs-name'))
+    meta, maps = io.StringIO(), io.StringIO()
+    for i, (key, group, n, color, name, desc, pts) in enumerate(ACH, 1):
+        assert ',' not in name + desc
+        meta.write('%s,%s,False,,Revealed,%d,%d\n' % (name, desc, pts, i))
+        maps.write('%s,%s.png\n' % (name, key))
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr('AchievementsMetadata.csv', meta.getvalue())
+        z.writestr(mapping_name, maps.getvalue())
+        for a in ACH:
+            z.write(os.path.join(OUT, a[0] + '.png'), a[0] + '.png')
+    return path
+
+
 if __name__ == '__main__':
     rows = []
     for key, group, n, color, name, desc, pts in ACH:
@@ -78,4 +95,6 @@ if __name__ == '__main__':
         w = csv.writer(fh)
         w.writerow(['key', 'name', 'description', 'points', 'icon'])
         w.writerows(rows)
+    build_zip('AchievementsIconsMappings.csv')
+    build_zip('AchievementsIconMappings.csv')
     print(len(rows), 'achievements,', sum(r[3] for r in rows), 'points')
