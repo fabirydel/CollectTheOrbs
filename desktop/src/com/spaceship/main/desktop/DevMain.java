@@ -8,6 +8,10 @@ public class DevMain extends Main {
 	public DevMain(DevHarness harness) {
 		super(0, 0);
 		this.harness = harness;
+		// the test driver has no ad/billing SDK: a do-nothing resolver so the Settings "Remove ads" rows show up
+		Main.setActionResolver((com.spaceship.handlers.ActionResolver) java.lang.reflect.Proxy.newProxyInstance(
+				getClass().getClassLoader(), new Class<?>[] { com.spaceship.handlers.ActionResolver.class },
+				(proxy, method, args) -> method.getReturnType() == boolean.class ? Boolean.FALSE : method.getReturnType() == int.class ? Integer.valueOf(0) : null));
 	}
 
 	@Override

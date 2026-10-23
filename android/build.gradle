@@ -14,8 +14,8 @@ android {
         applicationId 'com.fabirydel.collecttheorbs'
         minSdk 24
         targetSdk 36
-        versionCode 1
-        versionName '2.0'
+        versionCode 2
+        versionName '2.0.1'
         manifestPlaceholders = [appLabel: '@string/app_name']
     }
 
@@ -69,6 +69,8 @@ dependencies {
     implementation project(':core')
     implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    implementation "com.google.android.gms:play-services-ads:23.6.0"
+    implementation "com.android.billingclient:billing:7.1.1"
 
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"

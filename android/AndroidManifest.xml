@@ -11,6 +11,11 @@
         android:label="${appLabel}"
         android:theme="@style/GdxTheme" >
 
+        <!-- Google test AdMob app id: replace with the real one from the AdMob console before release -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <activity
             android:name="com.spaceship.main.android.AndroidLauncher"
             android:exported="true"

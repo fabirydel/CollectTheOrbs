@@ -2946,6 +2946,39 @@ public class MainMenuScreen implements Screen {
 		}else{
 			imgsSttngs.add(iEspanol).width(iEspanol.getWidth()).height(iEspanol.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
 		}
+		if(game.getActionResolver() != null){
+			// one-time purchase that removes the ads (Android only: the resolver is null on the desktop)
+			imgsSttngs.row();
+			final Label removeAdsLabel = new Label(language == ON ? "Remove ads" : "Quitar anuncios", skin){
+				@Override
+				public void act(float delta){
+					super.act(delta);
+					if(game.getActionResolver().isAdsRemoved() && !getText().toString().startsWith("Ads removed") && !getText().toString().startsWith("Sin anuncios"))
+						setText(language == ON ? "Ads removed" : "Sin anuncios");
+				}
+			};
+			removeAdsLabel.setFontScale(3*x/4, 3*y/4);
+			removeAdsLabel.setAlignment(Align.left);
+			removeAdsLabel.addListener(new ClickListener(){
+				public void clicked(InputEvent event, float x, float y){
+					if(!game.getActionResolver().isAdsRemoved()){
+						buttonSmall.play();
+						game.getActionResolver().buyRemoveAds();
+					}
+				}
+			});
+			final Label restoreLabel = new Label(language == ON ? "Restore purchase" : "Restaurar compra", skin);
+			restoreLabel.setFontScale(x/2.2f, y/2.2f);
+			restoreLabel.setAlignment(Align.left);
+			restoreLabel.addListener(new ClickListener(){
+				public void clicked(InputEvent event, float x, float y){
+					game.getActionResolver().restorePurchases();
+				}
+			});
+			imgsSttngs.add(removeAdsLabel).left().padTop(iSoundOn.getHeight()/4).padBottom(iSoundOn.getHeight()/8);
+			imgsSttngs.row();
+			imgsSttngs.add(restoreLabel).left();
+		}
 	
 		iSoundOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){

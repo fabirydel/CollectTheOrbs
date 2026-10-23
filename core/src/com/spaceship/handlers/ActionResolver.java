@@ -27,5 +27,10 @@ public interface ActionResolver {
 	public void share(String str);
 	
 	public int updateButtonImage();
+
+	/** In-app purchase that removes the ads (Google Play Billing). */
+	public boolean isAdsRemoved();
+	public void buyRemoveAds();
+	public void restorePurchases();
 	
 }

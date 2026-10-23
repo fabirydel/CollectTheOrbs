@@ -806,16 +806,12 @@ public class PlayScreen implements Screen {
 			//tween death
 			if(state == DEAD){
 				if(firstDeath){
-					int ad = MathUtils.random(0, 1);
-					if(Gdx.app.getType().equals(ApplicationType.Android) && ad == 0){
+					if(Gdx.app.getType().equals(ApplicationType.Android)){
+						// an interstitial every few game overs (skipped once the ads are removed): the launcher decides
 						Timer.schedule(new Task(){
 							@Override
 							public void run(){
-								if(game.getActionResolver().isGifitzAvailable())
-									game.getActionResolver().loadAdBuddiz();
-//								else
-								
-//									game.getActionResolver().showInterstital();
+								game.getActionResolver().showInterstital();
 							}
 						}, 1.70f);
 					}	
