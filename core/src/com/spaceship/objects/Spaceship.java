@@ -44,30 +44,18 @@ public class Spaceship{
 	public TextureRegion[] ffgTextures;
 	public Sprite[] ffgSprites;
 	public Texture forceFields;
-	private Texture trace1;
-	private Texture trace2;
-	private Texture trace3;
-	private Texture trace4;
-	private Texture trace5;
 	private Texture ships1;
 	private Texture ships2;
 	private Texture ships3;
 	private Texture ships4;
 	private Texture ships5;
-	private TextureRegion[] traceTextures1;
-	private TextureRegion[] traceTextures2;
-	private TextureRegion[] traceTextures3;
-	private TextureRegion[] traceTextures4;
-	private TextureRegion[] traceTextures5;
 	private TextureRegion[] shipsTextures1;
 	private TextureRegion[] shipsTextures2;
 	private TextureRegion[] shipsTextures3;
 	private TextureRegion[] shipsTextures4;
 	private TextureRegion[] shipsTextures5;
 	public Sprite[] shipsSprites;
-	private Sprite[][] trace;
 
-	private boolean[] enabled;
 	private int shadow;
 	private final ShipPlume plume = new ShipPlume();
 
@@ -142,21 +130,11 @@ public class Spaceship{
 			
 			
 		}
-		trace1 = game.assetManager.get("res/ships/trace1.png", Texture.class);
-		trace2 = game.assetManager.get("res/ships/trace2.png", Texture.class);
-		trace3 = game.assetManager.get("res/ships/trace3.png", Texture.class);
-		trace4 = game.assetManager.get("res/ships/trace4.png", Texture.class);
-		trace5 = game.assetManager.get("res/ships/trace5.png", Texture.class);
 		ships1 = game.assetManager.get("res/ships/ships1.png", Texture.class);
 		ships2 = game.assetManager.get("res/ships/ships2.png", Texture.class);
 		ships3 = game.assetManager.get("res/ships/ships3.png", Texture.class);
 		ships4 = game.assetManager.get("res/ships/ships4.png", Texture.class);
 		ships5 = game.assetManager.get("res/ships/ships5.png", Texture.class);
-		traceTextures1 = TextureRegion.split(trace1, 128, 128)[0];
-		traceTextures2 = TextureRegion.split(trace2, 128, 128)[0];
-		traceTextures3 = TextureRegion.split(trace3, 128, 128)[0];
-		traceTextures4 = TextureRegion.split(trace4, 128, 128)[0];
-		traceTextures5 = TextureRegion.split(trace5, 128, 128)[0];
 		shipsTextures1 = TextureRegion.split(ships1, 128, 128)[0];
 		shipsTextures2 = TextureRegion.split(ships2, 128, 128)[0];
 		shipsTextures3 = TextureRegion.split(ships3, 128, 128)[0];
@@ -182,55 +160,6 @@ public class Spaceship{
 		shipSelected = game.getMMS().shipSelected;
 		speed = 600 + 100*game.getMMS().shipSpeed;
 		
-		if(Gdx.graphics.getHeight()/7 % 2 == 0)
-			trace = new Sprite[traceTextures1.length*5][Gdx.graphics.getHeight()/7];
-		else
-			trace = new Sprite[traceTextures1.length*5][Gdx.graphics.getHeight()/7+1];
-		enabled = new boolean[trace[1].length];
-		for(int j = 0; j < traceTextures1.length*5; j++){
-			if(j < 15){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures1[j]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 30){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures2[j - 15]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 45){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures3[j - 30]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 60){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures4[j - 45]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else{
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures5[j - 60]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}
-		}	
-
 		shadow = 0;
 		bgRegion = 0;
 		
@@ -274,11 +203,6 @@ public class Spaceship{
 			}
 		}, 1.15f);
 		
-		for(int i = 0; i < trace[1].length; i++){
-			Tween.set(trace[shipSelected][i], SpriteAccessor.SCALE).target((fx(trace[shipSelected][i].getWidth()) + fy(trace[shipSelected][i].getHeight()))/2/128, 
-					(fx(trace[shipSelected][i].getWidth()) + fy(trace[shipSelected][i].getHeight()))/2/128).start(tweenManager);
-		}
-		
 	}
 	
 	public void effectsDeath(){
@@ -302,13 +226,7 @@ public class Spaceship{
 		ffSprites[forceFieldSelected].setColor(1f, 1f, 1f, 1f);
 		Tween.to(ffgSprites[forceFieldSelected], SpriteAccessor.COLOR, 0.50f).target(1f, 1f, 1f, 1f).start(tweenManager);
 		
-		for(int i = 0; i < trace[1].length; i++){
-			enabled[i] = false;
-			tweenManager.killTarget(trace[shipSelected][i]);
-			trace[shipSelected][i].setColor(1f, 1f, 1f, 0.35f);
-		}
 		shadow = 0;
-		enabled[0] = true;
 		startTrace = false;
 		shieldCan = true;
 		canPlay = false;

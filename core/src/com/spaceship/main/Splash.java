@@ -210,11 +210,6 @@ public class Splash implements Screen{
 		game.assetManager.load("res/ships/ships3.png", Texture.class);
 		game.assetManager.load("res/ships/ships4.png", Texture.class);
 		game.assetManager.load("res/ships/ships5.png", Texture.class);
-		game.assetManager.load("res/ships/trace1.png", Texture.class);
-		game.assetManager.load("res/ships/trace2.png", Texture.class);
-		game.assetManager.load("res/ships/trace3.png", Texture.class);
-		game.assetManager.load("res/ships/trace4.png", Texture.class);
-		game.assetManager.load("res/ships/trace5.png", Texture.class);
 		
 		game.assetManager.load("res/gui/bPlay.png", Texture.class);
 		game.assetManager.load("res/gui/bPause.png", Texture.class);

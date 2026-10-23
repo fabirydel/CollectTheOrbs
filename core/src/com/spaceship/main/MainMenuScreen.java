@@ -123,18 +123,6 @@ public class MainMenuScreen implements Screen {
 	private Image iControlsOn;
 	private Image iControlsOff;
 
-	private Texture trace1;
-	private Texture trace2;
-	private Texture trace3;
-	private Texture trace4;
-	private Texture trace5;
-	private TextureRegion[] traceTextures1;
-	private TextureRegion[] traceTextures2;
-	private TextureRegion[] traceTextures3;
-	private TextureRegion[] traceTextures4;
-	private TextureRegion[] traceTextures5;
-	private Sprite[][] trace;
-	private boolean[] enabled;
 	private int shadow;
 
 	public boolean startTrace;
@@ -650,17 +638,6 @@ public class MainMenuScreen implements Screen {
 		redCounter = new Sprite(game.assetManager.get("res/shapes/redCounter.png", Texture.class));
 		lifeCounter = new Sprite(game.assetManager.get("res/shapes/lifeCounter.png", Texture.class));
 
-		//traces
-		trace1 = game.assetManager.get("res/ships/trace1.png", Texture.class);
-		trace2 = game.assetManager.get("res/ships/trace2.png", Texture.class);
-		trace3 = game.assetManager.get("res/ships/trace3.png", Texture.class);
-		trace4 = game.assetManager.get("res/ships/trace4.png", Texture.class);
-		trace5 = game.assetManager.get("res/ships/trace5.png", Texture.class);
-		traceTextures1 = TextureRegion.split(trace1, 128, 128)[0];
-		traceTextures2 = TextureRegion.split(trace2, 128, 128)[0];
-		traceTextures3 = TextureRegion.split(trace3, 128, 128)[0];
-		traceTextures4 = TextureRegion.split(trace4, 128, 128)[0];
-		traceTextures5 = TextureRegion.split(trace5, 128, 128)[0];
 		
 		//ships bought
 		shipsBought1 = game.assetManager.get("res/ships/shipsBought1.png", Texture.class);
@@ -925,57 +902,8 @@ public class MainMenuScreen implements Screen {
 		
 		obj = new int[10];
 		
-		if(Gdx.graphics.getHeight()/7 % 2 == 0)
-			trace = new Sprite[traceTextures1.length*5][Gdx.graphics.getHeight()/7];
-		else
-			trace = new Sprite[traceTextures1.length*5][Gdx.graphics.getHeight()/7+1];
-		enabled = new boolean[trace[1].length];
-		for(int j = 0; j < traceTextures1.length*5; j++){
-			if(j < 15){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures1[j]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 30){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures2[j - 15]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 45){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures3[j - 30]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else if(j < 60){
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures4[j - 45]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}else{
-				for(int i = 0; i < trace[1].length; i++){
-					trace[j][i] = new Sprite(traceTextures5[j - 60]);
-					trace[j][i].setColor(1f,  1f,  1f,  0.50f);
-					trace[j][i].setSize(128, 128);
-					trace[j][i].setScale((fx(128) + fy(128))/2/96, (fx(128) + fy(128))/2/96);
-					enabled[i] = false;
-				}
-			}
-
-			shadow = 0;
-			startTrace = false;
-		}	
+		shadow = 0;
+		startTrace = false;
 		
 //		loadDataBases();
 		
@@ -1060,11 +988,6 @@ public class MainMenuScreen implements Screen {
 			if (games >= 500) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFg");
 		}
 		
-		//set up trace
-		for(int i = 0; i < trace[1].length; i++){
-			Tween.set(trace[shipSelected][i], SpriteAccessor.SCALE).target((fx(trace[shipSelected][i].getWidth()) + fy(trace[shipSelected][i].getHeight()))/2/96, 
-					(fx(trace[shipSelected][i].getWidth()) + fy(trace[shipSelected][i].getHeight()))/2/96).start(tweenManager);
-		}
 		startTrace = true;
 
 		// set up ships
@@ -3764,6 +3687,29 @@ public class MainMenuScreen implements Screen {
 		}
 	};
 	
+	/** Android Back: close the open sub-screen like its back arrow does; on the main screen, leave the game. */
+	public void onBack(){
+		Stage stage;
+		boolean spent = false;
+		switch(state){
+			case SHIPS: stage = stageShips; spent = true; break;
+			case GALAXIES: stage = stageGalaxies; spent = true; break;
+			case UPGRADES: stage = stageUpgrades; spent = true; break;
+			case STATS: stage = stageStats; break;
+			case SETTINGS: stage = stageSettings; break;
+			case HELP: stage = stageHelp; break;
+			case STANDBY: Gdx.app.exit(); return;
+			default: return;
+		}
+		state = STANDBY;
+		if(sound == ON)
+			buttonSmall.play();
+		stage.addAction(moveTo(0, stage.getHeight(), 0.5f));
+		effectsMenuOff();
+		if(spent)
+			updateStatsMenuSpent();
+	}
+
 	/** The music follows the Sound setting: silent when it is OFF, otherwise the faded-in level. */
 	public void updateMusicVolume(){
 		music.setVolume(sound == ON ? musicFade : 0f);
@@ -3876,13 +3822,7 @@ public class MainMenuScreen implements Screen {
 		tweenManager.killTarget(bluesFont);
 		tweenManager.killTarget(redsFont);
 		tweenManager.killTarget(lifeFont);
-		for(int i = 0; i < trace[1].length; i++){
-			enabled[i] = false;
-			tweenManager.killTarget(trace[shipSelected][i]);
-			trace[shipSelected][i].setColor(1f, 1f, 1f, 0.35f);
-		}
 		shadow = 0;
-		enabled[0] = true;
 		startTrace = false;
 	}
 

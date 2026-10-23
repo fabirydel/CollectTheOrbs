@@ -42,6 +42,8 @@ public class Main extends Game{
     
 	@Override
 	public void create(){
+		// the Back button navigates inside the game (see onBack in the screens) instead of closing it
+		com.badlogic.gdx.Gdx.input.setCatchKey(com.badlogic.gdx.Input.Keys.BACK, true);
 	
 		assetManager = new com.spaceship.handlers.GameAssetManager();
 		batch = new SpriteBatch();
@@ -342,6 +344,13 @@ public class Main extends Game{
 	
 	public void render() {
         super.render(); 
+        if(com.badlogic.gdx.Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.BACK)){
+        	com.badlogic.gdx.Screen s = getScreen();
+        	if(s instanceof MainMenuScreen)
+        		((MainMenuScreen) s).onBack();
+        	else if(s instanceof PlayScreen)
+        		((PlayScreen) s).onBack();
+        }
     }
 
     public void dispose() {

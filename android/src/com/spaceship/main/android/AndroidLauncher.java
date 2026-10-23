@@ -197,9 +197,20 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 
 	private void queryOwned() {
 		billing.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(), (r, purchases) -> {
-			if (r.getResponseCode() == BillingClient.BillingResponseCode.OK)
-				for (Purchase p : purchases)
+			if (r.getResponseCode() != BillingClient.BillingResponseCode.OK)
+				return; // offline or billing unavailable: keep what we knew
+			// ownership follows what Google Play reports, so a refunded purchase brings the ads back
+			boolean owned = false;
+			for (Purchase p : purchases)
+				if (p.getProducts().contains(REMOVE_ADS_SKU) && p.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+					owned = true;
 					handlePurchase(p);
+				}
+			if (!owned) {
+				adsRemoved = false;
+				prefs.edit().putBoolean("removed", false).apply();
+				loadInterstital();
+			}
 		});
 	}
 

@@ -2619,6 +2619,12 @@ public class PlayScreen implements Screen {
 		ship.Restore();
 	}
 
+	/** Android Back: pause the run; ignored on the other states so a stray press cannot lose a game. */
+	public void onBack(){
+		if(state == PLAY)
+			pause();
+	}
+
 	@Override
 	public void pause(){
 		if(state == DEAD && !updatedDB){
