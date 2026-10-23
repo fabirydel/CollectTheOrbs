@@ -28,18 +28,22 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.games.PlayGames;
+import com.google.android.gms.games.PlayGamesSdk;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
 import com.google.android.ump.UserMessagingPlatform;
 import com.spaceship.handlers.ActionResolver;
 import com.spaceship.main.Main;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Interstitial ads (Google AdMob, with the UMP consent form) and the one-time "remove ads" purchase (Google Play Billing).
- * Google Play Games and Giftiz were removed (their SDKs no longer exist or work), so those ActionResolver methods are no-ops.
+ * Interstitial ads (Google AdMob, with the UMP consent form), Google Play Games and the one-time "remove ads" purchase (Google Play Billing).
+ * Giftiz was removed (its SDK no longer exists), so its ActionResolver methods are no-ops.
  */
 public class AndroidLauncher extends AndroidApplication implements ActionResolver {
 
@@ -54,6 +58,26 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 	private InterstitialAd interstitial;
 	private boolean loadingAd;
 	private int gameOvers;
+
+	/** The game code unlocks achievements by their old (2014) Play Games ids: map those to the current ids in res/values/games_ids.xml. */
+	private static final String[][] ACHIEVEMENTS = {
+			{"CgkIrLf9wZgEEAIQCQ", "achievement_score_25"}, {"CgkIrLf9wZgEEAIQCg", "achievement_score_50"},
+			{"CgkIrLf9wZgEEAIQCw", "achievement_score_75"}, {"CgkIrLf9wZgEEAIQDA", "achievement_score_100"},
+			{"CgkIrLf9wZgEEAIQDQ", "achievement_score_200"}, {"CgkIrLf9wZgEEAIQDg", "achievement_score_300"},
+			{"CgkIrLf9wZgEEAIQAA", "achievement_ships_1"}, {"CgkIrLf9wZgEEAIQAQ", "achievement_ships_5"},
+			{"CgkIrLf9wZgEEAIQAg", "achievement_ships_10"}, {"CgkIrLf9wZgEEAIQAw", "achievement_ships_25"},
+			{"CgkIrLf9wZgEEAIQBA", "achievement_ships_50"}, {"CgkIrLf9wZgEEAIQBQ", "achievement_ships_74"},
+			{"CgkIrLf9wZgEEAIQBg", "achievement_galaxies_1"}, {"CgkIrLf9wZgEEAIQBw", "achievement_galaxies_5"},
+			{"CgkIrLf9wZgEEAIQCA", "achievement_galaxies_9"},
+			{"CgkIrLf9wZgEEAIQEQ", "achievement_games_1"}, {"CgkIrLf9wZgEEAIQEg", "achievement_games_10"},
+			{"CgkIrLf9wZgEEAIQEw", "achievement_games_25"}, {"CgkIrLf9wZgEEAIQFA", "achievement_games_50"},
+			{"CgkIrLf9wZgEEAIQFQ", "achievement_games_100"}, {"CgkIrLf9wZgEEAIQFg", "achievement_games_500"},
+			{"CgkIrLf9wZgEEAIQFw", "achievement_upgrades_1"}, {"CgkIrLf9wZgEEAIQGA", "achievement_upgrades_5"},
+			{"CgkIrLf9wZgEEAIQGQ", "achievement_upgrades_10"}, {"CgkIrLf9wZgEEAIQGg", "achievement_upgrades_18"},
+	};
+	private static final int RC_GAMES_UI = 9001;
+	private final Map<String, String> achievementIds = new HashMap<>();
+	private volatile boolean gamesSignedIn;
 
 	private BillingClient billing;
 	private ProductDetails removeAdsDetails;
@@ -76,7 +100,68 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 		prefs = getSharedPreferences("ads", MODE_PRIVATE);
 		adsRemoved = prefs.getBoolean("removed", false);
 		setupBilling();
+		setupGames();
 		setupConsentAndAds();
+	}
+
+	// ---- Google Play Games (sign-in, leaderboard, achievements) ----
+
+	private String gamesId(String resName) {
+		int res = getResources().getIdentifier(resName, "string", getPackageName());
+		String id = res == 0 ? "" : getString(res);
+		return id.isEmpty() || id.equals("TODO") ? null : id;
+	}
+
+	private void setupGames() {
+		for (String[] a : ACHIEVEMENTS) {
+			String id = gamesId(a[1]);
+			if (id != null)
+				achievementIds.put(a[0], id);
+		}
+		PlayGamesSdk.initialize(this);
+		refreshGamesSignIn();
+	}
+
+	private void refreshGamesSignIn() {
+		PlayGames.getGamesSignInClient(this).isAuthenticated().addOnCompleteListener(task ->
+				gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated());
+	}
+
+	@Override public boolean getSignedIn() { return gamesSignedIn; }
+
+	@Override
+	public void logIn() {
+		runOnUiThread(() -> PlayGames.getGamesSignInClient(this).signIn().addOnCompleteListener(task ->
+				gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated()));
+	}
+
+	@Override
+	public void submitScore(int score) {
+		String id = gamesId("leaderboard_high_score");
+		if (gamesSignedIn && id != null)
+			PlayGames.getLeaderboardsClient(this).submitScore(id, score);
+	}
+
+	@Override
+	public void unlockAchievement(String achievementId) {
+		String id = achievementIds.get(achievementId);
+		if (gamesSignedIn && id != null)
+			PlayGames.getAchievementsClient(this).unlock(id);
+	}
+
+	@Override
+	public void getLeaderboard() {
+		String id = gamesId("leaderboard_high_score");
+		if (id == null)
+			return;
+		runOnUiThread(() -> PlayGames.getLeaderboardsClient(this).getLeaderboardIntent(id)
+				.addOnSuccessListener(intent -> startActivityForResult(intent, RC_GAMES_UI)));
+	}
+
+	@Override
+	public void getAchievements() {
+		runOnUiThread(() -> PlayGames.getAchievementsClient(this).getAchievementsIntent()
+				.addOnSuccessListener(intent -> startActivityForResult(intent, RC_GAMES_UI)));
 	}
 
 	// ---- ads ----
@@ -257,12 +342,6 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 
 	@Override public int getAdHeight() { return 0; }
 
-	@Override public boolean getSignedIn() { return false; }
-	@Override public void logIn() {}
-	@Override public void submitScore(int score) {}
-	@Override public void unlockAchievement(String achievementId) {}
-	@Override public void getLeaderboard() {}
-	@Override public void getAchievements() {}
 
 	@Override public void loadAdBuddiz() {}
 	@Override public void giftizOnResume() {}
