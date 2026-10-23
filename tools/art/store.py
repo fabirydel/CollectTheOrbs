@@ -45,20 +45,36 @@ def over(base, layer, xy):
     return base
 
 
+def tint_red(sheet):
+    """The red orb frames, pulled from pink toward pure red."""
+    a = np.asarray(sheet, dtype=np.float32).copy()
+    a[..., 1] *= 0.35
+    a[..., 2] *= 0.42
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8))
+
+
 def background(w, h, seed=3, stars=1.0):
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    r = np.hypot((xx - w / 2) / (w * 0.75), (yy - h * 0.55) / (h * 0.8))
-    base = np.array([5, 6, 16], np.float32)
-    mid = np.array([14, 18, 44], np.float32)
-    t = np.clip(1 - r, 0, 1)[..., None] ** 1.5
-    rgb = base * (1 - t) + mid * t
-    im = Image.fromarray(np.dstack([rgb, np.full((h, w), 255)]).astype(np.uint8))
+    """Near-black space with white star dots of a few sizes (like the original icon)."""
+    arr = np.zeros((h, w, 4), np.float32)
+    arr[..., :3] = [3, 3, 5]
+    arr[..., 3] = 255
     rng = random.Random(seed)
-    arr = np.asarray(im, dtype=np.float32).copy()
-    for _ in range(int(w * h / 1400 * stars)):
+    area = w * h / 512.0 / 512.0
+    for _ in range(int(900 * area * stars)):
         x, y = rng.randrange(w), rng.randrange(h)
-        v = rng.uniform(60, 190)
+        v = rng.uniform(70, 230)
         arr[y, x, :3] += v
+    for _ in range(int(160 * area * stars)):
+        x, y = rng.randrange(1, w - 1), rng.randrange(1, h - 1)
+        v = rng.uniform(150, 255)
+        arr[y, x, :3] += v
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            arr[y + dy, x + dx, :3] += v * 0.35
+    for _ in range(int(18 * area * stars)):
+        x, y = rng.randrange(2, w - 2), rng.randrange(2, h - 2)
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                arr[y + dy, x + dx, :3] += 120 if (dx or dy) else 255
     return Image.fromarray(arr.clip(0, 255).astype(np.uint8))
 
 
@@ -136,12 +152,12 @@ SHIP_NOZZLES = [(395, 62), (52, 238), (52, 422)]   # engine rears in the 859x668
 SHIP_DIR = (-0.90, -0.43)                           # exhaust direction (away from the front)
 
 
-def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3):
+def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3, plume=210):
     """The original blue fighter (tools/art/src/original_ship.png) with game-style plumes and neon orbs in the original positions."""
     import math
     k = scale
     im = background(w, h, seed=seed, stars=1.3)
-    sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 60, 90), img('fx/orb_red.png'), 9)}
+    sheets = {'b': ((40, 190, 255), img('fx/orb_blue.png'), 4), 'r': ((255, 20, 36), tint_red(img('fx/orb_red.png')), 9)}
     for (hx, hy), (tx, ty), dia, c in orbs:
         col, sheet, fi = sheets[c]
         big = dia > 60
@@ -152,10 +168,10 @@ def scene(w, h, orbs, ship_xy, ship_scale, scale=1.0, seed=3, tail_mul=2.3):
     sc = ship_scale * k
     ship = ship.resize((int(ship.width * sc), int(ship.height * sc)), Image.LANCZOS)
     ox, oy = ship_xy[0] * k, ship_xy[1] * k
-    aura = N.radial(int(ship.width * 1.4), [(0, (40, 120, 255, 60)), (0.6, (30, 90, 230, 26)), (1.0, (20, 60, 200, 0))])
+    aura = N.radial(int(ship.width * 1.4), [(0, (40, 120, 255, 28)), (0.6, (30, 90, 230, 12)), (1.0, (20, 60, 200, 0))])
     im = add(im, aura, (ox + ship.width / 2, oy + ship.height / 2))
     for nx, ny in SHIP_NOZZLES:
-        im = flame(im, (ox + nx * sc, oy + ny * sc), SHIP_DIR, 210 * sc, 26 * sc)
+        im = flame(im, (ox + nx * sc, oy + ny * sc), SHIP_DIR, plume * sc, 26 * sc)
     layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
     layer.alpha_composite(ship, (0, 0)) if False else None
     big_layer = Image.new('RGBA', (im.width + 2 * ship.width, im.height + 2 * ship.height), (0, 0, 0, 0))
@@ -171,7 +187,7 @@ def pad(mask, m=40):
 
 
 def composition(size=512):
-    return scene(size, size, ICON_ORBS, (-84, 105), 0.69, size / 512.0)
+    return scene(size, size, ICON_ORBS, (-84, 105), 0.69, size / 512.0, plume=80)
 
 
 def feature(w=1024, h=500):
