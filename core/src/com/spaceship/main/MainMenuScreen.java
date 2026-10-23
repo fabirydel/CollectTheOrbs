@@ -2890,17 +2890,7 @@ public class MainMenuScreen implements Screen {
 					}
 				}
 			});
-			final Label restoreLabel = new Label(language == ON ? "Restore purchase" : "Restaurar compra", skin);
-			restoreLabel.setFontScale(x/2.2f, y/2.2f);
-			restoreLabel.setAlignment(Align.left);
-			restoreLabel.addListener(new ClickListener(){
-				public void clicked(InputEvent event, float x, float y){
-					game.getActionResolver().restorePurchases();
-				}
-			});
-			imgsSttngs.add(removeAdsLabel).left().padTop(iSoundOn.getHeight()/4).padBottom(iSoundOn.getHeight()/8);
-			imgsSttngs.row();
-			imgsSttngs.add(restoreLabel).left();
+			imgsSttngs.add(removeAdsLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 		}
 	
 		iSoundOn.addListener(new ClickListener(){
