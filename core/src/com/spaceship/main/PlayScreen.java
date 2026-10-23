@@ -1997,6 +1997,7 @@ public class PlayScreen implements Screen {
 				lifes++;
 				lifesCounter++;
 				ship.tweenYellowFF();
+				ship.goldFlash();
 				if(ship.getLifes() < game.getMMS().energyMeter) 
 					ship.setLifes(ship.getLifes() + 1);
 				if(ship.getLifes() > 1) 
