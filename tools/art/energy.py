@@ -147,9 +147,9 @@ def liquid_tile(K):
     y = (yy + 0.5) / K / h          # 0 top .. 1 bottom
     TAU = 2 * np.pi
     # vertical gradient: bright top -> rich gold -> deep amber bottom
-    top = np.array([255, 236, 150], dtype=np.float32)
-    mid = np.array([255, 190, 46], dtype=np.float32)
-    bot = np.array([214, 112, 4], dtype=np.float32)
+    top = np.array([255, 240, 160], dtype=np.float32)
+    mid = np.array([255, 196, 52], dtype=np.float32)
+    bot = np.array([226, 120, 8], dtype=np.float32)
     t1 = smooth(0.0, 0.45, y)[..., None]
     t2 = smooth(0.35, 1.0, y)[..., None]
     rgb = top * (1 - t1) + mid * t1
@@ -162,7 +162,7 @@ def liquid_tile(K):
     rgb = rgb + streak[..., None] * np.array([95, 75, 25])
     # bubbles
     rng = np.random.RandomState(7)
-    for _ in range(9):
+    for _ in range(0):  # bubbles are animated in EnergyBar now
         bx, by, br = rng.uniform(0, 64), rng.uniform(0.2, 0.85) * 16, rng.uniform(0.7, 1.4)
         for ox in (-64, 0, 64):
             d = np.hypot(x - (bx + ox), (y * 16) - by)
