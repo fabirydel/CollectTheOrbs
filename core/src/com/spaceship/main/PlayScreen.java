@@ -2148,14 +2148,12 @@ public class PlayScreen implements Screen {
 			if(game.getMMS().vibration == game.getMMS().ON)
 				Gdx.input.vibrate(140);
 		}
-		if(director.consumeResume()){
+		if(director.consumeResume())
 			chargeSoundStarted = false;
-			lastBallTime = TimeUtils.nanoTime();
-		}
 		ship.setChargeFx(speedFx.plumeLength(ct), speedFx.plumeAlpha(ct), speedFx.plumeWhite(ct));
 
-		// orbs spawn on the director's schedule (and not at all during a charge-up)
-		if(director.isSpawning() && TimeUtils.nanoTime() - lastBallTime > director.spawnGap()*ballSpawnSpeed*1000000000d)
+		// orbs spawn on the director's schedule (the charge-up doesn't interrupt it)
+		if(TimeUtils.nanoTime() - lastBallTime > director.spawnGap()*ballSpawnSpeed*1000000000d)
 			spawnBall();
 	}
 

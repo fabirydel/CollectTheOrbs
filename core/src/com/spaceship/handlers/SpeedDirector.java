@@ -3,16 +3,16 @@ package com.spaceship.handlers;
 /**
  * The run's speed, in one place. Time-based only (never score).
  *
- * The run is a series of tiers. Within a tier the orbs creep up a little; at the end of a tier the orbs stop spawning for a
- * few seconds (the CHARGE phase, during which the ship plays its charge-up animation), then the speed jumps to the next
- * tier's base speed (the BURST), and orbs resume.
+ * The run is a series of tiers. Within a tier the orbs creep up a little; at the end of a tier there is a few seconds' CHARGE
+ * phase, during which the ship plays its charge-up animation (orbs keep spawning), then the speed jumps to the next tier's
+ * base speed (the BURST).
  *
  * Only advance it with update() while the game is actually playing (not paused, not dead).
  */
 public class SpeedDirector {
 	public static final int TIERS = 8;                 // tier 0 .. TIERS - 1
 	public static final float TIER_SECONDS = 30f;      // play time spent in a tier before the charge-up starts
-	public static final float CHARGE_SECONDS = 4f;     // no orbs spawn for this long at each tier change
+	public static final float CHARGE_SECONDS = 4f;     // length of the charge-up animation before each tier change
 	public static final float BURST_AT = 3.2f;         // when, within the charge-up, the speed jumps
 	public static final float START_SPEED = 350f;      // orb speed at the start of tier 0 (unchanged from the original game)
 	public static final float TOP_SPEED = 1250f;       // orb speed in the last tier (unchanged from the original game)
@@ -86,10 +86,6 @@ public class SpeedDirector {
 		float progress = Math.min(1f, (tier + Math.min(1f, tierTime / TIER_SECONDS)) / (float) (TIERS - 1));
 		float density = DENSITY_START + (DENSITY_END - DENSITY_START) * progress;
 		return START_SPAWN_GAP * (START_SPEED / speed()) * (DENSITY_START / density);
-	}
-
-	public boolean isSpawning() {
-		return phase == Phase.RUN;
 	}
 
 	public Phase getPhase() {
