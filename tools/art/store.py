@@ -187,7 +187,7 @@ def pad(mask, m=40):
 
 
 def composition(size=512):
-    return scene(size, size, ICON_ORBS, (-84, 105), 0.69, size / 512.0, plume=80)
+    return scene(size, size, ICON_ORBS, (-82, 130), 0.69, size / 512.0, plume=210)
 
 
 def feature(w=1024, h=500):
