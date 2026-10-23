@@ -266,7 +266,7 @@ def launcher_icons(master):
     feather = np.clip(edge / 55.0, 0, 1) ** 1.5      # fade the art's edges into the near-black background layer
     a = np.asarray(art, dtype=np.float32).copy()
     a[..., 3] *= feather
-    fg.alpha_composite(Image.fromarray(a.astype(np.uint8)), (46, 2))
+    fg.alpha_composite(Image.fromarray(a.astype(np.uint8)), (46, 46))
     fg.save(os.path.join(res, 'drawable-nodpi', 'ic_launcher_foreground.png'))
     os.makedirs(os.path.join(res, 'mipmap-anydpi-v26'), exist_ok=True)
     open(os.path.join(res, 'mipmap-anydpi-v26', 'ic_launcher.xml'), 'w').write(
