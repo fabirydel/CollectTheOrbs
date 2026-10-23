@@ -155,13 +155,22 @@ public class Ball extends GameObject {
 		// sideways speed grows with the fall speed, so an orb keeps the same angle of descent for its whole fall
 		float xP = (float) (angle*(velocity/BASE_VELOCITY)*Gdx.graphics.getDeltaTime());
 		
-		this.setPosition(this.getPosition().x  - xP, this.getPosition().y -  yP);
+		float nx = this.getPosition().x - xP;
+		float ny = this.getPosition().y - yP;
 		
-		if(this.getPosition().x - texSelected.getWidth()/2 <= 0 | this.getPosition().x >= Gdx.graphics.getWidth() - fxy(20)){
-			angle = - angle;
-			angle2 = - angle2;
+		// bounce off the side walls: put the orb back at the wall and send it inward. (Just flipping the direction left an orb
+		// that overshot by more than one step still outside, so it flipped again every frame and seemed stuck to the edge.)
+		float margin = fxy(12);
+		if(nx < margin){
+			nx = margin;
+			angle = -Math.abs(angle);   // negative = moving right
+			angle2 = -Math.abs(angle2);
+		}else if(nx > Gdx.graphics.getWidth() - margin){
+			nx = Gdx.graphics.getWidth() - margin;
+			angle = Math.abs(angle);
+			angle2 = Math.abs(angle2);
 		}
-		
+		this.setPosition(nx, ny);
 	}
 	
 	public void update(float dt) {
