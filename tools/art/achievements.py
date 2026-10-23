@@ -84,11 +84,10 @@ def trophy_layer(h, color):
     # star emblem cut into the cup
     star = Image.new('L', (W, W), 0)
     sd = ImageDraw.Draw(star)
-    sp = []
-    for i in range(10):
-        r = 78 if i % 2 == 0 else 32
-        a = -math.pi / 2 + i * math.pi / 5
-        sp.append((cx + r * math.cos(a), 285 + r * math.sin(a)))
+    # a small fighter (nose up) instead of a star
+    half = [(0, -92), (14, -52), (18, -14), (74, 46), (74, 74), (24, 44), (16, 76), (0, 62)]
+    k = 1.2
+    sp = [(cx + k * x, 280 + k * y) for x, y in half] + [(cx - k * x, 280 + k * y) for x, y in half[::-1]]
     sd.polygon(sp, fill=255)
     fa = np.asarray(fill, dtype=np.float32).copy()
     fa[..., :3] = np.where(np.asarray(star)[..., None] > 0, np.array([90, 125, 190], np.float32), fa[..., :3])
