@@ -18,17 +18,13 @@ public class SpeedUpFx {
 	private final float[] sl = new float[STREAKS], sw = new float[STREAKS];
 	private float ringX, ringY;
 	private float emberCarry;
-	private int popTier = -1;
-	private float popAge = 99f;
 
 	public void reset() {
 		burstAge = 99f;
-		popTier = -1;
-		popAge = 99f;
 		emberCarry = 0f;
 	}
 
-	/** The speed just jumped: fire the flash, ring and streaks, and pop the new tier's chevron. */
+	/** The speed just jumped: fire the flash, ring and streaks,  */
 	public void burst(float shipX, float shipY, int newTier) {
 		burstAge = 0f;
 		ringX = shipX;
@@ -41,14 +37,11 @@ public class SpeedUpFx {
 			sl[i] = h * MathUtils.random(0.07f, 0.22f);
 			sw[i] = w / 720f * MathUtils.random(3f, 7f);
 		}
-		popTier = newTier;
-		popAge = 0f;
 	}
 
 	/** @param chargeTime seconds into the charge-up, or 0 if not charging */
 	public void update(float dt, float shipX, float shipY, float shipSize, float chargeTime, float r, float g, float b) {
 		burstAge += dt;
-		popAge += dt;
 		float h = Gdx.graphics.getHeight();
 		for (int i = 0; i < STREAKS; i++)
 			sy[i] -= sv[i] * dt;
@@ -142,37 +135,6 @@ public class SpeedUpFx {
 			float a = (1f - k) * (1f - k) * 0.75f;
 			for (int i = 0; i < STREAKS; i++)
 				Fx.tail(sb, false, sx[i], sy[i], 0f, 1f, sl[i], sw[i], 0.85f, 0.92f, 1f, a);
-		}
-		sb.setColor(1f, 1f, 1f, 1f);
-	}
-
-	// ---- tier chevrons ----
-
-	/**
-	 * Draws one row of tier markers centered on (cx, y): SpeedDirector.TIERS - 1 chevrons, lit up to the current tier.
-	 * @param height chevron height in px; alpha overall fade (the HUD's own alpha)
-	 */
-	public void drawChevrons(SpriteBatch sb, float cx, float y, float height, int tier, float alpha) {
-		int n = SpeedDirector.TIERS - 1;
-		float cw = height * (24f / 18f) * 1.35f; // slot width
-		float x0 = cx - n * cw / 2f;
-		float cwDraw = height * (24f / 18f);
-		for (int i = 0; i < n; i++) {
-			boolean lit = i < tier;
-			float scale = 1f;
-			if (i == popTier - 1 && popAge < 0.7f)
-				scale = 1f + 0.9f * (float) Math.exp(-popAge / 0.18f);
-			float w = cwDraw * scale, hh = height * scale;
-			float x = x0 + (i + 0.5f) * cw - w / 2f, yy = y + height / 2f - hh / 2f;
-			if (lit) {
-				sb.setColor(1f, 0.82f, 0.38f, alpha);
-				Fx.additiveOn(sb);
-				sb.draw(Fx.chevron(), x, yy, w, hh);
-				Fx.additiveOff(sb);
-			} else {
-				sb.setColor(0.8f, 0.82f, 0.86f, 0.22f * alpha);
-				sb.draw(Fx.chevron(), x, yy, w, hh);
-			}
 		}
 		sb.setColor(1f, 1f, 1f, 1f);
 	}
