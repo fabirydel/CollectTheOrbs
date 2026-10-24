@@ -9,9 +9,9 @@ import compose
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SR = compose.SR
-NAMES = {'deep_sub': ('Deep Sub', 'Dark and slow (96 BPM, F minor): rolling sub bass, a soft kick on 1 and 3, a wide pad, a few sparse echoing plucks.'),
-         'night_drive': ('Night Drive', 'Steady and driving (112 BPM, A minor): off-beat bass, a soft four-on-the-floor kick with pumping pads, light snare and hats.'),
-         'float': ('Float', 'Spacious and calm (84 BPM, D minor): long sub notes, a gentle thump each bar, a big airy pad, shimmering plucks.')}
+NAMES = {'synthwave': ('Synthwave Run', 'Neon-city driving (116 BPM, A minor): punchy kick and claps, a bouncing sub bass, pumping saw-chord stabs, a gated arpeggio and a hook melody. Intro, groove, a breakdown with a riser, a second groove.'),
+         'techno_pulse': ('Techno Pulse', 'Dark and hypnotic (128 BPM, D minor): a hard four-on-the-floor kick, a rolling acid bassline with a squelching filter, rolling hats, minimal chords and an eerie lead in the breakdown.'),
+         'neon_house': ('Neon House', 'Bright and bouncy (124 BPM, C minor): offbeat bass, heavily sidechained chords that pump with the kick, a plucky running arpeggio and a catchy lead.')}
 
 
 def wav_b64(x):
@@ -54,14 +54,10 @@ def main():
         x = x * min(1.0, 0.95 / np.max(np.abs(x)))
         src, size = wav_b64(x)
         rows.append({'id': key, 'name': NAMES[key][0], 'desc': NAMES[key][1], 'src': src, 'dur': x.shape[1] / SR})
-        print(key, round(x.shape[1] / SR, 1), 's', round(size / 1e6, 2), 'MB wav, loop error', render_error(compose))
+        print(key, round(x.shape[1] / SR, 1), 's', round(size / 1e6, 2), 'MB wav')
     path = os.path.expanduser('~/Downloads/CollectTheOrbs-music-options.html')
     open(path, 'w').write(TEMPLATE.replace('__DATA__', json.dumps(rows)))
     print(path)
-
-
-def render_error(c):
-    return c.render_track.seam
 
 
 TEMPLATE = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
