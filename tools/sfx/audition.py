@@ -8,7 +8,7 @@ import synth
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 AUDIO = os.path.join(ROOT, 'android', 'assets', 'audio')
-CURRENT = {  # sound -> (file at the start, file at the end)
+CURRENT_OLD = {  # sound -> (file at the start, file at the end)
     'menu_tap': ('buttonSmall', None), 'menu_big': ('buttonLarge', None), 'cant': ('select', None), 'bought': ('bought', None),
     'launch': ('launch', None), 'pre': ('pre', None), 'absorb': ('absorb', None), 'wrong': ('loseLife', None), 'shield_hit': ('shield', None),
     'life': ('life', None), 'dead': ('dead', None), 'item_pickup': ('object', None), 'item_tick': ('objectCount', None),
@@ -16,6 +16,7 @@ CURRENT = {  # sound -> (file at the start, file at the end)
     'shield_item': ('sword', 'swordReverse'), 'switch': ('change2', None), 'count_tick': ('bought', None),
 }
 END = {'swap': 'swap_end', 'mult': 'mult_end', 'slow': 'slow_end', 'shield_item': 'shield_item_end'}
+OLD_END = {'swap': 'swapReverse', 'mult': 'multReverse', 'slow': 'slowReverse', 'shield_item': 'swordReverse'}
 
 
 def mp3(src):
@@ -30,14 +31,13 @@ def main():
     wavdir = tempfile.mkdtemp()
     synth.render_all(wavdir)
     rows = []
-    for name, desc, fn in synth.SOUNDS:
-        cur = CURRENT[name]
+    for name, orig, desc in synth.SOUNDS:
         opts = {}
-        cur_clip = {'start': mp3(os.path.join(AUDIO, cur[0] + '.ogg'))}
-        if cur[1]:
-            cur_clip['end'] = mp3(os.path.join(AUDIO, cur[1] + '.ogg'))
+        cur_clip = {'start': mp3(os.path.join(AUDIO, orig + '.ogg'))}
+        if name in OLD_END:
+            cur_clip['end'] = mp3(os.path.join(AUDIO, OLD_END[name] + '.ogg'))
         opts['Current'] = cur_clip
-        for kind, label in (('A', 'A Grounded'), ('B', 'B Cinematic')):
+        for kind, label in (('1', '1 Retro'), ('2', '2 Smooth'), ('3', '3 Bright')):
             clip = {'start': mp3(os.path.join(wavdir, '%s_%s.wav' % (name, kind)))}
             if name in END:
                 clip['end'] = mp3(os.path.join(wavdir, '%s_%s.wav' % (END[name], kind)))
@@ -68,11 +68,11 @@ button:hover{border-color:var(--text)}
 #bar span{color:var(--dim);font-size:.9rem}
 </style></head><body>
 <h1>Sound options</h1>
-<p class="lead">Tap a button to hear it, then tap a card to pick it. <b>Current</b> is the sound in the game now. No instruments this time: each sound is built from what the real thing would do. Takeoff is turbulent airflow with a turbine spooling up; the shield soaking energy is an electrical charge with plasma crackle; a wrong hit is an overload arcing; slow is a turbine spinning down; items are relays, latches and ringing metal. <b style="color:var(--a)">A Grounded</b> is close and dry; <b style="color:var(--b)">B Cinematic</b> is the same sources bigger, with a roomy tail. Items with a start and an end sound (swap, x2/x3, slow, shield) have two buttons.</p>
+<p class="lead">Tap a button to hear it, then tap a card to pick it. <b>Current</b> is the sound in the game now. Back to synths, and this time each sound is rebuilt from an analysis of the original: same length, same pitch curve, same loudness shape, same noisy or tonal character, with no clicks added. The three takes differ only in the voice: <b style="color:var(--a)">1 Retro</b> (saw/square, closest to the originals), <b style="color:var(--b)">2 Smooth</b> (sines with a soft chorus) and <b style="color:var(--c)">3 Bright</b> (pulse waves with an octave shimmer). The game-over counter tick reuses the buying sound. Items with a start and an end sound (swap, x2/x3, slow, shield) have two buttons.</p>
 <div id="rows"></div>
 <div id="bar"><span id="count"></span><button id="copy">Copy my picks</button><span id="msg"></span></div>
 <script>
-const DATA=__DATA__;const COL={'Current':'var(--cur)','A Grounded':'var(--a)','B Cinematic':'var(--b)'};
+const DATA=__DATA__;const COL={'Current':'var(--cur)','1 Retro':'var(--a)','2 Smooth':'var(--b)','3 Bright':'var(--c)'};
 let picks={};try{picks=JSON.parse(localStorage.getItem('cto-picks')||'{}')}catch(e){}
 let audio=null;
 function play(src){if(audio){audio.pause()}audio=new Audio(src);audio.play()}
