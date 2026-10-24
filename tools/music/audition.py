@@ -5,13 +5,13 @@ Run from the repo root:  python3 tools/music/audition.py   -> ~/Downloads/Collec
 import base64, json, os, subprocess, sys, tempfile, wave
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import compose
+import compose, lofi
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SR = compose.SR
-NAMES = {'synthwave': ('Synthwave Run', 'Neon-city driving (116 BPM, A minor): punchy kick and claps, a bouncing sub bass, pumping saw-chord stabs, a gated arpeggio and a hook melody. Intro, groove, a breakdown with a riser, a second groove.'),
-         'techno_pulse': ('Techno Pulse', 'Dark and hypnotic (128 BPM, D minor): a hard four-on-the-floor kick, a rolling acid bassline with a squelching filter, rolling hats, minimal chords and an eerie lead in the breakdown.'),
-         'neon_house': ('Neon House', 'Bright and bouncy (124 BPM, C minor): offbeat bass, heavily sidechained chords that pump with the kick, a plucky running arpeggio and a catchy lead.')}
+NAMES = {'dusty_sub': ('Dusty Sub', 'Dark and slow (72 BPM, C minor): a deep sliding sub bassline in front, warm electric-piano chords, soft swung drums, a sparse echoing melody, vinyl crackle and a little tape wobble.'),
+         'midnight_tape': ('Midnight Tape', 'A bit brisker (80 BPM, A minor): a syncopated, walking bassline, shuffling hats, heavier tape wobble and crackle, a few high melody notes.'),
+         'rainy_drift': ('Rainy Drift', 'The slowest and heaviest (66 BPM, D minor): long, deep bass notes with little else moving, a soft kick, spacious chords and a roomy tail.')}
 
 
 def wav_b64(x):
@@ -48,8 +48,8 @@ def main():
     rows = []
     c64, _ = mp3_b64(cur)
     rows.append({'id': 'current', 'name': 'Current music', 'desc': 'The music in the game now (84 s).', 'src': c64, 'dur': cur.shape[1] / SR})
-    for key, spec in compose.TRACKS.items():
-        x = compose.render_track(spec)
+    for key, spec in lofi.TRACKS.items():
+        x = lofi.render_track(spec)
         x = x * (target / (np.sqrt(np.mean(x ** 2)) + 1e-9))
         x = x * min(1.0, 0.95 / np.max(np.abs(x)))
         src, size = wav_b64(x)
@@ -76,7 +76,7 @@ button:hover{border-color:var(--text)}button.on{border-color:var(--acc);color:va
 .bar{height:6px;background:var(--line);border-radius:3px;margin-top:12px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--acc)}
 </style></head><body>
 <h1>Music options</h1>
-<p class="lead">Bass-heavy, atmospheric electronic loops. Tap <b>Play</b> to start a loop (it repeats forever). Tap <b>Jump to the loop point</b> to hear the last 4 seconds and the restart: it should flow with no gap, click or sudden change. Volumes are matched to the current music. Tap a card's title to pick it.</p>
+<p class="lead">Lo-fi, moody loops with the bassline up front. Tap <b>Play</b> to start a loop (it repeats forever). Tap <b>Jump to the loop point</b> to hear the last 4 seconds and the restart: it should flow with no gap, click or sudden change. Volumes are matched to the current music. Tap a card's title to pick it.</p>
 <div id="cards"></div>
 <script>
 const DATA=__DATA__;let cur=null,curId=null,pick=null;
