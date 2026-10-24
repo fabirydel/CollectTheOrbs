@@ -37,7 +37,7 @@ def main():
         if cur[1]:
             cur_clip['end'] = mp3(os.path.join(AUDIO, cur[1] + '.ogg'))
         opts['Current'] = cur_clip
-        for kind, label in (('1', '1 Remaster'), ('2', '2 Neon'), ('3', '3 Crisp')):
+        for kind, label in (('A', 'A Grounded'), ('B', 'B Cinematic')):
             clip = {'start': mp3(os.path.join(wavdir, '%s_%s.wav' % (name, kind)))}
             if name in END:
                 clip['end'] = mp3(os.path.join(wavdir, '%s_%s.wav' % (END[name], kind)))
@@ -68,11 +68,11 @@ button:hover{border-color:var(--text)}
 #bar span{color:var(--dim);font-size:.9rem}
 </style></head><body>
 <h1>Sound options</h1>
-<p class="lead">Tap a button to hear it, then tap a card to pick it. <b>Current</b> is the sound in the game now. These are remakes of the current sounds: same gesture and length, rebuilt on a synth. <b style="color:var(--a)">1 Remaster</b> stays closest to the originals (retro saw/square, cleaned up); <b style="color:var(--b)">2 Neon</b> is smoother, with a shimmering octave and a soft stereo glow; <b style="color:var(--c)">3 Crisp</b> is brighter and tighter, almost dry. Items with a start and an end sound (swap, x2/x3, slow, shield) have two buttons.</p>
+<p class="lead">Tap a button to hear it, then tap a card to pick it. <b>Current</b> is the sound in the game now. No instruments this time: each sound is built from what the real thing would do. Takeoff is turbulent airflow with a turbine spooling up; the shield soaking energy is an electrical charge with plasma crackle; a wrong hit is an overload arcing; slow is a turbine spinning down; items are relays, latches and ringing metal. <b style="color:var(--a)">A Grounded</b> is close and dry; <b style="color:var(--b)">B Cinematic</b> is the same sources bigger, with a roomy tail. Items with a start and an end sound (swap, x2/x3, slow, shield) have two buttons.</p>
 <div id="rows"></div>
 <div id="bar"><span id="count"></span><button id="copy">Copy my picks</button><span id="msg"></span></div>
 <script>
-const DATA=__DATA__;const COL={'Current':'var(--cur)','1 Remaster':'var(--a)','2 Neon':'var(--b)','3 Crisp':'var(--c)'};
+const DATA=__DATA__;const COL={'Current':'var(--cur)','A Grounded':'var(--a)','B Cinematic':'var(--b)'};
 let picks={};try{picks=JSON.parse(localStorage.getItem('cto-picks')||'{}')}catch(e){}
 let audio=null;
 function play(src){if(audio){audio.pause()}audio=new Audio(src);audio.play()}
