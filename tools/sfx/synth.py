@@ -107,6 +107,90 @@ def click(dur=0.012, f=3000, gain=1.0):
     return bandpass(RNG.randn(n), f * 0.5, f * 1.6) * np.exp(-np.arange(n) / SR / (dur / 3)) * gain
 
 
+def servo(dur, f0, f1, am=70.0, curve=1.0):
+    """A small motor/actuator: buzzing saw with gear-tooth amplitude modulation, gliding in pitch."""
+    n = int(dur * SR)
+    f = fgrid(f0, f1, n, curve)
+    x = harmonic_wave(phase(f), f, 'saw', 0.8) * (0.55 + 0.45 * np.sin(phase(f * am / max(f0, 1.0) * 0.5)))
+    x = bandpass(x, 120, 2600)
+    t = np.arange(n) / SR
+    e = np.minimum(t / 0.02, 1.0) * np.minimum((dur - t) / 0.04, 1.0).clip(0, 1)
+    return x * e
+
+
+def latch(gain=1.0):
+    """A latch/relay: sharp click plus a short low thunk."""
+    n = int(0.09 * SR)
+    t = np.arange(n) / SR
+    thunk = np.sin(2 * np.pi * (95 + 60 * np.exp(-t / 0.01)) * t) * np.exp(-t / 0.022)
+    c = np.pad(click(0.014, 3400, 1.0), (0, n - int(0.014 * SR)))
+    return (c * 0.9 + thunk * 0.8) * gain
+
+
+def clank(gain=1.0, f=820.0):
+    """A metallic clank: inharmonic FM hit."""
+    n = int(0.22 * SR)
+    t = np.arange(n) / SR
+    ph = 2 * np.pi * f * t
+    x = np.sin(ph + 3.2 * np.sin(2.76 * ph) * np.exp(-t / 0.04)) * np.exp(-t / 0.055)
+    return (x + 0.5 * np.pad(click(0.01, 4200, 1.0), (0, n - int(0.01 * SR)))) * gain
+
+
+def hiss(dur=0.25, gain=1.0):
+    """Pneumatic release: bright noise that dies away."""
+    n = int(dur * SR)
+    return bandpass(RNG.randn(n), 2800, 9500) * np.exp(-np.arange(n) / SR / (dur / 3.0)) * gain
+
+
+def ratchet(count, gap, gain=1.0):
+    buf = np.zeros(int((count * gap + 0.1) * SR))
+    for i in range(count):
+        place(buf, click(0.012, 2600 + 160 * i, 1.0), i * gap, gain * (0.8 + 0.05 * i))
+    return buf
+
+
+MECH = {  # sound -> list of (time, element, args...) ; element in latch servo clank hiss ratchet
+    'menu_tap': [(0, 'latch', 0.8)],
+    'menu_big': [(0, 'ratchet', 2, 0.045, 0.9), (0.09, 'latch', 1.0)],
+    'cant': [(0, 'servo', 0.16, 240, 85, 60), (0.15, 'clank', 0.7, 520)],
+    'bought': [(0, 'ratchet', 4, 0.065, 0.8), (0.27, 'latch', 1.0), (0.28, 'hiss', 0.22, 0.4)],
+    'launch': [(0, 'servo', 0.5, 70, 560, 60, 1.8), (0.1, 'ratchet', 3, 0.1, 0.6), (0.4, 'clank', 1.0, 700), (0.42, 'hiss', 0.4, 0.5)],
+    'pre': [(0, 'servo', 0.3, 160, 520, 70, 1.4), (0.3, 'latch', 0.8)],
+    'absorb': [(0, 'latch', 0.8), (0.03, 'servo', 0.12, 420, 900, 90)],
+    'wrong': [(0, 'clank', 1.0, 300), (0.02, 'servo', 0.22, 280, 70, 60)],
+    'shield_hit': [(0, 'clank', 1.0, 1100), (0.01, 'hiss', 0.12, 0.35)],
+    'life': [(0, 'ratchet', 3, 0.08, 0.8), (0.16, 'servo', 0.2, 300, 700, 80), (0.2, 'hiss', 0.2, 0.3)],
+    'dead': [(0, 'servo', 1.0, 420, 38, 55, 1.4), (0.0, 'clank', 1.0, 260), (0.35, 'clank', 0.7, 200), (0.7, 'clank', 0.5, 160), (0.05, 'hiss', 0.6, 0.6)],
+    'item_pickup': [(0, 'latch', 0.9), (0.04, 'servo', 0.2, 300, 800, 80), (0.14, 'latch', 0.6)],
+    'item_tick': [(0, 'latch', 0.7)],
+    'swap': [(0, 'latch', 0.8), (0.02, 'servo', 0.22, 260, 840, 70), (0.22, 'latch', 0.8)],
+    'mult': [(0, 'ratchet', 2, 0.07, 0.8), (0.1, 'servo', 0.26, 350, 1100, 80), (0.3, 'latch', 0.6)],
+    'slow': [(0, 'servo', 0.6, 520, 55, 70, 0.7), (0.0, 'hiss', 0.45, 0.3), (0.55, 'clank', 0.5, 240)],
+    'shield_item': [(0, 'servo', 0.45, 120, 520, 60, 1.5), (0.18, 'latch', 0.9), (0.34, 'latch', 0.9), (0.4, 'hiss', 0.45, 0.45)],
+    'switch': [(0, 'latch', 0.8), (0.01, 'servo', 0.09, 480, 900, 90)],
+    'count_tick': [(0, 'latch', 0.6)],
+}
+_name = [None]
+
+
+def mech_layer(name, scale, total):
+    buf = np.zeros(int(total * SR) + 1)
+    for ev in MECH.get(name, []):
+        t0, el, *a = ev
+        if el == 'latch':
+            x = latch(a[0])
+        elif el == 'clank':
+            x = clank(a[0], a[1])
+        elif el == 'hiss':
+            x = hiss(a[0], a[1])
+        elif el == 'ratchet':
+            x = ratchet(a[0], a[1], a[2])
+        else:
+            x = servo(a[0], a[1], a[2], a[3], a[4] if len(a) > 4 else 1.0) * 0.5
+        place(buf, x, t0, scale)
+    return buf
+
+
 def place(buf, x, start, gain=1.0):
     i = int(start * SR)
     end = min(len(buf), i + len(x))
@@ -161,18 +245,22 @@ def finish(stereo, peak=0.7, fade=0.01):
 def mix_family(kind, events, noise=(), total=1.0, room=1.0):
     """events: (start, dur, f0, f1, gain[, tau, curve]); noise: (start, whoosh-args..., gain) -> stereo buffer with the family's space."""
     buf = np.zeros(int(total * SR) + 1)
+    mech = kind in ('D', 'E')
+    tkind = 'B' if mech else kind
     for ev in events:
         s, d, f0, f1, g = ev[:5]
         tau = ev[5] if len(ev) > 5 else None
         cv = ev[6] if len(ev) > 6 else 1.0
-        place(buf, voice(kind, f0, f1, d, tau, cv), s, g)
+        place(buf, voice(tkind, f0, f1, d, tau, cv), s, g * (0.8 if mech else 1.0))
     for nz in noise:
         s, d, a, b, bw, g = nz
         place(buf, whoosh(d, a, b, bw), s, g * (0.7 if kind == 'C' else 1.0))
     if kind == 'A':
         st = reverb(buf, 0.55 * room, 0.38 * min(1.0, room + 0.25), 3)
-    elif kind == 'B':
-        st = pingpong(buf, 0.14 * max(room, 0.35), 0.45, 0.55 * min(1.0, room + 0.2))
+    elif kind in ('B', 'D', 'E'):
+        if mech:
+            buf = buf + mech_layer(_name[0], 0.9 if kind == 'D' else 1.5, total)
+        st = pingpong(buf, 0.14 * max(room, 0.35), 0.45, (0.55 if kind == 'B' else 0.3) * min(1.0, room + 0.2))
     else:
         st = np.stack([buf, buf * 0.98])
     return st
@@ -306,7 +394,8 @@ def render_all(outdir):
     os.makedirs(outdir, exist_ok=True)
     names = []
     for name, desc, fn in SOUNDS:
-        for kind in 'ABC':
+        for kind in 'ABCDE':
+            _name[0] = name
             st = finish(fn(kind))
             outs = [(name, st)]
             if name in REVERSED:
