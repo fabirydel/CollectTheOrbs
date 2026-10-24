@@ -34,7 +34,7 @@ class Song:
 
 # ---- instruments --------------------------------------------------------------------------------------------------
 
-def ep(m, dur, vel=1.0):
+def ep(m, dur, vel=1.0, cut=2300):
     """A warm electric piano: two-operator FM tine with a slow tremolo, softened by a low-pass."""
     n = int(dur * SR)
     t = np.arange(n) / SR
@@ -43,7 +43,7 @@ def ep(m, dur, vel=1.0):
     p = 2 * np.pi * f * t
     x = np.sin(p + idx * np.sin(p)) + 0.18 * np.sin(2 * np.pi * f * 7 * t) * np.exp(-t / 0.05) + 0.12 * np.sin(2 * p) * np.exp(-t / 0.5)
     x *= 1 + 0.12 * np.sin(2 * np.pi * 4.2 * t)
-    x = lowpass(x, 2300) * 0.2 * vel
+    x = lowpass(x, cut) * 0.2 * vel
     return x * np.exp(-t / max(dur * 0.55, 0.3)) * env_ar(n, 0.004, min(0.25, dur * 0.4))
 
 
@@ -136,10 +136,10 @@ def compose(sg, spec):
             # keys: a long chord each 2 bars, a soft re-strum on the "and" of 3
             if bar % 2 == 0:
                 for k, m in enumerate(voicing):
-                    sg.put('keys', ep(m, 2 * 4 * sg.beat * 0.95, 0.85), idx(b0 + k * 0.012), (-0.35 + 0.23 * k) * 0.8, 1.0)
+                    sg.put('keys', ep(m, 2 * 4 * sg.beat * 0.95, 0.85, spec.get('ep_cut', 2300)), idx(b0 + k * 0.012), (-0.35 + 0.23 * k) * 0.8, 1.0)
             if bar % 2 == 1:
                 for k, m in enumerate(voicing):
-                    sg.put('keys', ep(m, sg.beat * 1.6, 0.5), idx(b0 + 2.5 * sg.beat + k * 0.015), (-0.3 + 0.2 * k) * 0.8, 1.0)
+                    sg.put('keys', ep(m, sg.beat * 1.6, 0.5, spec.get('ep_cut', 2300)), idx(b0 + 2.5 * sg.beat + k * 0.015), (-0.3 + 0.2 * k) * 0.8, 1.0)
             # bass: the pattern for this chord, played with the pattern's own rhythm
             pat = spec['bass_pat'][bar % 2]
             for (s, iv, ln) in pat:
@@ -154,7 +154,7 @@ def compose(sg, spec):
                 if s in spec['kicks'] or (second_half and s in spec.get('kicks2', ())):
                     sg.put('drums', kick(), i, 0.0, 1.0 if s == 0 else 0.8)
                     sg.kicks.append(i)
-                if s in (4, 12):
+                if s in (4, 12) and spec.get('snare', True):
                     sg.put('drums', snare(1.0), i)
                 if s in spec.get('ghosts', ()) and second_half:
                     sg.put('drums', snare(0.35), i)
@@ -164,11 +164,12 @@ def compose(sg, spec):
                     sg.put('drums', hat(0.35), i, 0.25 * (-1) ** s)
             # sparse melody: two or three notes every other bar, from the minor pentatonic, lots of space
             rs = np.random.RandomState(spec['seed'] * 131 + bar)
-            if bar % 2 == 0 and (bar % 4 == 0 or second_half):
+            if bar % 2 == 0 and (bar % 4 == 0 or second_half) and (bar % spec.get('lead_every', 2) == 0):
                 pent = spec['pent']
-                for k in range(rs.randint(2, 4)):
+                lo, hi = spec.get('lead_count', (2, 4))
+                for k in range(rs.randint(lo, hi)):
                     s = [2, 6, 9, 12][k + (0 if k < 3 else 0)] + rs.randint(0, 2)
-                    sg.put('lead', ep(pent[rs.randint(0, len(pent))] + 12 * spec['lead_oct'], st * 5, 0.9), idx(b0 + s * st + (sg.swing * st if s % 2 else 0)), rs.uniform(-0.4, 0.4), 1.0)
+                    sg.put('lead', ep(pent[rs.randint(0, len(pent))] + 12 * spec['lead_oct'], st * 5, 0.9, spec.get('ep_cut', 2300)), idx(b0 + s * st + (sg.swing * st if s % 2 else 0)), rs.uniform(-0.4, 0.4), 1.0)
 
 
 def render_track(spec, verify=False):
@@ -182,12 +183,12 @@ def render_track(spec, verify=False):
     drums = np.stack([lowpass(c, 7500) for c in drums]).astype(F)
     keys = (sg.buses['keys'] * g).astype(F)
     lead = echo(sg.buses['lead'], sg.beat * 0.75, 0.55, 0.8)
-    wob = tape((keys * lv['keys'] + lead * lv['lead']).astype(F), spec['wow'], spec['flutter'], sg.L)
+    wob = tape((keys * lv['keys'] + lead * lv['lead']).astype(F), spec['wow'], spec['flutter'], sg.L, spec.get('wobble_ms', 0.45))
     bass = sg.buses['bass'] * lv['bass']
     mix = (drums * lv['drums'] + bass + wob).astype(F)
     mix = reverb_stereo(mix, spec.get('tau', 1.2), spec.get('wet', 0.14))
     mix = (mix + vinyl(sg.L, n) * lv['vinyl']).astype(F)
-    mix = np.stack([lowpass(highpass(c, 28), 9500) for c in mix]).astype(F)
+    mix = np.stack([lowpass(highpass(c, 28), spec.get('lp', 9500)) for c in mix]).astype(F)
     mix = C.master(mix, 0.2)
     if verify:
         render_track.seam = float(np.max(np.abs(mix[:, sg.L: 2 * sg.L] - mix[:, 2 * sg.L: 3 * sg.L])))
@@ -197,6 +198,7 @@ def render_track(spec, verify=False):
 # chords: (EP voicing midis, bass root midi)
 CM = [((51, 55, 58, 62), 36), ((56, 60, 63, 67), 32), ((53, 56, 60, 63), 29), ((55, 58, 62, 65), 31)]   # Cm9 Abmaj7 Fm7 Gm7
 AM = [((57, 60, 64, 67), 33), ((53, 57, 60, 64), 38), ((53, 57, 60, 64), 29), ((55, 59, 62, 67), 40)]   # Am9 Dm9 Fmaj7 Em7
+AM_DARK = [((57, 60, 64, 67), 33), ((58, 62, 65, 69), 34), ((53, 57, 60, 64), 38), ((55, 59, 62, 67), 40)]   # Am9 Bbmaj7 Dm9 Em7 (a darker turn)
 DM = [((53, 57, 60, 64), 38), ((58, 62, 65, 69), 34), ((55, 58, 62, 65), 31), ((57, 60, 64, 67), 33)]   # Dm9 Bbmaj7 Gm9 Am7
 
 TRACKS = {
@@ -206,6 +208,11 @@ TRACKS = {
     'midnight_tape': dict(seed=2, bpm=80, swing=0.36, chords=AM, pent=[57, 60, 62, 64, 67], lead_oct=1, tau=1.0, wet=0.12, wow=4, flutter=37,
                           lvl=dict(drums=1.05, bass=0.62, keys=1.0, lead=0.7, vinyl=1.2), hats_on=2, kicks=(0, 7, 10), kicks2=(14,), ghosts=(15,), slide=False,
                           bass_pat=[[(0, 0, 3), (3, 0, 2), (6, 7, 2), (8, 0, 3), (11, 3, 2), (14, 5, 2)], [(0, 0, 4), (4, 12, 2), (7, 7, 3), (10, 0, 3), (14, 10, 2)]]),
+    # midnight tape, reworked: no drums, the bass up front, a sparser melody, darker chords and tone, a little faster
+    'midnight_tape_v2': dict(seed=2, bpm=86, swing=0.34, chords=AM_DARK, pent=[57, 60, 62, 64, 67], lead_oct=0, tau=1.2, wet=0.14, wow=4, flutter=37,
+                             ep_cut=1500, lp=6200, wobble_ms=0.6, lead_every=4, lead_count=(1, 3),
+                             lvl=dict(drums=0.0, bass=1.0, keys=0.85, lead=0.45, vinyl=1.3), hats_on=0, kicks=(), kicks2=(), ghosts=(), slide=True, snare=False,
+                             bass_pat=[[(0, 0, 3), (3, 0, 2), (6, 7, 2), (8, 0, 3), (11, 3, 2), (14, 5, 2)], [(0, 0, 4), (4, 12, 2), (7, 7, 3), (10, 0, 3), (14, 10, 2)]]),
     'rainy_drift': dict(seed=3, bpm=66, swing=0.28, chords=DM, pent=[62, 65, 67, 69, 72], lead_oct=0, tau=1.8, wet=0.2, wow=2, flutter=23,
                         lvl=dict(drums=0.8, bass=0.66, keys=1.05, lead=0.85, vinyl=1.1), hats_on=1, kicks=(0,), kicks2=(10,), ghosts=(), slide=True,
                         bass_pat=[[(0, 0, 10), (10, 7, 6)], [(0, 0, 8), (8, 3, 4), (12, 5, 4)]]),

@@ -11,6 +11,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SR = compose.SR
 NAMES = {'dusty_sub': ('Dusty Sub', 'Dark and slow (72 BPM, C minor): a deep sliding sub bassline in front, warm electric-piano chords, soft swung drums, a sparse echoing melody, vinyl crackle and a little tape wobble.'),
          'midnight_tape': ('Midnight Tape', 'A bit brisker (80 BPM, A minor): a syncopated, walking bassline, shuffling hats, heavier tape wobble and crackle, a few high melody notes.'),
+         'midnight_tape_v2': ('Midnight Tape v2', 'Your changes: no drums at all, the bassline much louder and carrying the rhythm, a sparser melody (one or two low notes every four bars), darker chords (Am9 - Bbmaj7 - Dm9 - Em7), a duller, warmer tone with more tape wobble, and a bit faster (86 BPM, was 80).'),
          'rainy_drift': ('Rainy Drift', 'The slowest and heaviest (66 BPM, D minor): long, deep bass notes with little else moving, a soft kick, spacious chords and a roomy tail.')}
 
 
@@ -48,7 +49,8 @@ def main():
     rows = []
     c64, _ = mp3_b64(cur)
     rows.append({'id': 'current', 'name': 'Current music', 'desc': 'The music in the game now (84 s).', 'src': c64, 'dur': cur.shape[1] / SR})
-    for key, spec in lofi.TRACKS.items():
+    for key in ('midnight_tape_v2', 'midnight_tape'):
+        spec = lofi.TRACKS[key]
         x = lofi.render_track(spec)
         x = x * (target / (np.sqrt(np.mean(x ** 2)) + 1e-9))
         x = x * min(1.0, 0.95 / np.max(np.abs(x)))
