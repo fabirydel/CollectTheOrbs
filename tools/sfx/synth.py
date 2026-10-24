@@ -2,7 +2,8 @@
 
 Each original sound (tools/sfx/originals/*.ogg) is analysed for its length, loudness envelope, pitch track (the strongest note over
 time), how tonal or noisy it is over time, and where its noise sits in frequency. The sound is then rebuilt from synth voices that
-follow those same curves, so the length, pitch and shape stay as close to the original as possible. No clicks or impacts are added.
+follow those same curves, so the length, pitch and shape stay as close to the original as possible. Only synth oscillators are used (no noise sources,
+no clicks): the originals' noisy, whooshing parts become a cluster of detuned synth voices run through a sweeping resonant filter.
 Three takes of every sound differ only in the voice:
 
   1 "Retro"  : saw/square voices with the original's own harmonic balance (closest to the originals)
@@ -18,7 +19,6 @@ from scipy.signal import butter, sosfilt, lfilter, medfilt, stft
 SR = 44100
 HOP = 256
 HERE = os.path.dirname(os.path.abspath(__file__))
-RNG = np.random.RandomState(5)
 KINDS = '123'
 
 
@@ -37,16 +37,17 @@ def lowpass(x, fc, order=2):
     return sosfilt(butter(order, min(fc, SR / 2 - 100), 'low', fs=SR, output='sos'), x)
 
 
-def sweep_bandpass(x, fc, q, block=128):
-    """Resonant band-pass whose centre follows fc (Hz per sample) and whose Q may follow q (per sample)."""
+def sweep_lowpass(x, fc, q, block=128):
+    """Resonant low-pass whose cutoff follows fc (Hz per sample)."""
     y = np.zeros_like(x)
     zi = np.zeros(2)
     for i in range(0, len(x), block):
         j = min(i + block // 2, len(fc) - 1)
-        w0 = 2 * np.pi * min(max(float(fc[j]), 40.0), SR / 2 - 300) / SR
-        al = np.sin(w0) / (2 * max(float(q[j]), 0.5))
-        b = np.array([al, 0, -al])
-        a = np.array([1 + al, -2 * np.cos(w0), 1 - al])
+        w0 = 2 * np.pi * min(max(float(fc[j]), 60.0), SR / 2 - 300) / SR
+        al = np.sin(w0) / (2 * max(float(q), 0.5))
+        c = np.cos(w0)
+        b = np.array([(1 - c) / 2, 1 - c, (1 - c) / 2])
+        a = np.array([1 + al, -2 * c, 1 - al])
         seg, zi = lfilter(b / a[0], a / a[0], x[i:i + block], zi=zi)
         y[i:i + block] = seg
     return y
@@ -111,6 +112,7 @@ def analyse(path):
         f0 = np.interp(np.arange(frames), idx, f0[idx])
     f0 = np.convolve(np.pad(f0, 3, mode='edge'), np.ones(7) / 7, mode='valid')
     tonal = np.convolve(tonal, np.ones(5) / 5, 'same') ** 1.5   # favour clearly tonal stretches
+    tonal[tonal < 0.25] = 0.0
     return dict(n=n, rms=rms, f0=f0, tonal=tonal, cent=np.convolve(cent, np.ones(5) / 5, 'same'),
                 bw=np.convolve(bw, np.ones(5) / 5, 'same'), prof=np.clip(prof, 0, 1.2), flat=flat)
 
@@ -131,6 +133,24 @@ def voice(kind, f, prof):
     return 0.8 * pulse + 0.35 * np.sin(2 * ph * 1.002)
 
 
+def cluster(kind, f):
+    """Detuned oscillators that give a dense, whooshy body without any noise source."""
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    if kind == '1':   # five detuned saws and a sub square
+        x = 0
+        for cents in (-17, -8, 0, 8, 17):
+            r = 2 ** (cents / 1200)
+            x = x + sum(np.sin(k * ph * r) / k for k in range(1, 14) if k * float(np.max(f)) < SR / 2 - 500)
+        return x + 0.6 * np.sign(np.sin(0.5 * ph))
+    if kind == '2':   # FM: a sine whose phase is bent by an inharmonic modulator
+        return np.sin(ph + 2.4 * np.sin(ph * 1.414) + 1.2 * np.sin(ph * 2.236)) + 0.5 * np.sin(ph * 0.5)
+    x = 0
+    for cents in (-12, -4, 4, 12):
+        r = 2 ** (cents / 1200)
+        x = x + sum(np.sin(np.pi * k * 0.25) / k * np.sin(k * ph * r) for k in range(1, 18) if k * float(np.max(f)) < SR / 2 - 500)
+    return x + 0.5 * np.sin(2 * ph)
+
+
 def resynth(p, kind):
     n = p['n']
     env = up(p['rms'], n) ** 1.0
@@ -140,11 +160,13 @@ def resynth(p, kind):
     bw = np.maximum(up(p['bw'], n), 80.0)
     voiced = voice(kind, f0, p['prof'])
     voiced = voiced / (np.max(np.abs(voiced)) + 1e-9) * tonal * env
-    q = np.clip(cent / (bw * 1.6), 0.6, 8.0)
-    noise = sweep_bandpass(RNG.randn(n), cent, q)
-    if kind == '2':
-        noise = lowpass(noise, 7000)
-    noise = noise / (np.max(np.abs(noise)) + 1e-9) * (1 - tonal) * env * (1.0 if kind != '2' else 0.8)
+    # the noisy / whooshing part: a cluster of detuned synth voices at a pitch tied to the original's brightness,
+    # through a resonant low-pass that follows the original's spectral centre
+    slow_cent = np.convolve(np.pad(cent, (2000, 2000), mode='edge'), np.ones(4000) / 4000, 'valid')[: len(cent)]   # smooth: no pitch wobble
+    base = np.clip(slow_cent / 7.0, 70.0, 520.0)
+    cl = cluster(kind, base)
+    cl = sweep_lowpass(cl, np.minimum(cent * 1.25, 14000), 1.4 if kind != '2' else 0.9)
+    noise = cl / (np.max(np.abs(cl)) + 1e-9) * (1 - tonal) * env
     y = voiced + noise
     a = int(0.004 * SR)
     y[:a] *= np.linspace(0, 1, a)   # no clicks: a short fade-in and fade-out
