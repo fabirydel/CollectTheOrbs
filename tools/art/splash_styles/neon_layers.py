@@ -46,7 +46,7 @@ def build(lit):
         dead = tuple(i for i in range(len(word)) if not any(g in lit and i in idx for g, idx in parts_))
         c.neon_text(word, W / 2, y, 112, col, Z, spacing=0.06, dead=dead)
     tube('frame', np.array([(70, 1070), (650, 1070), (650, 1310), (70, 1310)]), BLUE2, r=2.4, closed=True, level=0.6)
-    c.rain(far=1800, mid=500, near=30, slant=0.08, rings=0)
+    c.rain(far=0, mid=0, near=0, slant=0.08, rings=0)  # rain is animated in Splash.java (see rain_tiles.py)
     c.mist(y=H * 0.8, h=200, density=0.1)
     return np.asarray(c.composite().convert('RGB'), np.float32) / 255
 

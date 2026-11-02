@@ -31,6 +31,10 @@ public class Splash implements Screen{
 	private float[] glowStrike, glowPhase, glowGlitchTimer, glowGlitchLevel, glowRecover;
 	private int[] glowToggles;
 	private float dipTimer, dipTime;
+	// rain tiles (720x1440, seamless) scrolled along the slant of the streaks, in image px per second
+	private static final String[] RAIN_NAMES = {"rain_far", "rain_mid", "rain_near"};
+	private static final float[] RAIN_SPEEDS = {450, 800, 1500};
+	private Texture[] rainTextures;
 	
 	int level;
 	int galaxySelected;
@@ -355,6 +359,10 @@ public class Splash implements Screen{
 			for(Texture t : glowTextures) t.dispose();
 			glowTextures = null;
 		}
+		if(rainTextures != null){
+			for(Texture t : rainTextures) t.dispose();
+			rainTextures = null;
+		}
 	}
 
 	private void loadGlow(){
@@ -371,6 +379,11 @@ public class Splash implements Screen{
 					glowBounds[i] = new float[]{Float.parseFloat(f[1]), Float.parseFloat(f[2]), Float.parseFloat(f[3]), Float.parseFloat(f[4])};
 				}
 			}
+		}
+		rainTextures = new Texture[RAIN_NAMES.length];
+		for(int i = 0; i < rainTextures.length; i++){
+			rainTextures[i] = new Texture(Gdx.files.internal("res/splash/" + RAIN_NAMES[i] + ".png"));
+			rainTextures[i].setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 		}
 		glowStrike = new float[n];
 		glowPhase = new float[n];
@@ -450,6 +463,15 @@ public class Splash implements Screen{
 			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
 		}
 		game.batch.setColor(1, 1, 1, 1);
+		for(int i = 0; i < rainTextures.length; i++){
+			float oy = (glowTime*RAIN_SPEEDS[i]) % 1440;
+			float ox = (oy*0.08f) % 720;
+			for(int tx = -1; tx <= 0; tx++){
+				for(int ty = -1; ty <= 0; ty++){
+					game.batch.draw(rainTextures[i], (ox + tx*720)*s, splash.getY() - (oy + ty*1440)*s, 720*s, 1440*s);
+				}
+			}
+		}
 		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
