@@ -1,15 +1,21 @@
 """Neon-tube loading bar for the splash: 21 frames, 286x72 each (2x of the 143x36 logical size), laid out 7 columns x 3 rows.
-Blue glass tube, yellow neon fill with a white-hot core, in the orbs' colours. Writes android/assets/res/hud/progress_bar.png."""
-import os
+Rendered with the same glass-tube neon as the splash sign (cyberpunk lib): a blue rim tube and a yellow tube that lights up
+from the left as loading progresses, the unlit part staying dead glass. Writes android/assets/res/hud/progress_bar.png."""
+import os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage as ndi
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/claude-drawing/lib'))
+from cyberpunk import Cyberpunk
 
 FW, FH, N, COLS = 286, 72, 21, 7
-RED, BLUE = np.array([1.0, 0.76, 0.12]), np.array([0.13, 0.83, 0.96])
+BLUE, YELLOW = '#22d3f5', '#ffc21f'
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'android', 'assets', 'res', 'hud', 'progress_bar.png')
+Z = 12.0
 SS = 4
+PAD = 60
+RIM_R, FILL_R = 2.6, 3.6
 
 
 def rr(w, h, box, r):
@@ -18,48 +24,49 @@ def rr(w, h, box, r):
     return np.asarray(im.resize((w, h), Image.BOX), np.float32) / 255
 
 
-def ring(w, h, box, r, t):
-    a = rr(w, h, box, r)
-    b = rr(w, h, (box[0] + t, box[1] + t, box[2] - t, box[3] - t), max(r - t, 1))
-    return np.clip(a - b, 0, 1)
+def rim_path(box, r, n=24):
+    x0, y0, x1, y1 = box
+    pts = []
+    for (cx, cy, a0) in ((x1 - r, y0 + r, -90), (x1 - r, y1 - r, 0), (x0 + r, y1 - r, 90), (x0 + r, y0 + r, 180)):
+        for a in np.linspace(a0, a0 + 90, n):
+            pts.append((cx + r * np.cos(np.radians(a)), cy + r * np.sin(np.radians(a))))
+    return np.array(pts, np.float32)
 
 
-def blur(a, s): return ndi.gaussian_filter(a, s)
+def render(i, tubes=True):
+    """light-only render of one frame (the wall is black, so the image is the neon's own light)"""
+    # padded canvas so the glow falls off naturally at the frame edge, cropped back afterwards
+    W, H = FW + 2 * PAD, FH + 2 * PAD
+    c = Cyberpunk(W, H, seed=3, record=False, fog=400.0)
+    sl = c._box(0, 0, W - 1, H - 1)
+    c._put(sl, np.ones((H, W), np.float32), np.zeros((H, W, 3), np.float32), 0.0, Z + 1.5, None)
+    f = i / (N - 1)
+    if not tubes:
+        return np.asarray(c.composite().convert('RGB'), np.float32)[PAD:PAD + FH, PAD:PAD + FW] / 255
+    x0, x1 = 34 + PAD, FW - 34 + PAD
+    xe = x0 + (x1 - x0) * f
+    mid = H / 2
+    c.neon_path(rim_path((14 + PAD, 14 + PAD, FW - 14 + PAD, FH - 14 + PAD), 22), BLUE, Z, r=RIM_R, level=0.4, closed=True)
+    # the yellow tube: lit up to xe, dead glass beyond
+    if f > 0:
+        c.neon_path(np.array([(x0, mid), (xe, mid)], np.float32), YELLOW, Z, r=FILL_R)
+    if f < 1:
+        c.neon_path(np.array([(max(xe, x0) + (0 if f > 0 else 0), mid), (x1, mid)], np.float32), YELLOW, Z, r=FILL_R, state='dead')
+    return np.asarray(c.composite().convert('RGB'), np.float32)[PAD:PAD + FH, PAD:PAD + FW] / 255
+
+
+BASE = None
 
 
 def frame(i):
-    w, h = FW, FH
-    f = i / (N - 1)
-    L = np.zeros((h, w, 3), np.float32)
-    glass_a = np.zeros((h, w), np.float32)
-    # glass tube body: dark, slightly translucent, so the bar reads on any splash
-    body = rr(w, h, (14, 14, w - 14, h - 14), 22)
-    glass_a = np.maximum(glass_a, body * 0.62)
-    # blue neon rim
-    rim = ring(w, h, (14, 14, w - 14, h - 14), 22, 4.5)
-    core = ring(w, h, (14, 14, w - 14, h - 14), 22, 2.2)
-    L += (rim[..., None] * BLUE * 1.6 + core[..., None] * 0.85) * 0.9
-    # red fill: a neon tube growing from the left, with a hot core and a bright end cap
-    x0, x1 = 30, w - 30
-    xe = x0 + (x1 - x0) * f
-    if f > 0:
-        fill = rr(w, h, (x0, 24, max(xe, x0 + 6), h - 24), 11)
-        hot = rr(w, h, (x0 + 3, 31, max(xe - 3, x0 + 6), h - 31), 4)
-        L += fill[..., None] * RED * 1.7 + hot[..., None] * np.array([1.0, 0.93, 0.62]) * 1.2
-        cap = np.exp(-(((np.arange(w) - xe) / 7.0) ** 2))[None, :] * body * fill.max(0, keepdims=True).clip(0, 1) * 0
-        L += blur(fill, 6)[..., None] * RED * 0.7
-    else:
-        pass
-    # tick marks inside the empty part
-    for k in range(1, 20):
-        x = x0 + (x1 - x0) * k / 20
-        if x > xe + 2:
-            L[26:h - 26, int(x):int(x) + 1] += (BLUE * 0.18)
-    # glow around the rim
-    L += blur(rim, 5)[..., None] * BLUE * 0.9
-    # compose to RGBA (light over a translucent dark body)
+    global BASE
+    if BASE is None: BASE = render(0, tubes=False)
+    # subtract the empty wall's own haze and grain, so only the tubes' light remains
+    L = np.clip(render(i) - BASE, 0, 1)
+    body = rr(FW, FH, (14, 14, FW - 14, FH - 14), 22)
+    glass_a = body * 0.62
     dark = np.array([0.03, 0.04, 0.07], np.float32)
-    rgb = dark * glass_a[..., None] + L * (1 - 0)
+    rgb = dark * glass_a[..., None] + L
     a = np.clip(np.maximum(glass_a, L.max(-1)), 0, 1)
     col = np.where(a[..., None] > 1e-4, rgb / np.maximum(a[..., None], 1e-4), 0)
     out = np.dstack([np.clip(col, 0, 1), a])
@@ -77,4 +84,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1:   # preview: a few frames over the splash wall colour
+        outp = sys.argv[1]
+        prev = Image.new('RGBA', (FW * 2, FH * 4), (14, 16, 24, 255))
+        for k, i in enumerate((0, 5, 10, 20)):
+            f = frame(i); prev.alpha_composite(f, (0, k * FH)); prev.alpha_composite(frame(min(i + 3, 20)), (FW, k * FH))
+        prev = prev.resize((prev.width * 3, prev.height * 3), Image.LANCZOS); prev.save(outp)
+    else:
+        main()
