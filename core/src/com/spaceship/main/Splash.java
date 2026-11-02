@@ -8,7 +8,10 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.sql.DatabaseCursor;
 import com.badlogic.gdx.sql.SQLiteGdxException;
@@ -35,6 +38,15 @@ public class Splash implements Screen{
 	private static final String[] RAIN_NAMES = {"rain_far", "rain_mid", "rain_near"};
 	private static final float[] RAIN_SPEEDS = {450, 800, 1500};
 	private Texture[] rainTextures;
+	private static final float RAIN_AMBIENT = 0.08f;
+	private SpriteBatch fxBatch;
+	// neon sounds, following the same events as the light (respecting the game's sound setting)
+	private boolean soundOn = true;
+	private Music neonHum;
+	private Sound neonZap, neonStrike, neonDip;
+	private boolean[] glowStruck;
+	private FrameBuffer fbRain, fbLight;
+	private TextureRegion rainRegion, lightRegion;
 	
 	int level;
 	int galaxySelected;
@@ -58,6 +70,10 @@ public class Splash implements Screen{
 			cursor = game.getDataBase().rawQuery("SELECT galaxySelected FROM seleccionsAndNumbers;");
 			if(cursor != null && cursor.next())
 				galaxySelected = Integer.valueOf(cursor.getInt(0));
+			cursor.close();
+			cursor = game.getDataBase().rawQuery("SELECT sound FROM seleccionsAndNumbers;");
+			if(cursor != null && cursor.next())
+				soundOn = cursor.getInt(0) == 1;
 			cursor.close();
 		}catch (SQLiteGdxException e) {
 			// TODO Auto-generated catch block
@@ -302,6 +318,7 @@ public class Splash implements Screen{
 			else if(p >= 95 && p < 100) level = 19;
 			else if(p == 100) level = 20;
 
+			renderLight(delta);
 			game.batch.begin();
 
 			// the art keeps its proportions (scaled to the screen width) and sits so its loading-bar slot lines up
@@ -310,7 +327,7 @@ public class Splash implements Screen{
 			float splashTopY = splash.getY() + splash.getHeight();
 			if(splashTopY < Gdx.graphics.getHeight()) game.batch.draw(splashTop, 0, splashTopY, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - splashTopY);
 			splash.draw(game.batch);
-			drawGlow(delta);
+			drawGlow();
 			
 			progressSprites[level].draw(game.batch);
 			game.batch.end();
@@ -359,6 +376,20 @@ public class Splash implements Screen{
 			for(Texture t : glowTextures) t.dispose();
 			glowTextures = null;
 		}
+		if(neonHum != null){
+			neonHum.stop();
+			neonHum.dispose();
+			neonZap.dispose();
+			neonStrike.dispose();
+			neonDip.dispose();
+			neonHum = null;
+		}
+		if(fxBatch != null){
+			fxBatch.dispose();
+			fbRain.dispose();
+			fbLight.dispose();
+			fxBatch = null;
+		}
 		if(rainTextures != null){
 			for(Texture t : rainTextures) t.dispose();
 			rainTextures = null;
@@ -384,6 +415,16 @@ public class Splash implements Screen{
 		for(int i = 0; i < rainTextures.length; i++){
 			rainTextures[i] = new Texture(Gdx.files.internal("res/splash/" + RAIN_NAMES[i] + ".png"));
 			rainTextures[i].setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		}
+		glowStruck = new boolean[n];
+		if(soundOn){
+			neonHum = Gdx.audio.newMusic(Gdx.files.internal("audio/neon_hum.wav"));
+			neonHum.setLooping(true);
+			neonHum.setVolume(0);
+			neonHum.play();
+			neonZap = Gdx.audio.newSound(Gdx.files.internal("audio/neon_zap.wav"));
+			neonStrike = Gdx.audio.newSound(Gdx.files.internal("audio/neon_strike.wav"));
+			neonDip = Gdx.audio.newSound(Gdx.files.internal("audio/neon_dip.wav"));
 		}
 		glowStrike = new float[n];
 		glowPhase = new float[n];
@@ -415,6 +456,18 @@ public class Splash implements Screen{
 	private void updateGlow(float delta){
 		glowTime += delta;
 		for(int i = 0; i < GLOW_NAMES.length; i++){
+			if(!glowStruck[i] && glowTime >= glowStrike[i]){
+				glowStruck[i] = true;
+				if(i == 0) playNeon(neonStrike, 1);
+				else playNeon(neonZap, 0.35f);
+			}
+		}
+		if(neonHum != null){
+			float sum = 0;
+			for(int i = 0; i < GLOW_NAMES.length; i++) sum += glowAlpha(i);
+			neonHum.setVolume(0.3f*sum/GLOW_NAMES.length);
+		}
+		for(int i = 0; i < GLOW_NAMES.length; i++){
 			if(!GLOW_GLITCHES[i] || glowTime < glowStrike[i] + 0.6f) continue;
 			glowGlitchTimer[i] -= delta;
 			if(glowGlitchTimer[i] > 0) continue;
@@ -425,6 +478,7 @@ public class Splash implements Screen{
 				glowGlitchTimer[i] = 0.4f + (float)Math.random()*1.6f;
 			}else{
 				glowGlitchLevel[i] = glowGlitchLevel[i] == 1 ? 0.15f + (float)Math.random()*0.25f : 1;
+				if(glowGlitchLevel[i] < 1) playNeon(neonZap, 0.5f);
 				glowGlitchTimer[i] = 0.04f + (float)Math.random()*0.05f;
 			}
 		}
@@ -435,6 +489,7 @@ public class Splash implements Screen{
 			dipTimer -= delta;
 			if(dipTimer <= 0 && glowTime > 3f){
 				dipTime = 0;
+				playNeon(neonDip, 0.8f);
 				dipTimer = 3f + (float)Math.random()*3f;
 				for(int i = 0; i < GLOW_NAMES.length; i++) glowRecover[i] = 0.12f + 0.15f*(float)Math.random() + 0.08f*i;
 			}
@@ -448,32 +503,84 @@ public class Splash implements Screen{
 		return 0.3f + 0.7f*(dipTime - glowRecover[i])/0.2f;
 	}
 
-	private void drawGlow(float delta){
+	private void playNeon(Sound sound, float volume){
+		if(sound != null) sound.play(volume);
+	}
+
+	private float glowAlpha(int i){
+		float breath = 0.92f + 0.08f*(float)Math.sin(glowTime*1.6f + glowPhase[i]);
+		return Math.min(1, strikeOn(i)*breath*glowGlitchLevel[i]*dip(i));
+	}
+
+	// the rain is lit by the neon: the glow layers (already soft halos) are multiplied by the falling rain streaks
+	// in image space (720x1440 buffers), so the streaks shine only where a tube is bright and flicker with it
+	private void renderLight(float delta){
 		if(glowTextures == null) return;
 		updateGlow(delta);
-		float s = splash.getWidth()/720f;
-		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-		for(int i = 0; i < glowTextures.length; i++){
-			if(glowBounds[i] == null) continue;
-			float breath = 0.92f + 0.08f*(float)Math.sin(glowTime*1.6f + glowPhase[i]);
-			float a = Math.min(1, strikeOn(i)*breath*glowGlitchLevel[i]*dip(i));
-			if(a <= 0.01f) continue;
-			float[] b = glowBounds[i];
-			game.batch.setColor(1, 1, 1, a);
-			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
+		if(fxBatch == null){
+			fxBatch = new SpriteBatch();
+			fxBatch.getProjectionMatrix().setToOrtho2D(0, 0, 720, 1440);
+			fbRain = new FrameBuffer(Pixmap.Format.RGB888, 720, 1440, false);
+			fbLight = new FrameBuffer(Pixmap.Format.RGB888, 720, 1440, false);
+			rainRegion = new TextureRegion(fbRain.getColorBufferTexture());
+			rainRegion.flip(false, true);
+			lightRegion = new TextureRegion(fbLight.getColorBufferTexture());
+			lightRegion.flip(false, true);
 		}
-		game.batch.setColor(1, 1, 1, 1);
-		// rain is a flat tint with its own alpha, so the glowing tubes never make it look lit
-		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		fbRain.begin();
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		fxBatch.begin();
+		fxBatch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE);
 		for(int i = 0; i < rainTextures.length; i++){
 			float oy = (glowTime*RAIN_SPEEDS[i]) % 1440;
 			float ox = (oy*0.08f) % 720;
 			for(int tx = -1; tx <= 0; tx++){
 				for(int ty = -1; ty <= 0; ty++){
-					game.batch.draw(rainTextures[i], (ox + tx*720)*s, splash.getY() - (oy + ty*1440)*s, 720*s, 1440*s);
+					fxBatch.draw(rainTextures[i], ox + tx*720, -(oy + ty*1440), 720, 1440);
 				}
 			}
 		}
+		fxBatch.end();
+		fbRain.end();
+		fbLight.begin();
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		fxBatch.begin();
+		fxBatch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+		for(int i = 0; i < glowTextures.length; i++){
+			if(glowBounds[i] == null) continue;
+			float a = glowAlpha(i);
+			if(a <= 0.01f) continue;
+			float[] b = glowBounds[i];
+			fxBatch.setColor(1, 1, 1, a);
+			fxBatch.draw(glowTextures[i], b[0], 1440 - (b[1] + b[3]), b[2], b[3]);
+		}
+		fxBatch.setColor(1, 1, 1, 1);
+		fxBatch.flush();
+		fxBatch.setBlendFunction(GL20.GL_ZERO, GL20.GL_SRC_COLOR);
+		fxBatch.draw(rainRegion, 0, 0, 720, 1440);
+		fxBatch.end();
+		fbLight.end();
+	}
+
+	private void drawGlow(){
+		if(glowTextures == null || fxBatch == null) return;
+		float s = splash.getWidth()/720f;
+		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+		for(int i = 0; i < glowTextures.length; i++){
+			if(glowBounds[i] == null) continue;
+			float a = glowAlpha(i);
+			if(a <= 0.01f) continue;
+			float[] b = glowBounds[i];
+			game.batch.setColor(1, 1, 1, a);
+			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
+		}
+		// lit rain, plus a faint ambient trace of the streaks so the rain reads between the tubes too
+		game.batch.setColor(1, 1, 1, 1);
+		game.batch.draw(lightRegion, 0, splash.getY(), 720*s, 1440*s);
+		game.batch.setColor(0.55f, 0.65f, 0.85f, RAIN_AMBIENT);
+		game.batch.draw(rainRegion, 0, splash.getY(), 720*s, 1440*s);
+		game.batch.setColor(1, 1, 1, 1);
 		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
