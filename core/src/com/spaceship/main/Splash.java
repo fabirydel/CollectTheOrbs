@@ -463,6 +463,8 @@ public class Splash implements Screen{
 			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
 		}
 		game.batch.setColor(1, 1, 1, 1);
+		// rain is a flat tint with its own alpha, so the glowing tubes never make it look lit
+		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		for(int i = 0; i < rainTextures.length; i++){
 			float oy = (glowTime*RAIN_SPEEDS[i]) % 1440;
 			float ox = (oy*0.08f) % 720;
