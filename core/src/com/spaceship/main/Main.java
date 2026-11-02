@@ -86,6 +86,13 @@ public class Main extends Game{
 			numbersDB.execSQL("CREATE TABLE IF NOT EXISTS seleccionsAndNumbers (highScore integer, lifeBalls integer, blueBalls integer, redBalls integer, " +
 					"ffSelected integer, shipSelected integer, galaxySelected integer, sound integer, vibration integer, controls integer, language integer," +
 					"ships integer, galaxies integer, upgrades integer);");
+			try{
+				// the music switch was split from the sound switch: existing saves start with music as they had sound
+				numbersDB.execSQL("ALTER TABLE seleccionsAndNumbers ADD COLUMN music integer DEFAULT 1;");
+				numbersDB.execSQL("UPDATE seleccionsAndNumbers SET music = sound;");
+			}catch (SQLiteGdxException e) {
+				// column already there
+			}
 			cursor = numbersDB.rawQuery("SELECT COUNT(highScore) FROM seleccionsAndNumbers;");
 			if(cursor != null && cursor.next())
 				if(String.valueOf(cursor.getInt(0)).equals("0")){ 

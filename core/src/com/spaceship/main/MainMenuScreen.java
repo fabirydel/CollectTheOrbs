@@ -118,6 +118,8 @@ public class MainMenuScreen implements Screen {
 	
 	private Image iSoundOn;
 	private Image iSoundOff;
+	private Image iMusicOn;
+	private Image iMusicOff;
 	private Image iVibrationOn;
 	private Image iVibrationOff;
 	private Image iControlsOn;
@@ -231,7 +233,9 @@ public class MainMenuScreen implements Screen {
 	public int galaxies;
 	public int upgrades;
 	public int games; 
+	// sound = the sound effects switch; music = the background music switch
 	public int sound;
+	public int music_on = ON;
 	public int vibration;
 	public int language;
 	public int controls;
@@ -279,6 +283,7 @@ public class MainMenuScreen implements Screen {
 	public int[] obj;
 
 	public int soundInMenu;
+	public int musicInMenu;
 	public int vibrationInMenu;
 	public int controlsInMenu;
 	
@@ -360,6 +365,7 @@ public class MainMenuScreen implements Screen {
 	float y;
 	Label sttngsLabel;
 	Label soundLabel;
+	Label musicLabel;
 	Label vibrationLabel;
 	Label controlsLabel;
 	Label languageLabel;
@@ -429,6 +435,9 @@ public class MainMenuScreen implements Screen {
 			cursor = game.getDataBase().rawQuery("SELECT sound FROM seleccionsAndNumbers;");
 			if(cursor != null && cursor.next())
 				sound = Integer.valueOf(cursor.getInt(0));
+			cursor = game.getDataBase().rawQuery("SELECT music FROM seleccionsAndNumbers;");
+			if(cursor != null && cursor.next())
+				music_on = Integer.valueOf(cursor.getInt(0));
 			cursor = game.getDataBase().rawQuery("SELECT vibration FROM seleccionsAndNumbers;");
 			if(cursor != null && cursor.next())
 				vibration = Integer.valueOf(cursor.getInt(0));
@@ -858,6 +867,8 @@ public class MainMenuScreen implements Screen {
 		//button images
 		iSoundOn = new Image(bSoundOn);
 		iSoundOff = new Image(bSoundOff);
+		iMusicOn = new Image(bSoundOn);
+		iMusicOff = new Image(bSoundOff);
 		iVibrationOn = new Image(bVibrationOn);
 		iVibrationOff= new Image(bVibrationOff);
 		iControlsOn = new Image(bControlsOn);
@@ -874,6 +885,8 @@ public class MainMenuScreen implements Screen {
 		
 		iSoundOn.setSize((fx(iSoundOn.getWidth()) + fy(iSoundOn.getHeight()))/2, (fx(iSoundOn.getWidth()) + fy(iSoundOn.getHeight()))/2);
 		iSoundOff.setSize((fx(iSoundOff.getWidth()) + fy(iSoundOff.getHeight()))/2, (fx(iSoundOff.getWidth()) + fy(iSoundOff.getHeight()))/2);
+		iMusicOn.setSize(iSoundOn.getWidth(), iSoundOn.getHeight());
+		iMusicOff.setSize(iSoundOff.getWidth(), iSoundOff.getHeight());
 		iVibrationOn.setSize((fx(iVibrationOn.getWidth()) + fy(iVibrationOn.getHeight()))/2, (fx(iVibrationOn.getWidth()) + fy(iVibrationOn.getHeight()))/2);
 		iVibrationOff.setSize((fx(iVibrationOff.getWidth()) + fy(iVibrationOff.getHeight()))/2, (fx(iVibrationOff.getWidth()) + fy(iVibrationOff.getHeight()))/2);
 		iControlsOn.setSize((fx(iControlsOn.getWidth()) + fy(iControlsOn.getHeight()))/2, (fx(iControlsOn.getWidth()) + fy(iControlsOn.getHeight()))/2);
@@ -2809,11 +2822,18 @@ public class MainMenuScreen implements Screen {
 		sttngsLabel.setSize(fx(sttngsLabel.getWidth()), fy(sttngsLabel.getHeight()));
 
 		if(language == ON)
-			soundLabel = new Label("Sound:", skin);
+			soundLabel = new Label("Sound FXs:", skin);
 		else
-			soundLabel = new Label("Sonido:", skin);
+			soundLabel = new Label("Efectos:", skin);
 		soundLabel.setFontScale(3*x/4, 3*y/4);
 		soundLabel.setSize(fx(3*soundLabel.getWidth()/4), fy(3*soundLabel.getHeight()/4));
+
+		if(language == ON)
+			musicLabel = new Label("Music:", skin);
+		else
+			musicLabel = new Label("Musica:", skin);
+		musicLabel.setFontScale(3*x/4, 3*y/4);
+		musicLabel.setSize(fx(3*musicLabel.getWidth()/4), fy(3*musicLabel.getHeight()/4));
 		
 		if(language == ON)
 			vibrationLabel = new Label("Vibration:", skin);
@@ -2836,6 +2856,15 @@ public class MainMenuScreen implements Screen {
 		languageLabel.setFontScale(3*x/4, 3*y/4);
 		languageLabel.setSize(fx(3*languageLabel.getWidth()/4), fy(3*languageLabel.getHeight()/4));
 		
+		imgsSttngs.add(musicLabel).width(musicLabel.getWidth()).height(musicLabel.getHeight()).padBottom(iSoundOn.getHeight()/4).left().uniformX().expandX();
+		if(music_on == ON){
+			imgsSttngs.add(iMusicOn).width(iMusicOn.getWidth()).height(iMusicOn.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
+			musicInMenu = ON;
+		}else{
+			imgsSttngs.add(iMusicOff).width(iMusicOff.getWidth()).height(iMusicOff.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
+			musicInMenu = OFF;
+		}
+		imgsSttngs.row();
 		imgsSttngs.add(soundLabel).width(soundLabel.getWidth()).height(soundLabel.getHeight()).padBottom(iSoundOn.getHeight()/4).left().uniformX().expandX();
 		if(sound == ON){
 			imgsSttngs.add(iSoundOn).width(iSoundOn.getWidth()).height(iSoundOn.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
@@ -2893,10 +2922,29 @@ public class MainMenuScreen implements Screen {
 			imgsSttngs.add(removeAdsLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 		}
 	
+		iMusicOn.addListener(new ClickListener(){
+			public void clicked(InputEvent event, float x, float y){
+				if(sound == ON)
+					buttonSmall.play();
+				music_on = OFF;
+				updateMusicVolume();
+				musicInMenu = OFF;
+				imgsSttngs.getCell(iMusicOn).setActor(iMusicOff);
+			}
+		});
+		iMusicOff.addListener(new ClickListener(){
+			public void clicked(InputEvent event, float x, float y){
+				if(sound == ON)
+					buttonSmall.play();
+				music_on = ON;
+				updateMusicVolume();
+				musicInMenu = ON;
+				imgsSttngs.getCell(iMusicOff).setActor(iMusicOn);
+			}
+		});
 		iSoundOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){
 				sound = OFF;
-				updateMusicVolume();
 				soundInMenu = OFF;
 				imgsSttngs.getCell(iSoundOn).setActor(iSoundOff);
 			}
@@ -2905,7 +2953,6 @@ public class MainMenuScreen implements Screen {
 			public void clicked(InputEvent event, float x, float y){
 				buttonSmall.play();
 				sound = ON;
-				updateMusicVolume();
 				soundInMenu = ON;
 				imgsSttngs.getCell(iSoundOff).setActor(iSoundOn);
 			}
@@ -2993,8 +3040,10 @@ public class MainMenuScreen implements Screen {
 			
 			sttngsLabel.setText("Opciones");
 			sttngsLabel.setAlignment(Align.left);
-			soundLabel.setText("Sonido:");
+			soundLabel.setText("Efectos:");
 			soundLabel.setAlignment(Align.left);
+			musicLabel.setText("Musica:");
+			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibracion:");
 			vibrationLabel.setAlignment(Align.left);
 			controlsLabel.setText("Controles:");
@@ -3120,8 +3169,10 @@ public class MainMenuScreen implements Screen {
 		
 			sttngsLabel.setText("Settings");
 			sttngsLabel.setAlignment(Align.left);
-			soundLabel.setText("Sound:");
+			soundLabel.setText("Sound FXs:");
 			soundLabel.setAlignment(Align.left);
+			musicLabel.setText("Music:");
+			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibration:");
 			vibrationLabel.setAlignment(Align.left);
 			controlsLabel.setText("Controls:");
@@ -3245,6 +3296,13 @@ public class MainMenuScreen implements Screen {
 	}
 	
 	public void updateSettingsMenuSpent(){
+		if(music_on == ON && musicInMenu == OFF){
+			imgsSttngs.getCell(iMusicOff).setActor(iMusicOn);
+			musicInMenu = ON;
+		}else if(music_on == OFF && musicInMenu == ON){
+			imgsSttngs.getCell(iMusicOn).setActor(iMusicOff);
+			musicInMenu = OFF;
+		}
 		if(sound == ON && soundInMenu == OFF){
 			imgsSttngs.getCell(iSoundOff).setActor(iSoundOn);
 			soundInMenu = ON;
@@ -3326,6 +3384,7 @@ public class MainMenuScreen implements Screen {
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET shipSelected=" + shipSelected + ";");
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET galaxySelected=" + galaxySelected + ";");
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET sound=" + sound + ";");
+			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET music=" + music_on + ";");
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET vibration=" + vibration + ";");
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET controls=" + controls + ";");
 			game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET language=" + language + ";");
@@ -3702,7 +3761,7 @@ public class MainMenuScreen implements Screen {
 
 	/** The music follows the Sound setting: silent when it is OFF, otherwise the faded-in level. */
 	public void updateMusicVolume(){
-		music.setVolume(sound == ON ? musicFade : 0f);
+		music.setVolume(music_on == ON ? musicFade : 0f);
 	}
 
 	/**
