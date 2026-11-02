@@ -21,6 +21,16 @@ public class Splash implements Screen{
 	private Sprite[] progressSprites;
 	private Sprite splash;
 	private TextureRegion splashTop, splashBottom;
+
+	// neon glow layers drawn additively over the unlit base art, in the order of splash_layers.txt
+	private static final String[] GLOW_NAMES = {"ring", "puffin", "beak", "name_a", "name_f", "games_a", "games_m", "frame"};
+	private static final boolean[] GLOW_GLITCHES = {true, false, true, false, true, false, true, false};
+	private Texture[] glowTextures;
+	private float[][] glowBounds;
+	private float glowTime;
+	private float[] glowStrike, glowPhase, glowGlitchTimer, glowGlitchLevel, glowRecover;
+	private int[] glowToggles;
+	private float dipTimer, dipTime;
 	
 	int level;
 	int galaxySelected;
@@ -296,6 +306,7 @@ public class Splash implements Screen{
 			float splashTopY = splash.getY() + splash.getHeight();
 			if(splashTopY < Gdx.graphics.getHeight()) game.batch.draw(splashTop, 0, splashTopY, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - splashTopY);
 			splash.draw(game.batch);
+			drawGlow(delta);
 			
 			progressSprites[level].draw(game.batch);
 			game.batch.end();
@@ -319,6 +330,7 @@ public class Splash implements Screen{
 		splash.setPosition(0, Gdx.graphics.getHeight()/3f - (splashTexture.getHeight() - 960)*splashScale);
 		splashTop = new TextureRegion(splashTexture, 0, 0, splashTexture.getWidth(), 2);
 		splashBottom = new TextureRegion(splashTexture, 0, splashTexture.getHeight() - 2, splashTexture.getWidth(), 2);
+		loadGlow();
 		progressBar = game.assetManager.get("res/hud/progress_bar.png", Texture.class);
 		// the sheet holds 21 frames of 286x72 (2x of the 143x36 logical size) in a grid, read row by row
 		TextureRegion[][] grid = TextureRegion.split(progressBar, 286, 72);
@@ -339,8 +351,106 @@ public class Splash implements Screen{
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
-		
+		if(glowTextures != null){
+			for(Texture t : glowTextures) t.dispose();
+			glowTextures = null;
+		}
+	}
+
+	private void loadGlow(){
+		int n = GLOW_NAMES.length;
+		glowTextures = new Texture[n];
+		glowBounds = new float[n][];
+		String[] lines = Gdx.files.internal("res/splash_layers.txt").readString().split("\\n");
+		for(int i = 0; i < n; i++){
+			glowTextures[i] = new Texture(Gdx.files.internal("res/splash/" + GLOW_NAMES[i] + ".png"));
+			glowTextures[i].setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+			for(String line : lines){
+				String[] f = line.trim().split(" ");
+				if(f[0].equals(GLOW_NAMES[i])){
+					glowBounds[i] = new float[]{Float.parseFloat(f[1]), Float.parseFloat(f[2]), Float.parseFloat(f[3]), Float.parseFloat(f[4])};
+				}
+			}
+		}
+		glowStrike = new float[n];
+		glowPhase = new float[n];
+		glowGlitchTimer = new float[n];
+		glowGlitchLevel = new float[n];
+		glowRecover = new float[n];
+		glowToggles = new int[n];
+		for(int i = 0; i < n; i++){
+			// power-up: each tube strikes on at its own moment, stuttering before it holds
+			glowStrike[i] = 0.25f + 0.2f*i + (float)Math.random()*0.15f;
+			glowPhase[i] = (float)Math.random()*6.28f;
+			glowGlitchTimer[i] = 1.5f + (float)Math.random()*2f;
+			glowGlitchLevel[i] = 1;
+		}
+		dipTimer = 4f + (float)Math.random()*3f;
+		dipTime = -1;
+		glowTime = 0;
+	}
+
+	private float strikeOn(int i){
+		float d = glowTime - glowStrike[i];
+		if(d < 0) return 0;
+		if(d > 0.5f) return 1;
+		// stutter: on-off-on-off-on
+		int step = (int)(d/0.1f);
+		return step % 2 == 0 ? 1 : 0.15f;
+	}
+
+	private void updateGlow(float delta){
+		glowTime += delta;
+		for(int i = 0; i < GLOW_NAMES.length; i++){
+			if(!GLOW_GLITCHES[i] || glowTime < glowStrike[i] + 0.6f) continue;
+			glowGlitchTimer[i] -= delta;
+			if(glowGlitchTimer[i] > 0) continue;
+			if(glowToggles[i] == 0) glowToggles[i] = 3 + (int)(Math.random()*4);
+			glowToggles[i]--;
+			if(glowToggles[i] == 0){
+				glowGlitchLevel[i] = 1;
+				glowGlitchTimer[i] = 0.4f + (float)Math.random()*1.6f;
+			}else{
+				glowGlitchLevel[i] = glowGlitchLevel[i] == 1 ? 0.15f + (float)Math.random()*0.25f : 1;
+				glowGlitchTimer[i] = 0.04f + (float)Math.random()*0.05f;
+			}
+		}
+		if(dipTime >= 0){
+			dipTime += delta;
+			if(dipTime > 2f) dipTime = -1;
+		}else{
+			dipTimer -= delta;
+			if(dipTimer <= 0 && glowTime > 3f){
+				dipTime = 0;
+				dipTimer = 3f + (float)Math.random()*3f;
+				for(int i = 0; i < GLOW_NAMES.length; i++) glowRecover[i] = 0.12f + 0.15f*(float)Math.random() + 0.08f*i;
+			}
+		}
+	}
+
+	private float dip(int i){
+		if(dipTime < 0 || dipTime > glowRecover[i] + 0.2f) return 1;
+		if(dipTime < 0.12f) return 0.3f;
+		if(dipTime < glowRecover[i]) return 0.3f;
+		return 0.3f + 0.7f*(dipTime - glowRecover[i])/0.2f;
+	}
+
+	private void drawGlow(float delta){
+		if(glowTextures == null) return;
+		updateGlow(delta);
+		float s = splash.getWidth()/720f;
+		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+		for(int i = 0; i < glowTextures.length; i++){
+			if(glowBounds[i] == null) continue;
+			float breath = 0.92f + 0.08f*(float)Math.sin(glowTime*1.6f + glowPhase[i]);
+			float a = Math.min(1, strikeOn(i)*breath*glowGlitchLevel[i]*dip(i));
+			if(a <= 0.01f) continue;
+			float[] b = glowBounds[i];
+			game.batch.setColor(1, 1, 1, a);
+			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
+		}
+		game.batch.setColor(1, 1, 1, 1);
+		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	@Override
