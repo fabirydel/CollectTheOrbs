@@ -410,7 +410,7 @@ def build_lightning():
         N.logical_sizes['res/shapes/%s.png' % name] = (src.width, src.height)
 
 
-FONT_COLORS = {'grey': NEUTRAL, 'blueWhite': CYAN, 'redBlack': RED, 'yellowOrange': GOLD}
+FONT_COLORS = {'grey': TUBE_WHITE, 'blueWhite': CYAN, 'redBlack': RED, 'yellowOrange': GOLD}
 
 
 def build_neon_fonts():
