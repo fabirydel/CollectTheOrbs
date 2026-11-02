@@ -12,7 +12,7 @@ def smooth(x, a, b):
     return t * t * (3 - 2 * t)
 
 
-def tube_rgba(mask, color, sw, sig=(0.2, 0.5, 1.1), fade=0, strength=1.0):
+def tube_rgba(mask, color, sw, sig=(0.3, 0.9, 2.2), fade=0, strength=1.0):
     """mask: PIL 'L' (the strokes); color: 0-255 rgb; sw: stroke width in px; sig: bloom sigmas in stroke widths;
     fade: px over which the image edge fades the light out (keeps the bloom from showing a cut-off rectangle)"""
     a = np.asarray(mask, np.float32) / 255
@@ -20,15 +20,16 @@ def tube_rgba(mask, color, sw, sig=(0.2, 0.5, 1.1), fade=0, strength=1.0):
     d = ndi.distance_transform_edt(hard)
     hw = ndi.maximum_filter(d, size=int(max(3, sw * 2.2)) | 1)
     t = np.clip(d / np.maximum(hw, 1), 0, 1)
-    core = smooth(t, 0.45, 0.95) * a
+    core = smooth(t, 0.3, 0.85) * a
     core = ndi.gaussian_filter(core, max(0.4, sw * 0.06))
     c = np.array(color, np.float32) / 255
+    strength *= 1 - 0.6 * float(c.min())    # white light blooms far brighter than coloured light, so tame it
     sat = c * 0.92
     lite = c + (1 - c) * 0.5
     k = smooth(t, 0.0, 0.75)[..., None]
     body = (sat * (1 - k) + lite * k) * a[..., None]
-    halo = sum(w * ndi.gaussian_filter(a, s * sw) for s, w in zip(sig, (0.95, 0.6, 0.32)))
-    P = halo[..., None] * c * 1.2 * strength + body * (1 - core[..., None]) + core[..., None]
+    halo = sum(w * ndi.gaussian_filter(a, s * sw) for s, w in zip(sig, (0.8, 1.0, 0.9)))
+    P = halo[..., None] * c * 1.9 * strength + body * (1 - core[..., None]) + core[..., None]
     P = (1 - np.exp(-P * 1.3)) / (1 - np.exp(-1.3))
     if fade:
         h, w = a.shape

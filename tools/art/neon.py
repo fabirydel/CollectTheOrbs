@@ -426,7 +426,7 @@ def button(name, gname, size, slash=False):
     if slash:
         pen.line([(-0.95, -0.95), (0.95, 0.95)], w=w * U * 0.05)
     sw = w * U * 0.032
-    tube = tube_rgba(stroke.split()[3], TUBE_WHITE, sw, sig=(0.3, 0.8, 1.3), fade=3 * U)
+    tube = tube_rgba(stroke.split()[3], TUBE_WHITE, sw, sig=(0.3, 0.8, 1.1), fade=6 * U)
     out = Image.alpha_composite(base, tube)
     finish(out, w, w, 'gui/%s.png' % name)
 

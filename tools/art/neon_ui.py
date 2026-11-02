@@ -334,7 +334,7 @@ def build_play():
     fill.paste(outer, (mg * N.U, mg * N.U))
     text = tube_text(size, font.mask('START', 44), 44)
     mask = ImageChops.lighter(ring, text)
-    tube = tube_rgba(mask, TUBE_WHITE, 3.2 * N.U, sig=(0.3, 0.8, 1.5), fade=3 * N.U)
+    tube = tube_rgba(mask, TUBE_WHITE, 3.2 * N.U, sig=(0.3, 0.8, 1.2), fade=6 * N.U)
     base = Image.new('RGBA', size, NAVY + (0,))
     base.putalpha(fill.point(lambda v: int(v * 0.85)))
     N.finish(Image.alpha_composite(base, tube), w, h, 'gui/bGo.png')
@@ -441,7 +441,7 @@ def build_neon_fonts():
                     tail.append(line)
             else:
                 header.append(line)
-        P = int(size * 0.16) + 2
+        P = int(size * 0.26) + 2
         k = size / 64.0
         glyphs = []
         for c in chars:
@@ -451,7 +451,7 @@ def build_neon_fonts():
             if w > 0 and h > 0:
                 m = pages[c['page']].crop((c['x'], c['y'], c['x'] + w, c['y'] + h)).split()[3]
                 canvas.paste(m, (P, P))
-            glyphs.append((c, tube_rgba(centre_line(canvas, 0.055 * size) if w > 0 and h > 0 else canvas, color, 0.055 * size, sig=(0.35, 0.9, 2.0), fade=P), W, H))
+            glyphs.append((c, tube_rgba(centre_line(canvas, 0.055 * size) if w > 0 and h > 0 else canvas, color, 0.055 * size, sig=(0.3, 0.9, 2.2), fade=P), W, H))
         # shelf-pack into one page
         AW = 1024
         x = y = rowh = 0
