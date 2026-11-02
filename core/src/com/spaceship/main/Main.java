@@ -16,6 +16,7 @@ public class Main extends Game{
 
 	private static ActionResolver actionResolver;
     public SpriteBatch batch;
+    public com.spaceship.handlers.NeonBatch stageBatch;
     public BitmapFont font;
     public AssetManager assetManager;
     
@@ -46,7 +47,8 @@ public class Main extends Game{
 		com.badlogic.gdx.Gdx.input.setCatchKey(com.badlogic.gdx.Input.Keys.BACK, true);
 	
 		assetManager = new com.spaceship.handlers.GameAssetManager();
-		batch = new SpriteBatch();
+		batch = new com.spaceship.handlers.NeonBatch();
+		stageBatch = new com.spaceship.handlers.NeonBatch();
 	    font = new BitmapFont();
 	    setTutorial(false);
 	    	    

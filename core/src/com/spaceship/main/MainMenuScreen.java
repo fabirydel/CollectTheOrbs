@@ -931,6 +931,8 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void show(){
+		((com.spaceship.handlers.NeonBatch)game.batch).glitch = true;
+		game.stageBatch.glitch = true;
 
 		if(firstMMS){
 			firstMMS = false;
@@ -1632,7 +1634,7 @@ public class MainMenuScreen implements Screen {
 	
 	public void setUpShipsMenu(){
 		float shipPad = (3*Gdx.graphics.getWidth()/4 - shipsBoughtImage[0].getWidth()*3)/3;
-		stageShips = new Stage();
+		stageShips = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		containerShips = new Table();
 		stageShips.addActor(containerShips);
 		containerShips.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
@@ -1754,7 +1756,7 @@ public class MainMenuScreen implements Screen {
 	}
 
 	public void setUpGalaxiesMenu(){
-		stageGalaxies = new Stage();
+		stageGalaxies = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		float galaxyPad = (3*Gdx.graphics.getWidth()/4 - bgsBoughtImage[0].getWidth()*2)/2;
 		containerBgs = new Table();
 		stageGalaxies.addActor(containerBgs);
@@ -1899,7 +1901,7 @@ public class MainMenuScreen implements Screen {
 	}
 	
 	public void setUpUpgradesMenu(){
-		stageUpgrades = new Stage();
+		stageUpgrades = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		containerUpg = new Table();
 		stageUpgrades.addActor(containerUpg);
 		containerUpg.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
@@ -2192,7 +2194,7 @@ public class MainMenuScreen implements Screen {
 	}
 	
 	public void setUpHelpMenu(){
-		stageHelp = new Stage();
+		stageHelp = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		containerHelp = new Table();
 		stageHelp.addActor(containerHelp);
 		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
@@ -2352,7 +2354,7 @@ public class MainMenuScreen implements Screen {
 	}
 	
 	public void setUpStatsMenu(){
-		stageStats = new Stage();
+		stageStats = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		containerSts = new Table();
 		stageStats.addActor(containerSts);
 		containerSts.setBounds(blueCounter.getX(), counterBaseY + 1.5f*blueCounter.getHeight(), 
@@ -2805,7 +2807,7 @@ public class MainMenuScreen implements Screen {
 	}
 	
 	public void setUpSettingsMenu(){
-		stageSettings = new Stage();
+		stageSettings = new Stage(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), game.stageBatch);
 		containerSttngs = new Table();
 		stageSettings.addActor(containerSttngs);
 		containerSttngs.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
@@ -3865,6 +3867,8 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void hide() {
+		((com.spaceship.handlers.NeonBatch)game.batch).glitch = false;
+		game.stageBatch.glitch = false;
 		tweenManager.killTarget(blueCounter);
 		tweenManager.killTarget(redCounter);
 		tweenManager.killTarget(lifeCounter);
