@@ -49,3 +49,35 @@ n = int(0.5 * SR); tt = np.arange(n) / SR
 d = np.sin(2 * np.pi * np.cumsum(140 * np.exp(-tt * 5) + 40) / SR) * env(n, 0.003, 0.18)
 d += 0.5 * lowpass(r.normal(0, 1, n), 6) * env(n, 0.002, 0.08)
 save('neon_dip', d, 0.7)
+
+# --- storm bed (appended after the neon sounds so their random draws stay as they were)
+def shaped(n, lo, hi, tilt):
+    """noise with a band-limited 1/f**tilt spectrum, built in the frequency domain so it is periodic (loops seamlessly)"""
+    freqs = np.fft.rfftfreq(n, 1 / SR)
+    amp = np.where((freqs > lo) & (freqs < hi), 1 / np.maximum(freqs, 1) ** tilt, 0)
+    spec = amp * np.exp(2j * np.pi * r.random(len(freqs)))
+    return np.fft.irfft(spec, n)
+
+# rain: 6 s loop, a soft wash of mid/high noise with a slow swell, plus sparse droplet ticks on top
+n = 6 * SR; t = np.arange(n) / SR
+wash = shaped(n, 400, 9000, 0.35); wash /= np.abs(wash).max()
+wash *= 0.85 + 0.15 * np.sin(2 * np.pi * t / 6 * 2 + 1)
+drops = np.zeros(n)
+for i in np.nonzero(r.random(n) < 260 / SR)[0]:
+    m = min(n - i, int(0.006 * SR)); k = np.arange(m)
+    drops[i:i + m] += r.uniform(.2, 1) * np.sin(2 * np.pi * r.uniform(1800, 4200) * k / SR) * np.exp(-k / (0.0012 * SR))
+drops = np.roll(drops, 0)
+rain = wash + 0.35 * drops / np.abs(drops).max()
+save('storm_rain', rain, 0.5)
+
+# thunder: a distant crack, then rolls of low rumble that swell and fade; two variants
+for name, dur, rolls in (('storm_thunder1', 4.2, (0.15, 0.9, 1.9)), ('storm_thunder2', 5.0, (0.2, 1.4, 2.6, 3.4))):
+    n = int(dur * SR); t = np.arange(n) / SR
+    rumble = shaped(n, 40, 420, 0.6); rumble /= np.abs(rumble).max()
+    e = np.zeros(n)
+    for k, at in enumerate(rolls):
+        e += (0.9 ** k) * np.clip((t - at) / 0.35, 0, 1) * np.exp(-np.maximum(t - at, 0) / (0.9 + 0.2 * k)) * (t >= at)
+    crack = lowpass(shaped(n, 300, 3000, 0.2), 4) * np.exp(-np.maximum(t - rolls[0] + 0.05, 0) / 0.12) * (t >= rolls[0] - 0.05)
+    th = rumble * e + 0.35 * crack / (np.abs(crack).max() + 1e-9)
+    th[:int(0.02 * SR)] *= np.linspace(0, 1, int(0.02 * SR)); th[-int(0.3 * SR):] *= np.linspace(1, 0, int(0.3 * SR))
+    save(name, th, 0.9)

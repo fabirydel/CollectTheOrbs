@@ -16,6 +16,7 @@ Z = 12.0
 SS = 4
 PAD = 60
 RIM_R, FILL_R = 2.6, 3.6
+M = 22        # rim inset from the frame edge; the glow is faded out over this margin
 
 
 def rr(w, h, box, r):
@@ -43,10 +44,10 @@ def render(i, tubes=True):
     f = i / (N - 1)
     if not tubes:
         return np.asarray(c.composite().convert('RGB'), np.float32)[PAD:PAD + FH, PAD:PAD + FW] / 255
-    x0, x1 = 34 + PAD, FW - 34 + PAD
+    x0, x1 = 42 + PAD, FW - 42 + PAD
     xe = x0 + (x1 - x0) * f
     mid = H / 2
-    c.neon_path(rim_path((14 + PAD, 14 + PAD, FW - 14 + PAD, FH - 14 + PAD), 22), BLUE, Z, r=RIM_R, level=0.4, closed=True)
+    c.neon_path(rim_path((M + PAD, M + PAD, FW - M + PAD, FH - M + PAD), (FH - 2 * M) / 2), BLUE, Z, r=RIM_R, level=0.4, closed=True)
     # the yellow tube: lit up to xe, dead glass beyond
     if f > 0:
         c.neon_path(np.array([(x0, mid), (xe, mid)], np.float32), YELLOW, Z, r=FILL_R)
@@ -63,7 +64,12 @@ def frame(i):
     if BASE is None: BASE = render(0, tubes=False)
     # subtract the empty wall's own haze and grain, so only the tubes' light remains
     L = np.clip(render(i) - BASE, 0, 1)
-    body = rr(FW, FH, (14, 14, FW - 14, FH - 14), 22)
+    # fade the light to nothing at the frame edge (a cut-off halo would show as a rectangle)
+    ex = np.clip(np.minimum(np.arange(FW), FW - 1 - np.arange(FW)) / M, 0, 1)
+    ey = np.clip(np.minimum(np.arange(FH), FH - 1 - np.arange(FH)) / M, 0, 1)
+    fade = (ey[:, None] * ex[None, :]) ** 1.5
+    L = L * (fade * fade * (3 - 2 * fade))[..., None]
+    body = rr(FW, FH, (M, M, FW - M, FH - M), (FH - 2 * M) / 2)
     glass_a = body * 0.62
     dark = np.array([0.03, 0.04, 0.07], np.float32)
     rgb = dark * glass_a[..., None] + L

@@ -45,6 +45,10 @@ public class Splash implements Screen{
 	private Music neonHum;
 	private Sound neonZap, neonStrike, neonDip;
 	private boolean[] glowStruck;
+	// storm bed: a quiet rain loop and the odd distant thunder
+	private Music stormRain;
+	private Sound[] stormThunder;
+	private float thunderTimer;
 	private FrameBuffer fbRain, fbLight;
 	private TextureRegion rainRegion, lightRegion;
 	
@@ -384,6 +388,13 @@ public class Splash implements Screen{
 			neonDip.dispose();
 			neonHum = null;
 		}
+		if(stormRain != null){
+			stormRain.stop();
+			stormRain.dispose();
+			for(Sound t : stormThunder) t.dispose();
+			stormRain = null;
+			stormThunder = null;
+		}
 		if(fxBatch != null){
 			fxBatch.dispose();
 			fbRain.dispose();
@@ -425,6 +436,13 @@ public class Splash implements Screen{
 			neonZap = Gdx.audio.newSound(Gdx.files.internal("audio/neon_zap.wav"));
 			neonStrike = Gdx.audio.newSound(Gdx.files.internal("audio/neon_strike.wav"));
 			neonDip = Gdx.audio.newSound(Gdx.files.internal("audio/neon_dip.wav"));
+			stormRain = Gdx.audio.newMusic(Gdx.files.internal("audio/storm_rain.wav"));
+			stormRain.setLooping(true);
+			stormRain.setVolume(0.22f);
+			stormRain.play();
+			stormThunder = new Sound[]{Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder1.wav")),
+					Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder2.wav"))};
+			thunderTimer = 3.5f + (float)Math.random()*3f;
 		}
 		glowStrike = new float[n];
 		glowPhase = new float[n];
@@ -460,6 +478,13 @@ public class Splash implements Screen{
 				glowStruck[i] = true;
 				if(i == 0) playNeon(neonStrike, 1);
 				else playNeon(neonZap, 0.35f);
+			}
+		}
+		if(stormThunder != null){
+			thunderTimer -= delta;
+			if(thunderTimer <= 0){
+				stormThunder[(int)(Math.random()*stormThunder.length)].play(0.45f + 0.3f*(float)Math.random());
+				thunderTimer = 7f + (float)Math.random()*8f;
 			}
 		}
 		if(neonHum != null){
