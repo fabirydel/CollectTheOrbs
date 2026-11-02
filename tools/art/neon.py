@@ -8,6 +8,7 @@ import math, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops, ImageOps
 
+from neon_tube import tube_rgba
 K = 4
 SS = 2
 U = K * SS
@@ -19,6 +20,7 @@ RED = (255, 59, 92)
 GOLD = (255, 190, 46)
 PURPLE = (168, 85, 247)
 WHITE = (244, 244, 246)
+TUBE_WHITE = (196, 214, 255)  # white neon glass: a hint of cool blue in the body and bloom
 NEUTRAL = (206, 208, 212)  # metallic gray-white glow for UI that is not tied to a shield color
 logical_sizes = {}
 
@@ -412,21 +414,20 @@ def button(name, gname, size, slash=False):
     d = ImageDraw.Draw(base)
     c = w * U / 2
     R = w * U * 0.45
-    ring_w = w * U * 0.040
+    ring_w = w * U * 0.034
     d.ellipse((c - R, c - R, c + R, c + R), fill=(12, 12, 14, 150))
     stroke = canvas(w, w)
     d = ImageDraw.Draw(stroke)
     d.ellipse((c - R, c - R, c + R, c + R), outline=(255, 255, 255, 255), width=int(ring_w))
-    pen = Pen(stroke, c, c, R * 0.55, w * U * 0.040)
+    pen = Pen(stroke, c, c, R * 0.55, w * U * 0.030)
     GLYPHS[gname](pen)
     if gname in MIRROR:
         stroke = ImageOps.mirror(stroke)
     if slash:
         pen.line([(-0.95, -0.95), (0.95, 0.95)], w=w * U * 0.05)
-    halo = glow(stroke, w * 0.045, NEUTRAL, 1.0)
-    core = Image.new('RGBA', stroke.size, WHITE + (0,))
-    core.putalpha(stroke.split()[3])
-    out = Image.alpha_composite(Image.alpha_composite(base, halo), core)
+    sw = w * U * 0.032
+    tube = tube_rgba(stroke.split()[3], TUBE_WHITE, sw, sig=(0.3, 0.8, 1.3), fade=3 * U)
+    out = Image.alpha_composite(base, tube)
     finish(out, w, w, 'gui/%s.png' % name)
 
 

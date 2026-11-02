@@ -10,6 +10,8 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(__file__))
 import neon as N
+from neon_tube import tube_rgba, centre_line
+from neon import TUBE_WHITE
 from neon import CYAN, RED, GOLD, PURPLE, WHITE, NEUTRAL, tint, glow, radial
 
 BASE = 'fcb590d'
@@ -309,26 +311,39 @@ def build_cards():
     N.finish(sheet, 745, 149, 'upgrades/upgradesPrice.png')
 
 
+def tube_text(canvas_size, mask, size):
+    """single-line tube mask of `mask` (a font.mask) centred on a canvas"""
+    box = mask.getbbox()
+    mask = mask.crop(box)
+    out = Image.new('L', canvas_size, 0)
+    out.paste(mask, ((canvas_size[0] - mask.width) // 2, (canvas_size[1] - mask.height) // 2))
+    return centre_line(out, 0.075 * size * N.U)
+
+
 def build_play():
     N.set_scale(4)
     font = BMFont('fonts/prototype128blueWhite')
     w, h = 196, 98
-    # inset the button so its outer neon glow fits inside the image
-    mg = 12
-    inner = tile(w - 2 * mg, h - 2 * mg, (NEUTRAL,), None, 20, alpha=230, bw=5.0, glow_r=2.0)
-    t = N.canvas(w, h)
-    t.alpha_composite(inner, (mg * N.U, mg * N.U))
-    halo = glow(t, 6.5, NEUTRAL, 1.0)
-    t = Image.alpha_composite(halo, t)
-    m = font.mask('START', 44)
-    center_text(t, m, t.width / 2, t.height / 2, NEUTRAL, 4.0)
-    N.finish(t, w, h, 'gui/bGo.png')
+    mg = 14        # inset so the bloom fits inside the image
+    size = (int(w * N.U), int(h * N.U))
+    outer = rounded_mask(w - 2 * mg, h - 2 * mg, 20)
+    inner = rounded_mask(w - 2 * mg, h - 2 * mg, 20, 3.0)
+    ring = Image.new('L', size, 0)
+    ring.paste(ImageChops.subtract(outer, inner), (mg * N.U, mg * N.U))
+    fill = Image.new('L', size, 0)
+    fill.paste(outer, (mg * N.U, mg * N.U))
+    text = tube_text(size, font.mask('START', 44), 44)
+    mask = ImageChops.lighter(ring, text)
+    tube = tube_rgba(mask, TUBE_WHITE, 3.2 * N.U, sig=(0.3, 0.8, 1.5), fade=3 * N.U)
+    base = Image.new('RGBA', size, NAVY + (0,))
+    base.putalpha(fill.point(lambda v: int(v * 0.85)))
+    N.finish(Image.alpha_composite(base, tube), w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
                              ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
-        im = N.canvas(w, h)
+        size = (int(w * N.U), int(h * N.U))
         m = font.mask(text, 29)
-        center_text(im, m, im.width / 2, im.height / 2, WHITE)
-        N.finish(im, w, h, 'gui/%s.png' % name)
+        t = tube_text(size, m, 29)
+        N.finish(tube_rgba(t, TUBE_WHITE, 0.075 * 29 * N.U, sig=(0.3, 0.8, 1.4), fade=3 * N.U), w, h, 'gui/%s.png' % name)
 
 
 def glass_pad(w, h):
@@ -436,24 +451,7 @@ def build_neon_fonts():
             if w > 0 and h > 0:
                 m = pages[c['page']].crop((c['x'], c['y'], c['x'] + w, c['y'] + h)).split()[3]
                 canvas.paste(m, (P, P))
-            hard = canvas.point(lambda v: 255 if v > 110 else 0)
-            core = hard.filter(ImageFilter.MinFilter(max(3, int(round(4 * k)) | 1))).filter(ImageFilter.GaussianBlur(0.6 * k))
-            body = canvas
-            h1 = canvas.filter(ImageFilter.GaussianBlur(2.2 * k))
-            h2 = canvas.filter(ImageFilter.GaussianBlur(5.5 * k))
-            body_a = np.asarray(body, dtype=np.float32) / 255
-            core_a = np.asarray(core, dtype=np.float32) / 255
-            glow_a = np.clip(np.asarray(h1, dtype=np.float32) / 255 * 1.3 + np.asarray(h2, dtype=np.float32) / 255 * 1.0, 0, 1) * (1 - body_a)
-            rgb = np.zeros(body_a.shape + (3,), dtype=np.float32)
-            for i in range(3):
-                t = color[i] / 255.0
-                lite = t + (1 - t) * 0.55
-                num = t * glow_a * 0.9 + lite * body_a * (1 - core_a) + 1.0 * core_a
-                den = glow_a * 0.9 + body_a * (1 - core_a) + core_a
-                rgb[..., i] = np.clip(num / np.maximum(den, 1e-3), 0, 1)
-            alpha = np.clip(glow_a * 0.8 + body_a, 0, 1)
-            alpha = np.maximum(alpha, core_a)
-            glyphs.append((c, Image.fromarray(np.dstack([rgb * 255, alpha * 255]).astype(np.uint8)), W, H))
+            glyphs.append((c, tube_rgba(centre_line(canvas, 0.055 * size) if w > 0 and h > 0 else canvas, color, 0.055 * size, sig=(0.35, 0.9, 2.0), fade=P), W, H))
         # shelf-pack into one page
         AW = 1024
         x = y = rowh = 0
