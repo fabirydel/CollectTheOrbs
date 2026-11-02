@@ -308,11 +308,16 @@ public class Splash implements Screen{
 		splash = new Sprite(game.assetManager.get("res/splash.png", Texture.class));
 		splash.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		progressBar = game.assetManager.get("res/hud/progress_bar.png", Texture.class);
-		progressTextures = TextureRegion.split(progressBar, 143, 36)[0];
+		// the sheet holds 21 frames of 286x72 (2x of the 143x36 logical size) in a grid, read row by row
+		TextureRegion[][] grid = TextureRegion.split(progressBar, 286, 72);
+		progressTextures = new TextureRegion[21];
+		for(int i = 0; i < progressTextures.length; i++){
+			progressTextures[i] = grid[i / grid[0].length][i % grid[0].length];
+		}
 		progressSprites = new Sprite[progressTextures.length];
 		for(int i = 0; i < progressTextures.length; i++){
 			progressSprites[i] = new Sprite(progressTextures[i]);
-			progressSprites[i].setSize(fx(1.75f*progressSprites[i].getWidth()), fy(1.75f*progressSprites[i].getHeight()));
+			progressSprites[i].setSize(fx(1.75f*143), fy(1.75f*36));
 			progressSprites[i].setPosition(Gdx.graphics.getWidth()/2 - progressSprites[0].getWidth()/2,
 					Gdx.graphics.getHeight()/3 - progressSprites[0].getHeight()/2);
 		}
