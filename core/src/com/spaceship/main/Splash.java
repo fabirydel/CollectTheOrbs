@@ -20,6 +20,7 @@ public class Splash implements Screen{
 	private TextureRegion[] progressTextures;
 	private Sprite[] progressSprites;
 	private Sprite splash;
+	private TextureRegion splashTop, splashBottom;
 	
 	int level;
 	int galaxySelected;
@@ -289,6 +290,11 @@ public class Splash implements Screen{
 
 			game.batch.begin();
 
+			// the art keeps its proportions (scaled to the screen width) and sits so its loading-bar slot lines up
+			// with the bar; whatever the screen shows above or below it is the art's own edge row stretched
+			if(splash.getY() > 0) game.batch.draw(splashBottom, 0, 0, Gdx.graphics.getWidth(), splash.getY());
+			float splashTopY = splash.getY() + splash.getHeight();
+			if(splashTopY < Gdx.graphics.getHeight()) game.batch.draw(splashTop, 0, splashTopY, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - splashTopY);
 			splash.draw(game.batch);
 			
 			progressSprites[level].draw(game.batch);
@@ -305,8 +311,14 @@ public class Splash implements Screen{
 	@Override
 	public void show() {
 
-		splash = new Sprite(game.assetManager.get("res/splash.png", Texture.class));
-		splash.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		Texture splashTexture = game.assetManager.get("res/splash.png", Texture.class);
+		splash = new Sprite(splashTexture);
+		float splashScale = Gdx.graphics.getWidth()/(float)splashTexture.getWidth();
+		splash.setSize(Gdx.graphics.getWidth(), splashTexture.getHeight()*splashScale);
+		// the loading bar slot is 2/3 of the way down the art (960 of 1440 px)
+		splash.setPosition(0, Gdx.graphics.getHeight()/3f - (splashTexture.getHeight() - 960)*splashScale);
+		splashTop = new TextureRegion(splashTexture, 0, 0, splashTexture.getWidth(), 2);
+		splashBottom = new TextureRegion(splashTexture, 0, splashTexture.getHeight() - 2, splashTexture.getWidth(), 2);
 		progressBar = game.assetManager.get("res/hud/progress_bar.png", Texture.class);
 		// the sheet holds 21 frames of 286x72 (2x of the 143x36 logical size) in a grid, read row by row
 		TextureRegion[][] grid = TextureRegion.split(progressBar, 286, 72);
@@ -317,7 +329,7 @@ public class Splash implements Screen{
 		progressSprites = new Sprite[progressTextures.length];
 		for(int i = 0; i < progressTextures.length; i++){
 			progressSprites[i] = new Sprite(progressTextures[i]);
-			progressSprites[i].setSize(fx(1.75f*143), fy(1.75f*36));
+			progressSprites[i].setSize(fx(1.75f*143), fx(1.75f*36));
 			progressSprites[i].setPosition(Gdx.graphics.getWidth()/2 - progressSprites[0].getWidth()/2,
 					Gdx.graphics.getHeight()/3 - progressSprites[0].getHeight()/2);
 		}
