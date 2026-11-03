@@ -118,7 +118,8 @@ public class Fx {
 
 	/**
 	 * Engine flame as a ribbon hanging down from the nozzle (x, y): xs[k] is the centre line at k/n of the length, so
-	 * the flame keeps the path it was left on instead of tilting with the ship.
+	 * the flame keeps the path it was left on instead of tilting with the ship. Each segment is a straight vertical block at its
+	 * own x (no diagonal joins): it falls straight down from where it first appeared.
 	 */
 	public static void plumeRibbon(SpriteBatch sb, boolean hot, float[] xs, int n, float y, float length, float width,
 			float r, float g, float b, float a) {
@@ -128,10 +129,10 @@ public class Fx {
 		for (int k = 0; k < n; k++) {
 			float y0 = y - length * k / n, y1 = y - length * (k + 1) / n;
 			float v0 = (float) k / n, v1 = (float) (k + 1) / n;
-			quad[0] = xs[k + 1] - hw; quad[1] = y1; quad[2] = c; quad[3] = 0; quad[4] = v1;
+			quad[0] = xs[k] - hw; quad[1] = y1; quad[2] = c; quad[3] = 0; quad[4] = v1;
 			quad[5] = xs[k] - hw; quad[6] = y0; quad[7] = c; quad[8] = 0; quad[9] = v0;
 			quad[10] = xs[k] + hw; quad[11] = y0; quad[12] = c; quad[13] = 1; quad[14] = v0;
-			quad[15] = xs[k + 1] + hw; quad[16] = y1; quad[17] = c; quad[18] = 1; quad[19] = v1;
+			quad[15] = xs[k] + hw; quad[16] = y1; quad[17] = c; quad[18] = 1; quad[19] = v1;
 			sb.draw(t, quad, 0, 20);
 		}
 	}

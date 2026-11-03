@@ -82,18 +82,10 @@ public class ShipPlume {
 		return newerX;
 	}
 
-	private static final float KEEP = 0.3f;		// how much of the ship's sideways wandering the flame keeps (0 = straight down)
-
+	/** x of each segment of a flame: where the ship was when that stretch of flame left the nozzle (no smoothing, no diagonals) */
 	private void path(float now, float off, float length, float flow, float maxDev) {
-		float cxNow = xAgo(now, 0f);
 		for (int k = 0; k <= SEG; k++)
-			xs[k] = MathUtils.clamp((xAgo(now, length * k / SEG / flow) - cxNow) * KEEP, -maxDev, maxDev);
-		// relax the path into a smooth drift (no zigzag), the nozzle end stays put
-		for (int pass = 0; pass < 3; pass++)
-			for (int k = 1; k < SEG; k++)
-				xs[k] = 0.25f * xs[k - 1] + 0.5f * xs[k] + 0.25f * xs[k + 1];
-		for (int k = 0; k <= SEG; k++)
-			xs[k] += cxNow + off;
+			xs[k] = xAgo(now, length * (k + 0.5f) / SEG / flow) + off;
 	}
 
 	private float surge;
