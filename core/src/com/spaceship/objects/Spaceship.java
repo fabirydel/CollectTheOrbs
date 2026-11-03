@@ -58,6 +58,7 @@ public class Spaceship{
 
 	private int shadow;
 	private final ShipPlume plume = new ShipPlume();
+	private int plumeDir;
 
 	/** Speed-up sequence control of the engine flames (length x, brightness x, extra whiteness). */
 	public void setChargeFx(float len, float alpha, float white){
@@ -362,6 +363,11 @@ public class Spaceship{
 				float dt = Gdx.graphics.getDeltaTime();
 				if(prevX >= 0 && dt > 0)
 					plume.setLateral((ship.x - prevX)/(dt*fxy(speed)));
+				float mv = ship.x - prevX;
+				int dir = Math.abs(mv) < 0.01f ? 0 : (mv > 0 ? 1 : -1);
+				if(prevX >= 0 && dir != 0 && dir != plumeDir)
+					plume.split();		// a left/right press: leave the flame so far to fall away, start a new one
+				plumeDir = dir;
 				prevX = ship.x;
 				plume.setSpeed(game.getPS().getSpeedFactor());
 				Fx.additiveOn(sb);
