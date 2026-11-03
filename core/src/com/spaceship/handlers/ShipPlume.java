@@ -20,7 +20,7 @@ public class ShipPlume {
 			{ 1.00f, 0.23f, 0.36f }, // red-blue
 			{ 1.00f, 0.75f, 0.18f } // gold
 	};
-	private static final float BIG_L = 1.8f, BIG_W = 1.6f;		// flame size relative to the original
+	private static final float BIG_L = 1.4f, BIG_W = 1.3f;		// flame size relative to the original
 	private float cr = COLORS[0][0], cg = COLORS[0][1], cb = COLORS[0][2];
 	private float time;
 	private float lateral;
