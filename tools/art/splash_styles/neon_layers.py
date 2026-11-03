@@ -41,8 +41,8 @@ def build(lit):
         tube('beak', [tp, bt], YEL, r=3.4)
     ndead = lambda keep, n: tuple(i for i in range(n) if i not in keep)
     # lettering: a group lights its own characters, the rest stay dead glass
-    for word, y, col, parts_ in (('PUFFIN', 1140, PINK, (('name_a', (0, 1, 2, 4, 5)), ('name_f', (3,)))),
-                                 ('GAMES', 1255, TEAL, (('games_a', (0, 1, 3, 4)), ('games_m', (2,))))):
+    for word, y, col, parts_ in (('PUFFIN', 1131.5, PINK, (('name_a', (0, 1, 2, 4, 5)), ('name_f', (3,)))),
+                                 ('GAMES', 1246.5, TEAL, (('games_a', (0, 1, 3, 4)), ('games_m', (2,))))):
         dead = tuple(i for i in range(len(word)) if not any(g in lit and i in idx for g, idx in parts_))
         c.neon_text(word, W / 2, y, 112, col, Z, spacing=0.06, dead=dead)
     tube('frame', np.array([(70, 1070), (650, 1070), (650, 1310), (70, 1310)]), BLUE2, r=2.4, closed=True, level=0.6)
