@@ -96,55 +96,6 @@ public class ShipPlume {
 			xs[k] += cxNow + off;
 	}
 
-	/** a stretch of flame that came loose at a turn and keeps falling on its own */
-	private static class Piece {
-		float[][] xs;			// [nozzle * 3 + layer][SEG + 1]
-		float[] y, len, wid, flow, r, g, b, a;	// per [nozzle * 3 + layer]
-		float age;
-	}
-	private static final float PIECE_LIFE = 0.8f;
-	private Piece snap;
-	private final java.util.ArrayList<Piece> pieces = new java.util.ArrayList<Piece>();
-
-	/** Cut the flame here (a left/right press): what is already out keeps going south, a fresh flame starts at the nozzle. */
-	public void split() {
-		if (snap != null) {
-			snap.age = 0;
-			pieces.add(snap);
-			snap = null;
-			if (pieces.size() > 12)
-				pieces.remove(0);
-		}
-		histN = 0;
-	}
-
-	private void keep(int slot, int slots, float[] path, float y, float len, float wid, float flow, float r, float g, float b, float a) {
-		if (snap == null || snap.xs.length != slots) {
-			snap = new Piece();
-			snap.xs = new float[slots][SEG + 1];
-			snap.y = new float[slots]; snap.len = new float[slots]; snap.wid = new float[slots]; snap.flow = new float[slots];
-			snap.r = new float[slots]; snap.g = new float[slots]; snap.b = new float[slots]; snap.a = new float[slots];
-		}
-		System.arraycopy(path, 0, snap.xs[slot], 0, SEG + 1);
-		snap.y[slot] = y; snap.len[slot] = len; snap.wid[slot] = wid; snap.flow[slot] = flow;
-		snap.r[slot] = r; snap.g[slot] = g; snap.b[slot] = b; snap.a[slot] = a;
-	}
-
-	private void drawPieces(SpriteBatch sb, float dt) {
-		for (int i = pieces.size() - 1; i >= 0; i--) {
-			Piece p = pieces.get(i);
-			p.age += dt;
-			if (p.age >= PIECE_LIFE) {
-				pieces.remove(i);
-				continue;
-			}
-			float fade = 1f - p.age / PIECE_LIFE;
-			fade *= fade;
-			for (int s = 0; s < p.xs.length; s++)
-				Fx.plumeRibbon(sb, s % 3 == 2, p.xs[s], SEG, p.y[s] - p.flow[s] * p.age, p.len[s], p.wid[s], p.r[s], p.g[s], p.b[s], p.a[s] * fade, 0.35f);
-		}
-	}
-
 	private float surge;
 	private float speed;
 	private float chargeLen = 1f, chargeAlpha = 1f, chargeWhite = 0f;
@@ -186,9 +137,7 @@ public class ShipPlume {
 		float boost = 1f;
 		remember(t, cx);
 
-		drawPieces(sb, dt);
 		float[] n = nozzles[shipId];
-		int slots = n.length / 3 * 3;
 		for (int i = 0; i + 2 < n.length; i += 3) {
 			float ph = i * 1.7f;
 			float x = cx + (n[i] - 64f) * wEff / 128f;
@@ -212,16 +161,11 @@ public class ShipPlume {
 			float hot = Math.min(1f, 0.35f + 0.5f * speed + chargeWhite); // the core goes whiter as the run speeds up and as the engines ignite
 			float wakeL = length * (1.5f + 0.5f * speed), coreL = length * (0.62f + 0.1f * speed);
 			path(t, off, wakeL, flow, 0.6f * wEff);
-			float wa = a * (0.38f + 0.12f * speed);
-			keep(i + 0, slots, xs, y, wakeL, width * 1.1f, flow, cr, cg, cb, wa);
-			Fx.plumeRibbon(sb, false, xs, SEG, y, wakeL, width * 1.1f, cr, cg, cb, wa);
+			Fx.plumeRibbon(sb, false, xs, SEG, y, wakeL, width * 1.1f, cr, cg, cb, a * (0.38f + 0.12f * speed));
 			path(t, off, length, flow, 0.6f * wEff);
-			keep(i + 1, slots, xs, y, length, width * 1.5f, flow, cr, cg, cb, a);
 			Fx.plumeRibbon(sb, false, xs, SEG, y, length, width * 1.5f, cr, cg, cb, a);
 			path(t, off, coreL, flow, 0.6f * wEff);
-			float hr = 1f - (1f - cr) * (1f - hot), hg = 1f - (1f - cg) * (1f - hot), hb = 1f - (1f - cb) * (1f - hot), ha = Math.min(1f, a * (1f + 0.25f * speed));
-			keep(i + 2, slots, xs, y, coreL, width * 0.7f, flow, hr, hg, hb, ha);
-			Fx.plumeRibbon(sb, true, xs, SEG, y, coreL, width * 0.7f, hr, hg, hb, ha);
+			Fx.plumeRibbon(sb, true, xs, SEG, y, coreL, width * 0.7f, 1f - (1f - cr) * (1f - hot), 1f - (1f - cg) * (1f - hot), 1f - (1f - cb) * (1f - hot), Math.min(1f, a * (1f + 0.25f * speed)));
 
 			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f * (1f + 2.5f * speed)) {
 				float white = MathUtils.random(0f, 0.55f);

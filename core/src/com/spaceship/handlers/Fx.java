@@ -122,24 +122,16 @@ public class Fx {
 	 */
 	public static void plumeRibbon(SpriteBatch sb, boolean hot, float[] xs, int n, float y, float length, float width,
 			float r, float g, float b, float a) {
-		plumeRibbon(sb, hot, xs, n, y, length, width, r, g, b, a, 0f);
-	}
-
-	/** As above; headFade > 0 fades the top part of the ribbon in over that fraction of its length (for a piece that has come loose). */
-	public static void plumeRibbon(SpriteBatch sb, boolean hot, float[] xs, int n, float y, float length, float width,
-			float r, float g, float b, float a, float headFade) {
 		Texture t = hot ? plumeCore : plume;
+		float c = com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, a);
 		float hw = width / 2;
 		for (int k = 0; k < n; k++) {
 			float y0 = y - length * k / n, y1 = y - length * (k + 1) / n;
 			float v0 = (float) k / n, v1 = (float) (k + 1) / n;
-			float f0 = headFade > 0 ? Math.min(1f, v0 / headFade) : 1f, f1 = headFade > 0 ? Math.min(1f, v1 / headFade) : 1f;
-			float c0 = com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, a * f0);
-			float c1 = com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, a * f1);
-			quad[0] = xs[k + 1] - hw; quad[1] = y1; quad[2] = c1; quad[3] = 0; quad[4] = v1;
-			quad[5] = xs[k] - hw; quad[6] = y0; quad[7] = c0; quad[8] = 0; quad[9] = v0;
-			quad[10] = xs[k] + hw; quad[11] = y0; quad[12] = c0; quad[13] = 1; quad[14] = v0;
-			quad[15] = xs[k + 1] + hw; quad[16] = y1; quad[17] = c1; quad[18] = 1; quad[19] = v1;
+			quad[0] = xs[k + 1] - hw; quad[1] = y1; quad[2] = c; quad[3] = 0; quad[4] = v1;
+			quad[5] = xs[k] - hw; quad[6] = y0; quad[7] = c; quad[8] = 0; quad[9] = v0;
+			quad[10] = xs[k] + hw; quad[11] = y0; quad[12] = c; quad[13] = 1; quad[14] = v0;
+			quad[15] = xs[k + 1] + hw; quad[16] = y1; quad[17] = c; quad[18] = 1; quad[19] = v1;
 			sb.draw(t, quad, 0, 20);
 		}
 	}
