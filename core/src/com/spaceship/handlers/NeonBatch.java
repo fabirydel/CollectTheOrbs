@@ -20,6 +20,8 @@ public class NeonBatch extends SpriteBatch {
 
 	private static final long START = System.nanoTime();
 	private static final int NONE = 0, FONT = 1, ICON = 2;
+	/** icons (round buttons, START) stay steady; only text glitches */
+	private static final boolean GLITCH_ICONS = false;
 	private final IdentityHashMap<Texture, Integer> kinds = new IdentityHashMap<Texture, Integer>();
 	private final IdentityHashMap<Texture, Integer> names = new IdentityHashMap<Texture, Integer>();
 	private float[] scratch = new float[400];
@@ -33,7 +35,7 @@ public class NeonBatch extends SpriteBatch {
 				String name = fh.name();
 				if(name.startsWith("neon_prototype") && name.contains("grey")){
 					v = FONT;
-				}else if(fh.path().contains("res/gui/") && name.startsWith("b")){
+				}else if(GLITCH_ICONS && fh.path().contains("res/gui/") && name.startsWith("b")){
 					v = ICON;		// the round icon buttons, START and the question prompt
 					names.put(t, name.hashCode());
 				}
