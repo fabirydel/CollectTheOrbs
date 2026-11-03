@@ -47,6 +47,19 @@ import com.spaceship.handlers.ImageAccessor;
 import com.spaceship.handlers.SpriteAccessor;
 
 public class MainMenuScreen implements Screen {
+	/** ScrollPane that clips a little wider than its bounds sideways, so the neon glow around the first and last letters of a line isn't cut off. */
+	private static class GlowScrollPane extends ScrollPane {
+		GlowScrollPane(com.badlogic.gdx.scenes.scene2d.Actor widget) {
+			super(widget);
+		}
+
+		@Override
+		public boolean clipBegin(float x, float y, float width, float height) {
+			float m = Gdx.graphics.getWidth() * 0.06f;
+			return super.clipBegin(x - m, y, width + 2 * m, height);
+		}
+	}
+
 
 	final Main game;
 	private int state;
@@ -1640,7 +1653,7 @@ public class MainMenuScreen implements Screen {
 		containerShips.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsShips = new Table();
-		scrollShips = new ScrollPane(imgsShips);
+		scrollShips = new GlowScrollPane(imgsShips);
 		scrollShips.setScrollingDisabled(true, false);
 		for(int k = 0; k < shipsBoughtImage.length; k++){
 			final int i = k;
@@ -1763,7 +1776,7 @@ public class MainMenuScreen implements Screen {
 		containerBgs.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsBgs = new Table();
-		scrollBgs = new ScrollPane(imgsBgs);
+		scrollBgs = new GlowScrollPane(imgsBgs);
 		scrollBgs.setScrollingDisabled(true, false);
 		for(int k = 0; k < bgsBoughtImage.length; k++){
 			final int i = k;
@@ -1907,7 +1920,7 @@ public class MainMenuScreen implements Screen {
 		containerUpg.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsUpg = new Table();
-		scrollUpg = new ScrollPane(imgsUpg);
+		scrollUpg = new GlowScrollPane(imgsUpg);
 		scrollUpg.setScrollingDisabled(true, false);
 		
 		if(language == ON)
@@ -2200,7 +2213,7 @@ public class MainMenuScreen implements Screen {
 		containerHelp.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsHelp = new Table();
-		scrollHelp = new ScrollPane(imgsHelp);
+		scrollHelp = new GlowScrollPane(imgsHelp);
 		scrollHelp.setScrollingDisabled(true, false);
 		
 		if(language == ON)
@@ -2360,7 +2373,7 @@ public class MainMenuScreen implements Screen {
 		containerSts.setBounds(blueCounter.getX(), counterBaseY + 1.5f*blueCounter.getHeight(), 
 				redCounter.getX() + redCounter.getWidth() - blueCounter.getX(), Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsSts = new Table();
-		scrollSts = new ScrollPane(imgsSts);
+		scrollSts = new GlowScrollPane(imgsSts);
 		scrollSts.setScrollingDisabled(true, false);
 		
 		if(language == ON){
@@ -2813,7 +2826,7 @@ public class MainMenuScreen implements Screen {
 		containerSttngs.setBounds(Gdx.graphics.getWidth()/8 , counterBaseY + 1.5f*blueCounter.getHeight(), 
 				3*Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight() - 0.225f*Gdx.graphics.getHeight() - adHeight);	
 		imgsSttngs = new Table();
-		scrollSttngs = new ScrollPane(imgsSttngs);
+		scrollSttngs = new GlowScrollPane(imgsSttngs);
 		scrollSttngs.setScrollingDisabled(true, false);
 		
 		if(language == ON)
