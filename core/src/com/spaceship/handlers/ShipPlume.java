@@ -82,9 +82,18 @@ public class ShipPlume {
 		return newerX;
 	}
 
-	private void path(float now, float off, float length, float flow) {
+	private static final float KEEP = 0.3f;		// how much of the ship's sideways wandering the flame keeps (0 = straight down)
+
+	private void path(float now, float off, float length, float flow, float maxDev) {
+		float cxNow = xAgo(now, 0f);
 		for (int k = 0; k <= SEG; k++)
-			xs[k] = xAgo(now, length * k / SEG / flow) + off;
+			xs[k] = MathUtils.clamp((xAgo(now, length * k / SEG / flow) - cxNow) * KEEP, -maxDev, maxDev);
+		// relax the path into a smooth drift (no zigzag), the nozzle end stays put
+		for (int pass = 0; pass < 3; pass++)
+			for (int k = 1; k < SEG; k++)
+				xs[k] = 0.25f * xs[k - 1] + 0.5f * xs[k] + 0.25f * xs[k + 1];
+		for (int k = 0; k <= SEG; k++)
+			xs[k] += cxNow + off;
 	}
 
 	private float surge;
@@ -151,11 +160,11 @@ public class ShipPlume {
 			float off = x - cx;
 			float hot = Math.min(1f, 0.35f + 0.5f * speed + chargeWhite); // the core goes whiter as the run speeds up and as the engines ignite
 			float wakeL = length * (1.5f + 0.5f * speed), coreL = length * (0.62f + 0.1f * speed);
-			path(t, off, wakeL, flow);
+			path(t, off, wakeL, flow, 0.6f * wEff);
 			Fx.plumeRibbon(sb, false, xs, SEG, y, wakeL, width * 1.1f, cr, cg, cb, a * (0.38f + 0.12f * speed));
-			path(t, off, length, flow);
+			path(t, off, length, flow, 0.6f * wEff);
 			Fx.plumeRibbon(sb, false, xs, SEG, y, length, width * 1.5f, cr, cg, cb, a);
-			path(t, off, coreL, flow);
+			path(t, off, coreL, flow, 0.6f * wEff);
 			Fx.plumeRibbon(sb, true, xs, SEG, y, coreL, width * 0.7f, 1f - (1f - cr) * (1f - hot), 1f - (1f - cg) * (1f - hot), 1f - (1f - cb) * (1f - hot), Math.min(1f, a * (1f + 0.25f * speed)));
 
 			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f * (1f + 2.5f * speed)) {
