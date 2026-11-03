@@ -20,7 +20,6 @@ public class ShipPlume {
 			{ 1.00f, 0.23f, 0.36f }, // red-blue
 			{ 1.00f, 0.75f, 0.18f } // gold
 	};
-	private static final float BIG_L = 1.4f, BIG_W = 1.3f;		// flame size relative to the original
 	private float cr = COLORS[0][0], cg = COLORS[0][1], cb = COLORS[0][2];
 	private float time;
 	private float lateral;
@@ -46,54 +45,6 @@ public class ShipPlume {
 	/** Smoothed sideways motion in -1..1 (positive = moving right). */
 	public void setLateral(float target) {
 		lateral += (MathUtils.clamp(target, -1f, 1f) - lateral) * Math.min(1f, Gdx.graphics.getDeltaTime() * 12f);
-	}
-
-	// where the ship's centre was over the last second: the flame keeps the path it was left on
-	private static final int HIST = 256, SEG = 20;
-	private static final float LIFE = 0.45f;		// seconds a puff of flame takes to travel the glow's length
-	private final float[] histT = new float[HIST], histX = new float[HIST];
-	private int histN, histHead;
-	private final float[] xs = new float[SEG + 1];
-
-	private void remember(float t, float cx) {
-		if (histN > 0 && t - histT[(histHead - 1 + HIST) % HIST] > 0.25f)
-			histN = 0;			// the ship was away (paused, dead): start a fresh path
-		histT[histHead] = t;
-		histX[histHead] = cx;
-		histHead = (histHead + 1) % HIST;
-		if (histN < HIST)
-			histN++;
-	}
-
-	/** the ship centre's x, `age` seconds ago */
-	private float xAgo(float now, float age) {
-		float target = now - age;
-		float newerT = histT[(histHead - 1 + HIST) % HIST], newerX = histX[(histHead - 1 + HIST) % HIST];
-		for (int i = 2; i <= histN; i++) {
-			int idx = (histHead - i + HIST) % HIST;
-			if (histT[idx] <= target) {
-				float span = newerT - histT[idx];
-				float f = span > 1e-5f ? (target - histT[idx]) / span : 1f;
-				return histX[idx] + (newerX - histX[idx]) * f;
-			}
-			newerT = histT[idx];
-			newerX = histX[idx];
-		}
-		return newerX;
-	}
-
-	private static final float KEEP = 0.3f;		// how much of the ship's sideways wandering the flame keeps (0 = straight down)
-
-	private void path(float now, float off, float length, float flow, float maxDev) {
-		float cxNow = xAgo(now, 0f);
-		for (int k = 0; k <= SEG; k++)
-			xs[k] = MathUtils.clamp((xAgo(now, length * k / SEG / flow) - cxNow) * KEEP, -maxDev, maxDev);
-		// relax the path into a smooth drift (no zigzag), the nozzle end stays put
-		for (int pass = 0; pass < 3; pass++)
-			for (int k = 1; k < SEG; k++)
-				xs[k] = 0.25f * xs[k - 1] + 0.5f * xs[k] + 0.25f * xs[k + 1];
-		for (int k = 0; k <= SEG; k++)
-			xs[k] += cxNow + off;
 	}
 
 	private float surge;
@@ -134,8 +85,7 @@ public class ShipPlume {
 		float cx = ship.getX() + ship.getWidth() / 2;
 		float cy = ship.getY() + ship.getHeight() / 2;
 		float u = wEff / 128f;
-		float boost = 1f;
-		remember(t, cx);
+		float boost = 1f + 0.35f * Math.abs(lateral);
 
 		float[] n = nozzles[shipId];
 		for (int i = 0; i + 2 < n.length; i += 3) {
@@ -146,8 +96,9 @@ public class ShipPlume {
 			float flicker = !Fx.LIVELY ? 0.92f : 0.88f + 0.04f * MathUtils.sin(t * 16f + ph) + 0.03f * MathUtils.sin(t * 34f + 2f * ph)
 					+ MathUtils.random(-0.015f, 0.015f) + 0.15f * surge;
 			float pulse = !Fx.LIVELY ? 1f : 1f + 0.05f * MathUtils.sin(t * 24f + ph) + MathUtils.random(-0.015f, 0.015f);
-						float length = BIG_L * (82f + w * 2.2f) * u * flicker * boost * (1f + 1.15f * speed) * chargeLen;
-			float width = BIG_W * (7f + w * 1.25f) * u * pulse * (1f - 0.14f * speed);
+			float sway = -lateral * 16f + (!Fx.WOBBLE ? 0f : 1.5f * MathUtils.sin(t * 9f + ph) + MathUtils.random(-0.3f, 0.3f));
+			float length = (82f + w * 2.2f) * u * flicker * boost * (1f + 1.15f * speed) * chargeLen;
+			float width = (7f + w * 1.25f) * u * pulse * (1f - 0.14f * speed);
 			float a = alpha * (0.78f + 0.12f * flicker) * chargeAlpha;
 			// long faint wake, then the glow, then the hot core
 			if (chargeWhite > 0.02f) {
@@ -156,21 +107,15 @@ public class ShipPlume {
 				sb.setColor(1f, 1f, 1f, Math.min(1f, chargeWhite) * 0.9f * (chargeAlpha > 0.5f ? 1f : 0.3f));
 				sb.draw(Fx.glow(), x - gs / 2, y - gs / 2, gs, gs);
 			}
-			float flow = length / LIFE;
-			float off = x - cx;
+			Fx.plume(sb, false, x, y, length * (1.5f + 0.5f * speed), width * 1.1f, sway * 1.2f, cr, cg, cb, a * (0.38f + 0.12f * speed));
+			Fx.plume(sb, false, x, y, length, width * 1.5f, sway, cr, cg, cb, a);
 			float hot = Math.min(1f, 0.35f + 0.5f * speed + chargeWhite); // the core goes whiter as the run speeds up and as the engines ignite
-			float wakeL = length * (1.5f + 0.5f * speed), coreL = length * (0.62f + 0.1f * speed);
-			path(t, off, wakeL, flow, 0.6f * wEff);
-			Fx.plumeRibbon(sb, false, xs, SEG, y, wakeL, width * 1.1f, cr, cg, cb, a * (0.38f + 0.12f * speed));
-			path(t, off, length, flow, 0.6f * wEff);
-			Fx.plumeRibbon(sb, false, xs, SEG, y, length, width * 1.5f, cr, cg, cb, a);
-			path(t, off, coreL, flow, 0.6f * wEff);
-			Fx.plumeRibbon(sb, true, xs, SEG, y, coreL, width * 0.7f, 1f - (1f - cr) * (1f - hot), 1f - (1f - cg) * (1f - hot), 1f - (1f - cb) * (1f - hot), Math.min(1f, a * (1f + 0.25f * speed)));
+			Fx.plume(sb, true, x, y, length * (0.62f + 0.1f * speed), width * 0.7f, sway, 1f - (1f - cr) * (1f - hot), 1f - (1f - cg) * (1f - hot), 1f - (1f - cb) * (1f - hot), Math.min(1f, a * (1f + 0.25f * speed)));
 
 			if (Fx.LIVELY && emit && MathUtils.random() < dt * 44f * (1f + 2.5f * speed)) {
 				float white = MathUtils.random(0f, 0.55f);
 				Fx.emit(x + MathUtils.random(-w * 0.5f, w * 0.5f) * u, y - MathUtils.random(0f, 12f) * u,
-						MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u * (1f + 1.6f * speed),
+						-lateral * 90f * u + MathUtils.random(-36f, 36f) * u, -MathUtils.random(70f, 230f) * u * (1f + 1.6f * speed),
 						MathUtils.random(0.35f, 0.85f), MathUtils.random(5f, 12f) * u,
 						cr + (1f - cr) * white, cg + (1f - cg) * white, cb + (1f - cb) * white);
 			}
