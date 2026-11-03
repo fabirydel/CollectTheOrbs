@@ -49,7 +49,7 @@ public class ShipPlume {
 	}
 
 	// where the ship's centre was over the last second: the flame keeps the path it was left on
-	private static final int HIST = 256, SEG = 7;
+	private static final int HIST = 256, SEG = 20;
 	private static final float LIFE = 0.45f;		// seconds a puff of flame takes to travel the glow's length
 	private final float[] histT = new float[HIST], histX = new float[HIST];
 	private int histN, histHead;
@@ -82,10 +82,18 @@ public class ShipPlume {
 		return newerX;
 	}
 
-	/** x of each segment of a flame: where the ship was when that stretch of flame left the nozzle (no smoothing, no diagonals) */
+	private static final float KEEP = 0.3f;		// how much of the ship's sideways wandering the flame keeps (0 = straight down)
+
 	private void path(float now, float off, float length, float flow, float maxDev) {
+		float cxNow = xAgo(now, 0f);
 		for (int k = 0; k <= SEG; k++)
-			xs[k] = xAgo(now, length * (k + 0.5f) / SEG / flow) + off;
+			xs[k] = MathUtils.clamp((xAgo(now, length * k / SEG / flow) - cxNow) * KEEP, -maxDev, maxDev);
+		// relax the path into a smooth drift (no zigzag), the nozzle end stays put
+		for (int pass = 0; pass < 3; pass++)
+			for (int k = 1; k < SEG; k++)
+				xs[k] = 0.25f * xs[k - 1] + 0.5f * xs[k] + 0.25f * xs[k + 1];
+		for (int k = 0; k <= SEG; k++)
+			xs[k] += cxNow + off;
 	}
 
 	private float surge;
