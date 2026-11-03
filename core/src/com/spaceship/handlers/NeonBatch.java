@@ -59,7 +59,7 @@ public class NeonBatch extends SpriteBatch {
 	private static float level(int seed, int line, float t, boolean glitcher){
 		float lv = 0.95f + 0.05f*(float)Math.sin(t*1.6f + (seed & 255)*0.05f);
 		if(glitcher){
-			float slotLen = 1.6f + ((seed >>> 8) & 255)/255f*1.8f;
+			float slotLen = 3.2f + ((seed >>> 8) & 255)/255f*3.6f;
 			int slot = (int)Math.floor(t/slotLen);
 			int h = hash(seed, slot);
 			if((h & 3) != 0 && (h & 12) != 0){
@@ -71,10 +71,10 @@ public class NeonBatch extends SpriteBatch {
 			}
 		}
 		// a line's power dip: its own period, offset and recovery, and not every line takes part every time
-		float dipLen = 4f + ((line >>> 5) & 255)/255f*4f;
+		float dipLen = 6f + ((line >>> 5) & 255)/255f*6f;
 		int ds = (int)Math.floor(t/dipLen);
 		int hd = hash(ds, line);
-		if((hd & 3) == 0){
+		if((hd & 7) == 0){
 			float dt = t - ds*dipLen - ((hd >>> 4) & 1023)/1023f*(dipLen - 1f);
 			float rec = 0.1f + ((seed >>> 3) & 127)/127f*0.35f;
 			if(dt >= 0 && dt < rec + 0.2f)
