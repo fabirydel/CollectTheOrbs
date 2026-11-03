@@ -410,6 +410,54 @@ def build_lightning():
         N.logical_sizes['res/shapes/%s.png' % name] = (src.width, src.height)
 
 
+
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/claude-drawing/lib'))
+from cyberpunk import sign_font
+from scipy import ndimage as ndi
+SS_ALPHA = 4
+_REF = sign_font('neon', 1000)
+CAP_RATIO = -_REF.getbbox('H', anchor='ls')[1] / 1000.0     # cap height of the hairline alphabet, in em
+
+
+def _font(em_px):
+    return sign_font('neon', int(round(em_px * SS_ALPHA)))
+
+
+def glyph_stretch(chars, em_px):
+    """one horizontal stretch for the whole alphabet (the game's old letters are wider than the hairline face), so every
+    letter keeps the same proportions"""
+    f = _font(em_px)
+    ratios = []
+    for c in chars:
+        ch = chr(c['id'])
+        if ch.isalpha() and c['width'] > 0:
+            l, t, r, b = f.getbbox(ch, anchor='ls')
+            ratios.append(c['width'] * SS_ALPHA / max(r - l, 1))
+    return float(np.clip(0.9 * np.median(ratios), 0.9, 1.4))
+
+
+def alphabet_glyph(ch, c, base_px, P, em_px, sx, tube_w):
+    """tube mask for one letter, drawn on a canvas that covers the old glyph box plus margin P: same baseline and same
+    horizontal centre for every use of the letter"""
+    S = SS_ALPHA
+    w, h = c['width'], c['height']
+    Wc, Hc = (w + 2 * P) * S, (h + 2 * P) * S
+    f = _font(em_px)
+    l, t, r, b = f.getbbox(ch, anchor='ls')
+    tw = int(r - l + 8 * S)
+    tmp = Image.new('L', (tw, Hc), 0)
+    yb = (base_px - c['yoffset'] + P) * S
+    ImageDraw.Draw(tmp).text((4 * S - l, yb), ch, font=f, fill=255, anchor='ls')
+    tmp = tmp.resize((max(1, int(tw * sx)), Hc), Image.LANCZOS)
+    can = Image.new('L', (Wc, Hc), 0)
+    ink_c = (4 * S + (r - l) / 2.0) * sx                    # ink centre inside tmp
+    can.paste(tmp, (int(round((w / 2.0 + P) * S - ink_c)), 0))
+    hard = np.asarray(can, np.float32) > 60
+    tube = ndi.distance_transform_edt(~hard) <= tube_w * S / 2.0
+    tube = ndi.gaussian_filter(tube.astype(np.float32), 0.6)
+    return Image.fromarray((np.clip(tube, 0, 1) * 255).astype(np.uint8)).resize((w + 2 * P, h + 2 * P), Image.LANCZOS)
+
+
 FONT_COLORS = {'grey': TUBE_WHITE, 'blueWhite': CYAN, 'redBlack': RED, 'yellowOrange': GOLD}
 
 
@@ -441,17 +489,25 @@ def build_neon_fonts():
                     tail.append(line)
             else:
                 header.append(line)
-        P = int(size * 0.26) + 2
-        k = size / 64.0
+        P = int(size * 0.3) + 2
+        base_px = int(re.search(r'base=(\d+)', txt).group(1))
+        cap_old = next(c['height'] for c in chars if c['id'] == 72)
+        em_px = cap_old / (CAP_RATIO)
+        sx = glyph_stretch(chars, em_px)
         glyphs = []
         for c in chars:
+            if c['id'] != 32 and c['width'] > 0:
+                # the alphabet's own spacing: the letter's ink plus an even gap, the ink centred on the advance
+                l_, t_, r_, b_ = _font(em_px).getbbox(chr(c['id']), anchor='ls')
+                c['xadvance'] = int(round((r_ - l_) * sx / SS_ALPHA + 0.17 * size))
+                c['xoffset'] = int(round(c['xadvance'] / 2.0 - c['width'] / 2.0))
             w, h = c['width'], c['height']
             W, H = w + 2 * P, h + 2 * P
-            canvas = Image.new('L', (W, H), 0)
             if w > 0 and h > 0:
-                m = pages[c['page']].crop((c['x'], c['y'], c['x'] + w, c['y'] + h)).split()[3]
-                canvas.paste(m, (P, P))
-            glyphs.append((c, tube_rgba(centre_line(canvas, 0.055 * size) if w > 0 and h > 0 else canvas, color, 0.055 * size, sig=(0.3, 0.9, 2.2), fade=P), W, H))
+                m = alphabet_glyph(chr(c['id']), c, base_px, P, em_px, sx, 0.055 * size)
+                glyphs.append((c, tube_rgba(m, color, 0.055 * size, sig=(0.3, 0.9, 2.2), fade=P), W, H))
+            else:
+                glyphs.append((c, Image.new('RGBA', (W, H), (0, 0, 0, 0)), W, H))
         # shelf-pack into one page
         AW = 1024
         x = y = rowh = 0
