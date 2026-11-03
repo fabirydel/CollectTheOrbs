@@ -49,7 +49,7 @@ public class ShipPlume {
 	}
 
 	// where the ship's centre was over the last second: the flame keeps the path it was left on
-	private static final int HIST = 256, SEG = 20;
+	private static final int HIST = 256, SEG = 7;
 	private static final float LIFE = 0.45f;		// seconds a puff of flame takes to travel the glow's length
 	private final float[] histT = new float[HIST], histX = new float[HIST];
 	private int histN, histHead;

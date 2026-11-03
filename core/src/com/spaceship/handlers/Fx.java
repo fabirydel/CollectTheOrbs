@@ -127,8 +127,9 @@ public class Fx {
 		float c = com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, a);
 		float hw = width / 2;
 		for (int k = 0; k < n; k++) {
-			float y0 = y - length * k / n, y1 = y - length * (k + 1) / n;
-			float v0 = (float) k / n, v1 = (float) (k + 1) / n;
+			float over = k < n - 1 ? 0.3f : 0f;		// each block reaches a little into the next one
+			float y0 = y - length * k / n, y1 = y - length * (k + 1 + over) / n;
+			float v0 = (float) k / n, v1 = (float) (k + 1 + over) / n;
 			quad[0] = xs[k] - hw; quad[1] = y1; quad[2] = c; quad[3] = 0; quad[4] = v1;
 			quad[5] = xs[k] - hw; quad[6] = y0; quad[7] = c; quad[8] = 0; quad[9] = v0;
 			quad[10] = xs[k] + hw; quad[11] = y0; quad[12] = c; quad[13] = 1; quad[14] = v0;
