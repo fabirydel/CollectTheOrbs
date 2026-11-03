@@ -2,6 +2,8 @@ package com.spaceship.handlers;
 
 import java.util.IdentityHashMap;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -46,6 +48,37 @@ public class NeonBatch extends SpriteBatch {
 		return k;
 	}
 
+
+	/** the game's sound-FX switch; the glitch sounds follow it */
+	public static boolean fxOn = true;
+	private static Sound zap, dipSnd;
+	private static boolean evStutter, evDip;
+	private static int frame = -1, stutters, dips, prevStutters, prevDips;
+	private static float lastZap, lastDip;
+
+	/** plays the neon zap when a letter starts glitching and the dip sound when a line loses power, in step with the picture */
+	private static void syncSounds(){
+		int f = (int)Gdx.graphics.getFrameId();
+		if(f == frame) return;
+		frame = f;
+		float now = (System.nanoTime() - START)/1e9f;
+		if(fxOn){
+			if(stutters > prevStutters && now - lastZap > 0.12f){
+				if(zap == null) zap = Gdx.audio.newSound(Gdx.files.internal("audio/neon_zap.wav"));
+				zap.play(0.3f);
+				lastZap = now;
+			}
+			if(dips > 0 && prevDips == 0 && now - lastDip > 0.6f){
+				if(dipSnd == null) dipSnd = Gdx.audio.newSound(Gdx.files.internal("audio/neon_dip.wav"));
+				dipSnd.play(0.45f);
+				lastDip = now;
+			}
+		}
+		prevStutters = stutters;
+		prevDips = dips;
+		stutters = dips = 0;
+	}
+
 	private static int hash(int a, int b){
 		int h = a*0x9E3779B1 ^ (b + 0x7F4A7C15)*0x85EBCA6B;
 		h ^= h >>> 15;
@@ -59,6 +92,7 @@ public class NeonBatch extends SpriteBatch {
 	 * lines stutter and dip on their own schedules
 	 */
 	private static float level(int seed, int line, float t, boolean glitcher){
+		evStutter = evDip = false;
 		float lv = 0.95f + 0.05f*(float)Math.sin(t*1.6f + (seed & 255)*0.05f);
 		if(glitcher){
 			float slotLen = 3.2f + ((seed >>> 8) & 255)/255f*3.6f;
@@ -68,7 +102,10 @@ public class NeonBatch extends SpriteBatch {
 				float local = t - slot*slotLen - ((h >>> 4) & 255)/255f*(slotLen - 0.5f);
 				if(local >= 0 && local < 0.45f){
 					int i = (int)(local/0.07f);
-					if((i & 1) == 1) lv *= 0.12f + ((h >>> (8 + i)) & 7)/7f*0.28f;
+					if((i & 1) == 1){
+						lv *= 0.12f + ((h >>> (8 + i)) & 7)/7f*0.28f;
+						evStutter = true;
+					}
 				}
 			}
 		}
@@ -80,7 +117,10 @@ public class NeonBatch extends SpriteBatch {
 			float dt = t - ds*dipLen - ((hd >>> 4) & 1023)/1023f*(dipLen - 1f);
 			float rec = 0.1f + ((seed >>> 3) & 127)/127f*0.35f;
 			if(dt >= 0 && dt < rec + 0.2f)
+				{
 				lv *= dt < rec ? 0.3f : 0.3f + 0.7f*(dt - rec)/0.2f;
+				evDip = true;
+			}
 		}
 		return lv;
 	}
@@ -140,6 +180,7 @@ public class NeonBatch extends SpriteBatch {
 		}
 		if(scratch.length < count) scratch = new float[count];
 		System.arraycopy(v, offset, scratch, 0, count);
+		syncSounds();
 		float t = (System.nanoTime() - START)/1e9f;
 		// the string this call draws: its first glyph and length tell its lines apart
 		int line = hash(Float.floatToRawIntBits(scratch[3]), count);
@@ -151,6 +192,8 @@ public class NeonBatch extends SpriteBatch {
 				// the letter (its atlas position) at this place in this line: no two letters share a schedule
 				int seed = hash(hash(Float.floatToRawIntBits(scratch[g + 3]), Float.floatToRawIntBits(scratch[g + 4])), line + g);
 				lv = level(seed, line, t, (seed & 7) == 0);
+				if(evStutter) stutters++;
+				if(evDip) dips++;
 			}
 			if(lv >= 0.999f) continue;
 			for(int k = 0; k < 4; k++)

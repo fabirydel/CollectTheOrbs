@@ -1182,6 +1182,7 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		com.spaceship.handlers.NeonBatch.fxOn = (sound == ON);
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
