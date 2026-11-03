@@ -4,7 +4,7 @@ Run from the repo root:  python3 tools/art/neon.py
 Each asset is drawn at K x its logical size (the size the game code expects) and written over the
 original file. res/logical-sizes.txt tells the game the logical size (see GameAssetManager).
 """
-import math, os
+import math, os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops, ImageOps
 
@@ -189,9 +189,20 @@ class Pen:
             self.line(pts, close=True)
 
     def text(self, x, y, txt, size):
-        f = ImageFont.truetype(FONT, int(size * self.s))
+        """letters from the neon alphabet (hairline face), thickened to the pen width"""
+        import numpy as np
+        from scipy import ndimage as ndi
+        sys.path.insert(0, os.path.expanduser('~/.claude/skills/claude-drawing/lib'))
+        from cyberpunk import sign_font
+        S = 4
+        f = sign_font('neon', int(size * self.s * S * 0.9))
         cx, cy = self.p(x, y)
-        self.d.text((cx, cy), txt, font=f, fill=(255, 255, 255, 255), anchor='mm')
+        tmp = Image.new('L', (self.layer.width * S, self.layer.height * S), 0)
+        ImageDraw.Draw(tmp).text((cx * S, cy * S), txt, font=f, fill=255, anchor='mm')
+        hard = np.asarray(tmp) > 60
+        tube = ndi.distance_transform_edt(~hard) <= self.w * S / 2.0
+        m = Image.fromarray((tube * 255).astype(np.uint8)).resize(self.layer.size, Image.LANCZOS)
+        self.layer.paste((255, 255, 255, 255), (0, 0), m)
 
 
 def spiral(pen, arm):

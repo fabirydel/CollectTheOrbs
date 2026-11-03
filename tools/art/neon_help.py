@@ -92,19 +92,16 @@ def new_layers(w, h):
     return {k: Image.new('L', (w, h), 0) for k in ('body', 'head', 'emph')}
 
 
-def composite_layers(layers, size):
+def composite_layers(layers, size, tsize=60):
     out = Image.new('RGBA', size, (0, 0, 0, 0))
-    for kind, col, st in (('body', BODY, 0.35), ('head', NEUTRAL, 1.0), ('emph', GOLD, 0.9)):
-        m = layers[kind]
-        halo = glow(Image.merge('RGBA', [Image.new('L', size, 0)] * 3 + [m]), 1.6, col, st)
-        core = Image.new('RGBA', size, U.light(col, 0.55 if kind != 'body' else 0.0) + (255,))
-        core.putalpha(m)
-        out = Image.alpha_composite(out, Image.alpha_composite(halo, core))
+    tf = U.TubeFont.shared()
+    for kind, col in (('body', U.TUBE_WHITE), ('head', U.TUBE_WHITE), ('emph', GOLD)):
+        out = Image.alpha_composite(out, tf.light(layers[kind], col, tsize, fade=False))
     return out
 
 
 def inst_image(lang, name):
-    font = U.BMFont('fonts/prototype128blueWhite')
+    font = U.TubeFont()
     size = 60
     s = size * N.U / font.size
     line_h = font.line_h * s * 1.02
@@ -136,7 +133,7 @@ def pad_label(font, text, size):
 
 
 def controls_image(lang, name):
-    font = U.BMFont('fonts/prototype128blueWhite')
+    font = U.TubeFont()
     w, h = 1280, 980
     im = N.canvas(w, h)
     t = TEXT[lang]['pads']
@@ -155,15 +152,15 @@ def controls_image(lang, name):
                 dr.ellipse((a - px(8), b - px(8), a + px(8), b + px(8)), fill=WHITE + (255,))
             tl.alpha_composite(Image.alpha_composite(glow(lay, 10, col, 1.0), lay))
             m = font.mask(label, 64).rotate(90 if d < 0 else -90, expand=True)
-            U.center_text(tl, m, cx, cy + px(90), col)
+            U.center_text(tl, m, cx, cy + px(90), col, size=64)
         else:
-            U.center_text(tl, font.mask(label, 84), cx, cy, col)
+            U.center_text(tl, font.mask(label, 84), cx, cy, col, size=84)
         im.alpha_composite(tl, (px(x), px(y)))
     N.finish(im, w, h, 'objects/%s.png' % name)
 
 
 def orbs_image(lang, name):
-    font = U.BMFont('fonts/prototype128blueWhite')
+    font = U.TubeFont()
     w, h = 1281, 418
     im = N.canvas(w, h)
     labels = TEXT[lang]['orbs']
@@ -178,7 +175,7 @@ def orbs_image(lang, name):
         m = font.mask(lab, size)
         box = m.getbbox()
         m = m.crop(box)
-        U.put_text(im, m, px(cx + d + 50), px(cy) - m.height / 2, col)
+        U.put_text(im, m, px(cx + d + 50), px(cy) - m.height / 2, col, size=size)
     N.finish(im, w, h, 'objects/%s.png' % name)
 
 
@@ -244,12 +241,12 @@ def cluster_icon(col, count, tag, font):
         o = eorb(118, col)
         im.alpha_composite(o, (int(n * fx - o.width / 2), int(n * fy - o.height / 2)))
     m = font.mask(tag, 56).crop(font.mask(tag, 56).getbbox())
-    U.put_text(im, m, (n - m.width) / 2, n * 0.84 - m.height / 2, col)
+    U.put_text(im, m, (n - m.width) / 2, n * 0.84 - m.height / 2, col, size=56)
     return im
 
 
 def items_image(lang, name):
-    font = U.BMFont('fonts/prototype128blueWhite')
+    font = U.TubeFont()
     texts = TEXT[lang]['items']
     row_h, w = 290, 1344
     h = row_h * len(texts)
@@ -303,7 +300,7 @@ def converter_icon(a, b):
 
 def item_icons_sheet():
     """res/objects/objects.png: the ten in-game item icons, 160x160 frames, in the original order."""
-    font = U.BMFont('fonts/prototype128blueWhite')
+    font = U.TubeFont()
     icons = [converter_icon(CYAN, RED), converter_icon(RED, CYAN),
              cluster_icon(CYAN, 2, 'X2', font), cluster_icon(RED, 2, 'X2', font),
              chevrons_icon(250),

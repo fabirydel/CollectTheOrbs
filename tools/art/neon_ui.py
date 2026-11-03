@@ -137,17 +137,23 @@ def pad_canvas(layer, margin):
     return out
 
 
-def put_text(dst, mask, x, y, color, glow_r=2.0):
+def put_text(dst, mask, x, y, color, glow_r=2.0, size=None):
+    if size is not None:                          # neon-alphabet text: mask is already tube-width
+        tf = TubeFont.shared()
+        m = tf.margin(size)
+        t = tf.light(pad_canvas(mask, m).convert('L'), color, size)
+        dst.alpha_composite(t, (int(x - m), int(y - m)))
+        return
     m = int((6 + 2 * glow_r) * N.U)
     t = neon_text(pad_canvas(Image.merge('L', [mask]) if False else mask, m).convert('L'), color, glow_r)
     dst.alpha_composite(t, (int(x - m), int(y - m)))
 
 
-def center_text(dst, mask, cx, cy, color, glow_r=2.0):
+def center_text(dst, mask, cx, cy, color, glow_r=2.0, size=None):
     """Draw text so the center of its actual ink bounds lands on (cx, cy)."""
     box = mask.getbbox()
     mask = mask.crop(box)
-    put_text(dst, mask, cx - mask.width / 2, cy - mask.height / 2, color, glow_r)
+    put_text(dst, mask, cx - mask.width / 2, cy - mask.height / 2, color, glow_r, size)
 
 
 def rounded_mask(w, h, r, inset=0):
@@ -209,17 +215,17 @@ def price_tile(font, w, h, red, blue, flip=False, radius=14, horiz=False, size=4
         m1, m2 = font.mask(str(amts[0]), sz), font.mask(str(amts[1]), sz)
         pad = 9 * N.U
         if horiz:
-            put_text(t, m1, w * N.U - pad - m1.width, h * N.U / 2 - pad - m1.height, cols[0])
-            put_text(t, m2, pad, h * N.U - pad - m2.height, cols[1])
+            put_text(t, m1, w * N.U - pad - m1.width, h * N.U / 2 - pad - m1.height, cols[0], size=sz)
+            put_text(t, m2, pad, h * N.U - pad - m2.height, cols[1], size=sz)
         else:
-            put_text(t, m1, pad, pad * 0.8, cols[0])
-            put_text(t, m2, w * N.U - pad - m2.width, h * N.U - pad * 0.8 - m2.height, cols[1])
+            put_text(t, m1, pad, pad * 0.8, cols[0], size=sz)
+            put_text(t, m2, w * N.U - pad - m2.width, h * N.U - pad * 0.8 - m2.height, cols[1], size=sz)
         return t
     col = RED if red else CYAN
     t = tile(w, h, (col,), None, radius)
     m = font.mask(str(red or blue), size)
     pad = 10 * N.U
-    put_text(t, m, w * N.U - pad - m.width, h * N.U - pad - m.height, col)
+    put_text(t, m, w * N.U - pad - m.width, h * N.U - pad - m.height, col, size=size)
     return t
 
 
@@ -274,7 +280,7 @@ def bought_galaxy_tile(sheet_name, k):
 
 def build_cards():
     N.set_scale(2)
-    font = BMFont('fonts/prototype128blueWhite')
+    font = TubeFont()
     ships, gal, ups = parse_prices()
     for s in range(8):
         n = 5 if s == 7 else 10
@@ -306,7 +312,7 @@ def build_cards():
     for j, v in enumerate([50, 100, 250, 500, 1000]):
         t = tile(149, 149, (GOLD,), None, 14)
         m = font.mask(str(v), 44)
-        put_text(t, m, 149 * N.U - 10 * N.U - m.width, 149 * N.U - 10 * N.U - m.height, GOLD)
+        put_text(t, m, 149 * N.U - 10 * N.U - m.width, 149 * N.U - 10 * N.U - m.height, GOLD, size=44)
         stamp(sheet, t, j, 149)
     N.finish(sheet, 745, 149, 'upgrades/upgradesPrice.png')
 
@@ -317,12 +323,12 @@ def tube_text(canvas_size, mask, size):
     mask = mask.crop(box)
     out = Image.new('L', canvas_size, 0)
     out.paste(mask, ((canvas_size[0] - mask.width) // 2, (canvas_size[1] - mask.height) // 2))
-    return centre_line(out, 0.075 * size * N.U)
+    return out
 
 
 def build_play():
     N.set_scale(4)
-    font = BMFont('fonts/prototype128blueWhite')
+    font = TubeFont()
     w, h = 196, 98
     mg = 14        # inset so the bloom fits inside the image
     size = (int(w * N.U), int(h * N.U))
@@ -334,7 +340,7 @@ def build_play():
     fill.paste(outer, (mg * N.U, mg * N.U))
     text = tube_text(size, font.mask('START', 44), 44)
     mask = ImageChops.lighter(ring, text)
-    tube = tube_rgba(mask, TUBE_WHITE, 3.2 * N.U, sig=(0.3, 0.8, 1.2), fade=6 * N.U)
+    tube = tube_rgba(mask, TUBE_WHITE, 0.055 * 44 * N.U, sig=(0.3, 0.8, 1.2), fade=6 * N.U)
     base = Image.new('RGBA', size, NAVY + (0,))
     base.putalpha(fill.point(lambda v: int(v * 0.85)))
     N.finish(Image.alpha_composite(base, tube), w, h, 'gui/bGo.png')
@@ -343,7 +349,7 @@ def build_play():
         size = (int(w * N.U), int(h * N.U))
         m = font.mask(text, 29)
         t = tube_text(size, m, 29)
-        N.finish(tube_rgba(t, TUBE_WHITE, 0.075 * 29 * N.U, sig=(0.3, 0.8, 1.4), fade=3 * N.U), w, h, 'gui/%s.png' % name)
+        N.finish(tube_rgba(t, TUBE_WHITE, 0.055 * 29 * N.U, sig=(0.3, 0.8, 1.4), fade=3 * N.U), w, h, 'gui/%s.png' % name)
 
 
 def glass_pad(w, h):
@@ -365,7 +371,7 @@ def chevron(t, w, h, direction):
 
 def build_pads():
     N.set_scale(2)
-    font = BMFont('fonts/prototype128blueWhite')
+    font = TubeFont()
     for name, w, h, d in [('padsLeft', 160, 576, -1), ('padsIzq', 160, 576, -1), ('padsRight', 160, 576, 1), ('padsDer', 160, 576, 1)]:
         t = glass_pad(w, h)
         chevron(t, w, h, d)
@@ -375,7 +381,7 @@ def build_pads():
     for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use Item'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
         t = glass_pad(392, 284)
         m = font.mask(text, 40)
-        center_text(t, m, t.width / 2, t.height / 2, NEUTRAL)
+        center_text(t, m, t.width / 2, t.height / 2, TUBE_WHITE, size=40)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 
@@ -458,6 +464,74 @@ def alphabet_glyph(ch, c, base_px, P, em_px, sx, tube_w):
     return Image.fromarray((np.clip(tube, 0, 1) * 255).astype(np.uint8)).resize((w + 2 * P, h + 2 * P), Image.LANCZOS)
 
 
+class TubeFont(BMFont):
+    """BMFont-compatible text source that draws with the neon alphabet (hairline face, same stretch, same even
+    spacing as the in-game fonts), returning tube-width masks for baked-text images. Pair with `tube_rgba`."""
+
+    def __init__(self, name='fonts/prototype128blueWhite'):
+        BMFont.__init__(self, name)
+        self.em = self.chars[72]['height'] / CAP_RATIO
+        self.sx = glyph_stretch(list(self.chars.values()), self.em)
+        self._ink = {}
+
+    _shared = None
+
+    @classmethod
+    def shared(cls):
+        if cls._shared is None:
+            cls._shared = cls()
+        return cls._shared
+
+    def tube_w(self, size):
+        return 0.055 * size * N.U
+
+    def _scale(self, size):
+        return size * N.U / self.size
+
+    def _adv(self, ch, size):
+        """advance of one letter in output px"""
+        s = self._scale(size)
+        if ch == ' ' or ord(ch) not in self.chars:
+            return self.chars.get(32, {'xadvance': self.size * 0.3})['xadvance'] * s
+        return self.chars[ord(ch)]['xadvance'] * s
+
+    def width(self, text, size):
+        return sum(self._adv(c, size) for c in text)
+
+    def mask(self, text, size, align='center'):
+        s, S = self._scale(size), SS_ALPHA
+        lines = text.split('\n')
+        widths = [self.width(l, size) for l in lines]
+        W, H = int(max(widths)) + 4, int(self.line_h * s * len(lines)) + 4
+        big = Image.new('L', (W * S, H * S), 0)
+        f = _font(self.em * s)
+        for li, l in enumerate(lines):
+            x = (max(widths) - widths[li]) / 2 if align == 'center' else 0
+            yb = (li * self.line_h + self.base) * s
+            for c in l:
+                adv = self._adv(c, size)
+                if c != ' ' and ord(c) in self.chars:
+                    l_, t_, r_, b_ = f.getbbox(c, anchor='ls')
+                    tw = int(r_ - l_ + 8 * S)
+                    tmp = Image.new('L', (tw, H * S), 0)
+                    ImageDraw.Draw(tmp).text((4 * S - l_, yb * S), c, font=f, fill=255, anchor='ls')
+                    tmp = tmp.resize((max(1, int(tw * self.sx)), H * S), Image.LANCZOS)
+                    ink_c = (4 * S + (r_ - l_) / 2.0) * self.sx
+                    big.paste(tmp, (int(round((x + adv / 2.0) * S - ink_c)), 0), tmp)
+                x += adv
+        hard = np.asarray(big, np.float32) > 60
+        tube = ndi.distance_transform_edt(~hard) <= self.tube_w(size) * S / 2.0
+        tube = ndi.gaussian_filter(tube.astype(np.float32), 0.6)
+        return Image.fromarray((np.clip(tube, 0, 1) * 255).astype(np.uint8)).resize((W, H), Image.LANCZOS)
+
+    def light(self, mask, color, size, fade=True):
+        """the lit tube layer for a mask made by this font"""
+        return tube_rgba(mask, color, self.tube_w(size), sig=(0.3, 0.9, 2.2), fade=(self.margin(size) if fade else 0))
+
+    def margin(self, size):
+        return int(0.3 * size * N.U) + 2
+
+
 FONT_COLORS = {'grey': TUBE_WHITE, 'blueWhite': CYAN, 'redBlack': RED, 'yellowOrange': GOLD}
 
 
@@ -497,9 +571,7 @@ def build_neon_fonts():
         glyphs = []
         for c in chars:
             if c['id'] != 32 and c['width'] > 0:
-                # the alphabet's own spacing: the letter's ink plus an even gap, the ink centred on the advance
-                l_, t_, r_, b_ = _font(em_px).getbbox(chr(c['id']), anchor='ls')
-                c['xadvance'] = int(round((r_ - l_) * sx / SS_ALPHA + 0.17 * size))
+                # keep the original advances (so every layout stays as wide as before), the letter centred on its advance
                 c['xoffset'] = int(round(c['xadvance'] / 2.0 - c['width'] / 2.0))
             w, h = c['width'], c['height']
             W, H = w + 2 * P, h + 2 * P
