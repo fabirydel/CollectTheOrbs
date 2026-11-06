@@ -965,13 +965,6 @@ public class MainMenuScreen implements Screen {
 		updateMusicVolume();
 		music.play();
 		
-		if(Gdx.app.getType().equals(ApplicationType.Android) && !game.getActionResolver().getSignedIn() && bestScore == 0)
-			Timer.schedule(new Task(){
-				@Override
-				public void run() {
-					game.getActionResolver().logIn();
-				}
-			}, 0.30f);
 		state = STANDBY;
 
 		canSelect = true;
@@ -1497,7 +1490,7 @@ public class MainMenuScreen implements Screen {
 							Timer.schedule(new Task(){
 								@Override
 								public void run() {
-									game.getActionResolver().logIn();
+									game.getActionResolver().getAchievements();	// signs the player in first if needed
 								}
 							}, 0.30f);
 						}
@@ -1528,7 +1521,7 @@ public class MainMenuScreen implements Screen {
 							Timer.schedule(new Task(){
 								@Override
 								public void run() {
-									game.getActionResolver().logIn();
+									game.getActionResolver().getLeaderboard();	// signs the player in first if needed
 								}
 							}, 0.30f);
 						}	

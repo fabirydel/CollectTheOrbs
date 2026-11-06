@@ -118,8 +118,12 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			if (id != null)
 				achievementIds.put(a[0], id);
 		}
-		PlayGamesSdk.initialize(this);
-		refreshGamesSignIn();
+		// Play Games only starts (and may ask the player to sign in) once they have used the trophy or ranking icons;
+		// from then on it signs in silently at launch
+		if (prefs.getBoolean("games_opt_in", false)) {
+			ensureGamesSdk();
+			refreshGamesSignIn();
+		}
 		if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
 			// debug builds only: adb shell am broadcast -a com.spaceship.DEBUG_UNLOCK_ALL  (unlocks every achievement, to test Platinum)
 			android.content.IntentFilter filter = new android.content.IntentFilter("com.spaceship.DEBUG_UNLOCK_ALL");
@@ -138,6 +142,15 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 		}
 	}
 
+	private boolean gamesSdkStarted;
+
+	private void ensureGamesSdk() {
+		if (!gamesSdkStarted) {
+			gamesSdkStarted = true;
+			PlayGamesSdk.initialize(this);
+		}
+	}
+
 	private void toast(String text) {
 		runOnUiThread(() -> android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_SHORT).show());
 	}
@@ -145,7 +158,6 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 	/** Checks the Play Games sign-in (the SDK signs in silently at launch) and lets the player know what is going on. */
 	private void refreshGamesSignIn() {
 		gamesSigningIn = true;
-		toast("Signing in to Google Play Games...");
 		PlayGames.getGamesSignInClient(this).isAuthenticated().addOnCompleteListener(task -> {
 			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
 			gamesSigningIn = false;
@@ -168,18 +180,27 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 
 	@Override
 	public void logIn() {
+		signInThen(null);
+	}
+
+	/** Signs in to Play Games (asking the player if needed), then runs `then` on success. */
+	private void signInThen(Runnable then) {
 		if (gamesSigningIn) {
 			toast("Still signing in to Google Play Games...");
 			return;
 		}
+		ensureGamesSdk();
 		gamesSigningIn = true;
 		toast("Signing in to Google Play Games...");
 		runOnUiThread(() -> PlayGames.getGamesSignInClient(this).signIn().addOnCompleteListener(task -> {
 			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
 			gamesSigningIn = false;
-			if (gamesSignedIn)
+			if (gamesSignedIn) {
+				prefs.edit().putBoolean("games_opt_in", true).apply();
 				onGamesSignedIn();
-			else
+				if (then != null)
+					then.run();
+			} else
 				toast("Could not sign in to Google Play Games");
 		}));
 	}
@@ -225,12 +246,20 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 		String id = gamesId("leaderboard_high_score");
 		if (id == null)
 			return;
+		if (!gamesSignedIn) {
+			signInThen(this::getLeaderboard);
+			return;
+		}
 		runOnUiThread(() -> PlayGames.getLeaderboardsClient(this).getLeaderboardIntent(id)
 				.addOnSuccessListener(intent -> startActivityForResult(intent, RC_GAMES_UI)));
 	}
 
 	@Override
 	public void getAchievements() {
+		if (!gamesSignedIn) {
+			signInThen(this::getAchievements);
+			return;
+		}
 		runOnUiThread(() -> PlayGames.getAchievementsClient(this).getAchievementsIntent()
 				.addOnSuccessListener(intent -> startActivityForResult(intent, RC_GAMES_UI)));
 	}
