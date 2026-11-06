@@ -60,7 +60,7 @@ def main():
     for word, y, col in (('FLUTTERING', 1149, PINK), ('PUFFINS', 1229, TEAL)):
         px, py = Sg((360, y))
         c.neon_text(word, px, py, 72 * K, col, Z, spacing=0.06, r=max(0.9, 72 * 0.018) * K)
-    c.neon_path(Sg(np.array([(70, 1090), (650, 1090), (650, 1290), (70, 1290)])), BLUE2, Z, r=2.4 * K, level=0.6, closed=True, state='on')
+    c.neon_path(Sg(np.array([(70, 1090), (650, 1090), (650, 1290), (70, 1290)])), YEL, Z, r=2.4 * K, level=0.6, closed=True, state='on')
     c.mist(y=H2 * 0.8, h=200, density=0.1)
     img = c.composite().convert('RGB').resize((4096, 2304), Image.LANCZOS)
     out = os.path.abspath(os.path.join(RES, '..', '..', '..', 'store', 'puffin-header-%s4096x2304.jpg' % ('sign-' if SIGN_ONLY else '')))
