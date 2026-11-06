@@ -1181,7 +1181,6 @@ public class MainMenuScreen implements Screen {
 		
 	}
 
-	@Override
 	/** the Remove ads / Ads removed line follows the language switch */
 	private void refreshRemoveAdsText(){
 		if(removeAdsLabel == null || game.getActionResolver() == null)
@@ -1192,6 +1191,7 @@ public class MainMenuScreen implements Screen {
 			removeAdsLabel.setText(language == ON ? "Remove ads" : "Quitar anuncios");
 	}
 
+	@Override
 	public void render(float delta) {
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
