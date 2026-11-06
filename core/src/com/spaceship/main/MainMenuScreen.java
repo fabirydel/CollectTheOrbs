@@ -379,6 +379,7 @@ public class MainMenuScreen implements Screen {
 	Label sttngsLabel;
 	Label soundLabel;
 	Label musicLabel;
+	Label removeAdsLabel;
 	Label vibrationLabel;
 	Label controlsLabel;
 	Label languageLabel;
@@ -1181,6 +1182,16 @@ public class MainMenuScreen implements Screen {
 	}
 
 	@Override
+	/** the Remove ads / Ads removed line follows the language switch */
+	private void refreshRemoveAdsText(){
+		if(removeAdsLabel == null || game.getActionResolver() == null)
+			return;
+		if(game.getActionResolver().isAdsRemoved())
+			removeAdsLabel.setText(language == ON ? "Ads removed" : "Sin anuncios");
+		else
+			removeAdsLabel.setText(language == ON ? "Remove ads" : "Quitar anuncios");
+	}
+
 	public void render(float delta) {
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
@@ -2916,7 +2927,7 @@ public class MainMenuScreen implements Screen {
 		if(game.getActionResolver() != null){
 			// one-time purchase that removes the ads (Android only: the resolver is null on the desktop)
 			imgsSttngs.row();
-			final Label removeAdsLabel = new Label(language == ON ? "Remove ads" : "Quitar anuncios", skin){
+			removeAdsLabel = new Label(language == ON ? "Remove ads" : "Quitar anuncios", skin){
 				@Override
 				public void act(float delta){
 					super.act(delta);
@@ -3058,6 +3069,7 @@ public class MainMenuScreen implements Screen {
 			soundLabel.setText("Efectos:");
 			soundLabel.setAlignment(Align.left);
 			musicLabel.setText("Musica:");
+			refreshRemoveAdsText();
 			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibracion:");
 			vibrationLabel.setAlignment(Align.left);
@@ -3187,6 +3199,7 @@ public class MainMenuScreen implements Screen {
 			soundLabel.setText("Sound FXs:");
 			soundLabel.setAlignment(Align.left);
 			musicLabel.setText("Music:");
+			refreshRemoveAdsText();
 			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibration:");
 			vibrationLabel.setAlignment(Align.left);
