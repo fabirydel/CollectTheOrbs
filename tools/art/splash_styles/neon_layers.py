@@ -24,7 +24,7 @@ def build(lit):
     for box in ((cx - ER - 36, cy - ER - 36, cx + ER + 36, cy + ER + 36),):
         pm = Image.new('L', (W, H), 0); ID.Draw(pm).ellipse(box, fill=255)
         c._put(sl, np.asarray(pm.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255, np.array([0.012, 0.012, 0.018], np.float32), 0.0, Z, None)
-    bm = Image.new('L', (W, H), 0); ID.Draw(bm).rounded_rectangle((60, 1060, 660, 1320), 34, fill=255)
+    bm = Image.new('L', (W, H), 0); ID.Draw(bm).rounded_rectangle((60, 1080, 660, 1300), 34, fill=255)
     c._put(sl, np.asarray(bm.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255, np.array([0.012, 0.012, 0.018], np.float32), 0.0, Z, None)
 
     def tube(g, pts, col, r=3.4, closed=False, level=1.0):
@@ -41,11 +41,11 @@ def build(lit):
         tube('beak', [tp, bt], YEL, r=3.4)
     ndead = lambda keep, n: tuple(i for i in range(n) if i not in keep)
     # lettering: a group lights its own characters, the rest stay dead glass
-    for word, y, col, parts_ in (('PUFFIN', 1131.5, PINK, (('name_a', (0, 1, 2, 4, 5)), ('name_f', (3,)))),
-                                 ('GAMES', 1246.5, TEAL, (('games_a', (0, 1, 3, 4)), ('games_m', (2,))))):
+    for word, y, col, parts_ in (('FLUTTERING', 1149, PINK, (('name_a', (0, 1, 2, 4, 5, 6, 7, 8, 9)), ('name_f', (3,)))),
+                                 ('PUFFINS', 1229, TEAL, (('games_a', (0, 1, 3, 4, 5, 6)), ('games_m', (2,))))):
         dead = tuple(i for i in range(len(word)) if not any(g in lit and i in idx for g, idx in parts_))
-        c.neon_text(word, W / 2, y, 112, col, Z, spacing=0.06, dead=dead)
-    tube('frame', np.array([(70, 1070), (650, 1070), (650, 1310), (70, 1310)]), BLUE2, r=2.4, closed=True, level=0.6)
+        c.neon_text(word, W / 2, y, 72, col, Z, spacing=0.06, dead=dead)
+    tube('frame', np.array([(70, 1090), (650, 1090), (650, 1290), (70, 1290)]), BLUE2, r=2.4, closed=True, level=0.6)
     c.rain(far=0, mid=0, near=0, slant=0.08, rings=0)  # rain is animated in Splash.java (see rain_tiles.py)
     c.mist(y=H * 0.8, h=200, density=0.1)
     return np.asarray(c.composite().convert('RGB'), np.float32) / 255
@@ -77,4 +77,5 @@ def main():
     Image.fromarray((np.clip(full, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(ART, 'splash_options3', 'neon_layers_full.png'))
 
 
-main()
+if __name__ == '__main__':
+    main()
