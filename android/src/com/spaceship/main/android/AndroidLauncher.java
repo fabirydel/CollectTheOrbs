@@ -118,12 +118,10 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			if (id != null)
 				achievementIds.put(a[0], id);
 		}
-		// Play Games only starts (and may ask the player to sign in) once they have used the trophy or ranking icons;
-		// from then on it signs in silently at launch
-		if (prefs.getBoolean("games_opt_in", false)) {
-			ensureGamesSdk();
-			refreshGamesSignIn();
-		}
+		// at launch only check, silently, whether the player already has a Play Games account (no sign-up prompt);
+		// the prompt comes from the trophy / ranking icons (signInThen)
+		ensureGamesSdk();
+		refreshGamesSignIn();
 		if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
 			// debug builds only: adb shell am broadcast -a com.spaceship.DEBUG_UNLOCK_ALL  (unlocks every achievement, to test Platinum)
 			android.content.IntentFilter filter = new android.content.IntentFilter("com.spaceship.DEBUG_UNLOCK_ALL");
@@ -196,7 +194,6 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			gamesSignedIn = task.isSuccessful() && task.getResult().isAuthenticated();
 			gamesSigningIn = false;
 			if (gamesSignedIn) {
-				prefs.edit().putBoolean("games_opt_in", true).apply();
 				onGamesSignedIn();
 				if (then != null)
 					then.run();

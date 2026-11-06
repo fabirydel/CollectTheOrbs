@@ -985,30 +985,7 @@ public class MainMenuScreen implements Screen {
 		
 		time = TimeUtils.nanoTime();
 		
-		if(Gdx.app.getType().equals(ApplicationType.Android) && game.getActionResolver().getSignedIn()){
-			game.getActionResolver().submitScore(bestScore);
-			if (bestScore >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCQ");
-			if (bestScore >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCg");
-			if (bestScore >= 75) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCw");
-			if (bestScore >= 100) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDA");
-			if (bestScore >= 200) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDQ");
-			if (bestScore >= 300) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDg");
-			if (ships >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAA");
-			if (ships >= 5) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAQ");
-			if (ships >= 10) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAg");
-			if (ships >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAw");
-			if (ships >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBA");
-			if (ships >= 74) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBQ");
-			if (galaxies >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBg");
-			if (galaxies >= 5) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBw");
-			if (galaxies >= 9) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCA");
-			if (games >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEQ");
-			if (games >= 10) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEg");
-			if (games >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEw");
-			if (games >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFA");
-			if (games >= 100) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFQ");
-			if (games >= 500) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFg");
-		}
+		syncGames();
 		
 		startTrace = true;
 
@@ -1184,8 +1161,46 @@ public class MainMenuScreen implements Screen {
 			removeAdsLabel.setText(language == ON ? "Remove ads" : "Quitar anuncios");
 	}
 
+	private boolean gamesSynced;
+
+	/** Sends the best score and unlocks the achievements the saved progress has earned, once the player is signed in to Play Games
+	 *  (at launch if they already were, or later if they sign in from the trophy / ranking icons). */
+	private void syncGames(){
+		if(!Gdx.app.getType().equals(ApplicationType.Android) || !game.getActionResolver().getSignedIn())
+			return;
+		gamesSynced = true;
+		game.getActionResolver().submitScore(bestScore);
+		if (bestScore >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCQ");
+		if (bestScore >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCg");
+		if (bestScore >= 75) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCw");
+		if (bestScore >= 100) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDA");
+		if (bestScore >= 200) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDQ");
+		if (bestScore >= 300) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQDg");
+		if (ships >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAA");
+		if (ships >= 5) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAQ");
+		if (ships >= 10) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAg");
+		if (ships >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQAw");
+		if (ships >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBA");
+		if (ships >= 74) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBQ");
+		if (galaxies >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBg");
+		if (galaxies >= 5) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQBw");
+		if (galaxies >= 9) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQCA");
+		if (games >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEQ");
+		if (games >= 10) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEg");
+		if (games >= 25) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQEw");
+		if (games >= 50) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFA");
+		if (games >= 100) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFQ");
+		if (games >= 500) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFg");
+				if (upgrades >= 1) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQFw");
+		if (upgrades >= 5) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQGA");
+		if (upgrades >= 10) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQGQ");
+		if (upgrades >= 18) game.getActionResolver().unlockAchievement("CgkIrLf9wZgEEAIQGg");
+	}
+
 	@Override
 	public void render(float delta) {
+		if(!gamesSynced)
+			syncGames();		// signed in after the menu opened (silent sign-in finishing, or the player just signed in)
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
