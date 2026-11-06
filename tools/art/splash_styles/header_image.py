@@ -1,11 +1,14 @@
 """Play developer-page header: emblem + FLUTTERING PUFFINS sign on the neon wall, 4096x2304 JPEG (under 1 MB): store/puffin-header-4096x2304.jpg"""
+import sys
 from neon_layers import *
+
+SIGN_ONLY = 'sign' in sys.argv[1:]
 
 W2, H2 = 2048, 1152
 S = 1.12                    # emblem scale
 EMB = (600, 576)            # where the emblem centre goes
-SIGN = (1415, 576)          # sign centre
-K = 1.28                    # sign scale
+SIGN = (1024, 576) if SIGN_ONLY else (1415, 576)          # sign centre
+K = 3.0 if SIGN_ONLY else 1.28                    # sign scale
 
 
 def main():
@@ -27,11 +30,13 @@ def main():
         p = np.asarray(p, np.float32)
         return (p - np.array([360, 1190], np.float32)) * K + np.array(SIGN, np.float32)
 
+    EM = not SIGN_ONLY
     dark = np.array([0.012, 0.012, 0.018], np.float32)
     pm = Image.new('L', (W2, H2), 0)
     ex, ey = EMB
     ID.Draw(pm).ellipse((ex - (ER + 36) * S, ey - (ER + 36) * S, ex + (ER + 36) * S, ey + (ER + 36) * S), fill=255)
-    c._put(sl, np.asarray(pm.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255, dark, 0.0, Z, None)
+    if EM:
+        c._put(sl, np.asarray(pm.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255, dark, 0.0, Z, None)
     bm = Image.new('L', (W2, H2), 0)
     (x0, y0), (x1, y1) = Sg((60, 1080)), Sg((660, 1300))
     ID.Draw(bm).rounded_rectangle((x0, y0, x1, y1), 34 * K, fill=255)
@@ -40,24 +45,25 @@ def main():
     def tube(pts, col, r=3.4, closed=False, level=1.0, sc=S, tf=E):
         c.neon_path(tf(pts), col, Z, r=r * sc, level=level, closed=closed, state='on')
 
-    ang = np.radians(np.linspace(0, 360, 400))
-    outer = np.stack([cx + (ER + 22) * np.cos(ang), cy + (ER + 22) * np.sin(ang)], 1)[:-1]
-    tube(RING[:-1], PINK, r=5.2, closed=True)
-    tube(outer, BLUE2, r=2.2, closed=True, level=0.7)
-    for pts, r in ((HEAD, 4.2), (FRONT, 4.2), (FACEP[(np.hypot(FACEP[:, 0] - cx, FACEP[:, 1] - cy) < ER - 4)], 3.2), (BREAST, 3.2)):
-        tube(pts, TEAL, r=r)
-    tube(EYE, PINK, r=2.6)
-    tube(CHEEK, TEAL, r=2.6)
-    tube(np.vstack([TE, BASE, LE]), ORANGE, r=4.2, closed=True, level=0.9)
-    for tp, bt in stripe:
-        tube(np.array([tp, bt]), YEL, r=3.4)
+    if EM:
+        ang = np.radians(np.linspace(0, 360, 400))
+        outer = np.stack([cx + (ER + 22) * np.cos(ang), cy + (ER + 22) * np.sin(ang)], 1)[:-1]
+        tube(RING[:-1], PINK, r=5.2, closed=True)
+        tube(outer, BLUE2, r=2.2, closed=True, level=0.7)
+        for pts, r in ((HEAD, 4.2), (FRONT, 4.2), (FACEP[(np.hypot(FACEP[:, 0] - cx, FACEP[:, 1] - cy) < ER - 4)], 3.2), (BREAST, 3.2)):
+            tube(pts, TEAL, r=r)
+        tube(EYE, PINK, r=2.6)
+        tube(CHEEK, TEAL, r=2.6)
+        tube(np.vstack([TE, BASE, LE]), ORANGE, r=4.2, closed=True, level=0.9)
+        for tp, bt in stripe:
+            tube(np.array([tp, bt]), YEL, r=3.4)
     for word, y, col in (('FLUTTERING', 1149, PINK), ('PUFFINS', 1229, TEAL)):
         px, py = Sg((360, y))
         c.neon_text(word, px, py, 72 * K, col, Z, spacing=0.06, r=max(0.9, 72 * 0.018) * K)
     c.neon_path(Sg(np.array([(70, 1090), (650, 1090), (650, 1290), (70, 1290)])), BLUE2, Z, r=2.4 * K, level=0.6, closed=True, state='on')
     c.mist(y=H2 * 0.8, h=200, density=0.1)
     img = c.composite().convert('RGB').resize((4096, 2304), Image.LANCZOS)
-    out = os.path.abspath(os.path.join(RES, '..', '..', '..', 'store', 'puffin-header-4096x2304.jpg'))
+    out = os.path.abspath(os.path.join(RES, '..', '..', '..', 'store', 'puffin-header-%s4096x2304.jpg' % ('sign-' if SIGN_ONLY else '')))
     for q in (92, 88, 84, 80, 75, 70):
         img.save(out, quality=q, optimize=True, subsampling=0 if q > 85 else 2)
         if os.path.getsize(out) < 1_000_000:
