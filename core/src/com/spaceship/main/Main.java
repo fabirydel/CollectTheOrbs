@@ -99,8 +99,8 @@ public class Main extends Game{
 			if(cursor != null && cursor.next())
 				if(String.valueOf(cursor.getInt(0)).equals("0")){ 
 					numbersDB.execSQL("INSERT INTO seleccionsAndNumbers (highScore, lifeBalls, blueBalls, redBalls, ffSelected, shipSelected, " +
-							"galaxySelected, sound, vibration, controls, language, ships, galaxies, upgrades)" +
-							" VALUES (0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0)");
+							"galaxySelected, sound, music, vibration, controls, language, ships, galaxies, upgrades)" +
+							" VALUES (0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0)");		// first install: sound FX on, music off
 					setTutorial(true);
 				}	
 			cursor.close();
