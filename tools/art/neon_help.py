@@ -233,6 +233,34 @@ def chevrons_icon(size):
     return Image.alpha_composite(glow(lay, 8, NEUTRAL, 1.0), lay)
 
 
+def hourglass_icon(size):
+    """slow time: a sand clock, drawn like the other item icons (white-hot strokes with a soft glow)"""
+    n = px(size)
+    lay = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    c = n / 2
+    w = px(12)
+
+    def line(pts, width=w, closed=False):
+        pts = [(c + x * n, c + y * n) for x, y in pts]
+        if closed:
+            pts = pts + [pts[0]]
+        d.line(pts, fill=WHITE + (255,), width=width, joint='curve')
+        for a, b in pts:
+            d.ellipse((a - width / 2, b - width / 2, a + width / 2, b + width / 2), fill=WHITE + (255,))
+    # glass: two bulbs meeting at a narrow neck
+    line([(-0.23, -0.36), (0.23, -0.36), (0.03, 0.0), (0.23, 0.36), (-0.23, 0.36), (-0.03, 0.0)], closed=True)
+    # caps
+    line([(-0.30, -0.40), (0.30, -0.40)])
+    line([(-0.30, 0.40), (0.30, 0.40)])
+    sand = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    ds = ImageDraw.Draw(sand)
+    for pts in ([(-0.10, -0.20), (0.10, -0.20), (0.0, -0.04)], [(-0.17, 0.32), (0.17, 0.32), (0.0, 0.17)]):
+        ds.polygon([(c + x * n, c + y * n) for x, y in pts], fill=WHITE + (110,))
+    d.line([(c, c - 0.03 * n), (c, c + 0.17 * n)], fill=WHITE + (200,), width=px(4))
+    return Image.alpha_composite(Image.alpha_composite(glow(lay, 8, NEUTRAL, 1.0), sand), lay)
+
+
 def cluster_icon(col, count, tag, font):
     n = px(250)
     im = Image.new('RGBA', (n, n), (0, 0, 0, 0))
@@ -268,7 +296,7 @@ def items_image(lang, name):
         elif i in (2, 3, 7, 8):
             ic = cluster_icon(CYAN if i in (2, 7) else RED, 2 if i < 4 else 3, 'X2' if i < 4 else 'X3', font)
         elif i == 4:
-            ic = chevrons_icon(250)
+            ic = hourglass_icon(250)
         elif i in (5, 6, 9):
             ic = shield_icon(CYAN if i == 5 else RED if i == 6 else GOLD, 250)
         if ic is not None:
@@ -303,7 +331,7 @@ def item_icons_sheet():
     font = U.TubeFont()
     icons = [converter_icon(CYAN, RED), converter_icon(RED, CYAN),
              cluster_icon(CYAN, 2, 'X2', font), cluster_icon(RED, 2, 'X2', font),
-             chevrons_icon(250),
+             hourglass_icon(250),
              shield_icon(CYAN, 250), shield_icon(RED, 250),
              cluster_icon(CYAN, 3, 'X3', font), cluster_icon(RED, 3, 'X3', font),
              shield_icon(GOLD, 250)]
