@@ -381,6 +381,7 @@ public class MainMenuScreen implements Screen {
 	Label musicLabel;
 	Label removeAdsLabel;
 	Label replayLabel;
+	private boolean tutorialLaunch;
 	Label vibrationLabel;
 	Label controlsLabel;
 	Label languageLabel;
@@ -1149,18 +1150,24 @@ public class MainMenuScreen implements Screen {
 		stageStats.addAction(moveTo(0, stageStats.getHeight()));	
 		stageSettings.addAction(moveTo(0, stageSettings.getHeight()));	
 		stageHelp.addAction(moveTo(0, stageHelp.getHeight()));	
-		
+
+		// coming back from the tutorial started in Settings: reopen Settings
+		if(Main.tutorialFromSettings){
+			Main.tutorialFromSettings = false;
+			state = SETTINGS;
+			canSelect = true;
+			stageSettings.getRoot().clearActions();
+			stageSettings.addAction(moveTo(0, 0));
+			Gdx.input.setInputProcessor(stageSettings);
+			effectsMenuOn();
+		}
 	}
 
-	/** the Replay tutorial line: says so once it is armed for the next game, and follows the language switch */
+	/** the Repeat tutorial line follows the language switch */
 	private void refreshReplayText(){
 		if(replayLabel == null)
 			return;
-		boolean en = language == ON;
-		if(Main.isTutorial())
-			replayLabel.setText(en ? "Tutorial: next game" : "Tutorial: pr\u00f3xima partida");
-		else
-			replayLabel.setText(en ? "Replay tutorial" : "Repetir tutorial");
+		replayLabel.setText(language == ON ? "Repeat tutorial" : "Repetir tutorial");
 	}
 
 	/** the Remove ads / Ads removed line follows the language switch */
@@ -1386,11 +1393,12 @@ public class MainMenuScreen implements Screen {
 //		containerSts.drawDebug(stageStats);
 
 		//start game
-		if(Gdx.input.justTouched()){
-			if(Gdx.input.getX() > bGo.getX() && Gdx.input.getX() < bGo.getX() + bGo.getWidth() &&
+		if(Gdx.input.justTouched() || (tutorialLaunch && state == STANDBY)){
+			if((tutorialLaunch && state == STANDBY) || (Gdx.input.getX() > bGo.getX() && Gdx.input.getX() < bGo.getX() + bGo.getWidth() &&
 					Gdx.graphics.getHeight() - Gdx.input.getY() > bGo.getY() && Gdx.graphics.getHeight() - 
-					Gdx.input.getY() < bGo.getY() + bGo.getHeight() && state == STANDBY){
+					Gdx.input.getY() < bGo.getY() + bGo.getHeight() && state == STANDBY)){
 				//Play
+				tutorialLaunch = false;
 				state = LAUNCH;
 				if(sound == ON)
 					buttonLarge.play(0.75f);
@@ -2944,6 +2952,30 @@ public class MainMenuScreen implements Screen {
 		}else{
 			imgsSttngs.add(iEspanol).width(iEspanol.getWidth()).height(iEspanol.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
 		}
+		// repeat the guided first run: closes Settings and starts it straight away; it returns here when it ends
+		replayLabel = new Label(language == ON ? "Repeat tutorial" : "Repetir tutorial", skin);
+		replayLabel.setFontScale(3*x/4, 3*y/4);
+		replayLabel.setAlignment(Align.left);
+		replayLabel.addListener(new ClickListener(){
+			public void clicked(InputEvent event, float x, float y){
+				if(state != SETTINGS)
+					return;
+				buttonSmall.play();
+				Main.setTutorial(true);
+				Main.tutorialFromSettings = true;
+				state = STANDBY;
+				stageSettings.addAction(moveTo(0, stageSettings.getHeight(), 0.5f));
+				effectsMenuOff();
+				Timer.schedule(new Task(){
+					@Override
+					public void run(){
+						tutorialLaunch = true;
+					}
+				}, 0.55f);
+			}
+		});
+		imgsSttngs.row();
+		imgsSttngs.add(replayLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 		if(game.getActionResolver() != null){
 			// one-time purchase that removes the ads (Android only: the resolver is null on the desktop)
 			imgsSttngs.row();
@@ -2967,20 +2999,6 @@ public class MainMenuScreen implements Screen {
 			});
 			imgsSttngs.add(removeAdsLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 		}
-		// replay the guided first run in the next game
-		replayLabel = new Label(language == ON ? "Replay tutorial" : "Repetir tutorial", skin);
-		replayLabel.setFontScale(3*x/4, 3*y/4);
-		replayLabel.setAlignment(Align.left);
-		replayLabel.addListener(new ClickListener(){
-			public void clicked(InputEvent event, float x, float y){
-				buttonSmall.play();
-				Main.setTutorial(true);
-				refreshReplayText();
-			}
-		});
-		imgsSttngs.row();
-		imgsSttngs.add(replayLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
-	
 		iMusicOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){
 				if(sound == ON)
