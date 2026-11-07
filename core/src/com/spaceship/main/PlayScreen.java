@@ -2175,6 +2175,8 @@ public class PlayScreen implements Screen {
 	int tutEnergy(){ return ship.getLifes(); }
 	boolean tutItemHeld(){ return object1 != -1; }
 	boolean tutBlueX2(){ return blueX2; }
+	void tutKeepItem(){ objectClock = TimeUtils.nanoTime(); }
+	void tutEndItem(){ objectClock = TimeUtils.nanoTime() - 20000000000L; }
 	void tutLock(boolean on){ ship.tutLock = on; }
 	void tutDrive(float tx, float dt){ ship.tutDrive(tx, dt); }
 	void tutFillEnergy(){ ship.setLifes(barWidth); }

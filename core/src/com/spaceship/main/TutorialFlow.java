@@ -20,7 +20,7 @@ import com.spaceship.objects.Spaceship;
  * keep both colours even.
  */
 class TutorialFlow {
-	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, EVEN = 8, GO = 9, DONE = 10;
+	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, GO = 10, DONE = 11;
 	private static final int ORB_SPEED = 240;
 
 	private final PlayScreen ps;
@@ -71,7 +71,7 @@ class TutorialFlow {
 		case BLUE:
 			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\n\u00a1Atr\u00e1palo!";
 		case RED:
-			return en ? "Red orb? Tap the middle to switch your shield" : "\u00bfOrbe rojo? Toca el centro para cambiar de escudo";
+			return en ? "Red orb? Tap the middle to switch your shield" : "Orbe rojo? Toca el centro para cambiar de escudo";
 		case WRONG:
 			return en ? "The wrong colour drains your energy" : "El color equivocado te quita energ\u00eda";
 		case LIFE:
@@ -82,6 +82,8 @@ class TutorialFlow {
 			return en ? "Tap the middle to use it" : "Toca el centro para usarlo";
 		case GAIN:
 			return en ? "Blue orbs count double now!" : "\u00a1Ahora los orbes azules valen doble!";
+		case TIP:
+			return en ? "There are more powers that can help you.\nAlways grab the item orbs!" : "Hay m\u00e1s poderes que te pueden ayudar.\n\u00a1Atrapa siempre los orbes de objetos!";
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n\u00a1Mantenlos parejos!";
 		case GO:
@@ -191,14 +193,22 @@ class TutorialFlow {
 				next(0.1f);
 			break;
 		case GAIN:
-			if (stepTime > 0f && orb == null) {
-				ps.tutSetShield(Spaceship.STATE_BLUE);
-				float w = Gdx.graphics.getWidth();
-				float x = MathUtils.clamp(ps.tutShipX() + MathUtils.random(-0.1f, 0.1f) * w, 0.12f * w, 0.88f * w);
-				orb = ps.tutSpawn(Ball.B_BLUE, x, 560);
+			ps.tutKeepItem();
+			if (stepTime > nextSpawn && evenSpawned < 3) {
+				if (evenSpawned == 0)
+					ps.tutSetShield(Spaceship.STATE_BLUE);
+				orb = spawn(Ball.B_BLUE);
+				evenSpawned++;
+				nextSpawn = stepTime + 1.4f;
 			}
-			if (orb != null && !ps.tutAlive(orb))
+			if (evenSpawned >= 3 && orb != null && !ps.tutAlive(orb)) {
+				ps.tutEndItem();
 				next(0.9f);
+			}
+			break;
+		case TIP:
+			if (stepTime > 3.6f)
+				next(0.3f);
 			break;
 		case EVEN:
 			if (stepTime > nextSpawn && evenSpawned < 5) {
@@ -221,6 +231,10 @@ class TutorialFlow {
 		stepTime = -pause;
 		orb = null;
 		tries = 0;
+		if (step == GAIN) {
+			evenSpawned = 0;
+			nextSpawn = 0f;
+		}
 		if (step == EVEN) {
 			evenSpawned = 0;
 			nextSpawn = 0.6f;
