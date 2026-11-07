@@ -83,7 +83,7 @@ class TutorialFlow {
 		case GAIN:
 			return en ? "Blue orbs count double now!" : "\u00a1Ahora los orbes azules valen doble!";
 		case TIP:
-			return en ? "There are more powers that can help you.\nAlways grab the item orbs!" : "Hay m\u00e1s poderes que te pueden ayudar.\n\u00a1Atrapa siempre los orbes de objetos!";
+			return en ? "There are more powers that can help you..." : "Hay m\u00e1s poderes que te pueden ayudar...";
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n\u00a1Mantenlos parejos!";
 		case GO:
