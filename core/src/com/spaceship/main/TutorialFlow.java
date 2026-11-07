@@ -180,12 +180,9 @@ class TutorialFlow {
 			if (orb != null && !ps.tutAlive(orb)) {
 				if (ps.tutItemHeld())
 					next(0.9f);
-				else if (++tries < 4) {
+				else {
 					orb = null;
 					stepTime = 0.2f;
-				} else {
-					step = EVEN - 1;
-					next(0.2f);
 				}
 			}
 			break;
@@ -267,8 +264,8 @@ class TutorialFlow {
 		float a = (0.45f + 0.35f * MathUtils.sin(pulse * 5f)) * alpha;
 		switch (step) {
 		case MOVE:
-			box(sb, ps.tutPadLeft(), 0.85f, 0.88f, 0.95f, a, u);
-			box(sb, ps.tutPadRight(), 0.85f, 0.88f, 0.95f, a, u);
+			pad(sb, ps.tutPadLeft(), a);
+			pad(sb, ps.tutPadRight(), a);
 			break;
 		case RED:
 			box(sb, ps.tutPadShield(), 0.85f, 0.88f, 0.95f, a, u);
@@ -279,13 +276,14 @@ class TutorialFlow {
 			break;
 		case USE:
 			box(sb, ps.tutItemRing(), 1f, 0.75f, 0.18f, a, u);
+			pad(sb, ps.tutPadItem(), a);
 			break;
 		case GAIN:
-			rect(sb, 0.005f * w, 0.445f * h, 0.125f * w, 0.11f * h, 0.13f, 0.83f, 0.93f, a, u);
+			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
 			break;
 		case EVEN:
-			rect(sb, 0.005f * w, 0.445f * h, 0.125f * w, 0.11f * h, 0.13f, 0.83f, 0.93f, a, u);
-			rect(sb, 0.87f * w, 0.445f * h, 0.125f * w, 0.11f * h, 1f, 0.23f, 0.36f, a, u);
+			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
+			counterBox(sb, false, 1f, 0.23f, 0.36f, a, u);
 			break;
 		}
 		Fx.additiveOff(sb);
@@ -313,6 +311,22 @@ class TutorialFlow {
 		font.getData().setScale(oldScaleX, oldScaleY);
 		font.setColor(1f, 1f, 1f, 1f);
 		sb.setColor(1f, 1f, 1f, 1f);
+	}
+
+	/** pulses one of the on-screen control pads (the same boxes the Controls setting shows), drawn even when that setting is off */
+	private void pad(SpriteBatch sb, Sprite pad, float a) {
+		if (pad == null)
+			return;
+		float old = pad.getColor().a;
+		pad.setAlpha(Math.min(1f, (ps.tutControlsOn() ? 0.5f : 0.8f) * a));
+		pad.draw(sb);
+		pad.setAlpha(old);
+	}
+
+	private void counterBox(SpriteBatch sb, boolean blue, float r, float g, float b, float a, float u) {
+		float[] c = ps.tutCounterRect(blue);
+		float pad = 18f * u;
+		rect(sb, c[0] - pad, c[1] - pad, c[2] + 2 * pad, c[3] + 2 * pad, r, g, b, a, u);
 	}
 
 	/** a pulsing frame around a screen rectangle (a pad, the energy bar, a counter) */

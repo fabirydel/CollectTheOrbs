@@ -2149,12 +2149,24 @@ public class PlayScreen implements Screen {
 	int tutReds(){ return reds; }
 	boolean tutAlive(Ball b){ return dBalls.contains(b, true); }
 	void tutSetShield(int state){ ship.setShield(state); }
-	Sprite tutPadLeft(){ return padVerticalLeft; }
-	Sprite tutPadRight(){ return padVerticalRight; }
-	Sprite tutPadShield(){ return padHorizontalDown; }
+	Sprite tutPadLeft(){ return english() ? padVerticalLeft : padVerticalLeftEsp; }
+	Sprite tutPadRight(){ return english() ? padVerticalRight : padVerticalRightEsp; }
+	Sprite tutPadShield(){ return english() ? padHorizontalDown : padHorizontalDownEsp; }
+	Sprite tutPadItem(){ return english() ? padHorizontalUp : padHorizontalUpEsp; }
+	private boolean english(){ return game.getMMS().language == game.getMMS().ON; }
+	boolean tutControlsOn(){ return game.getMMS().controls == game.getMMS().ON; }
 	Sprite tutLifeBar(){ return lifeBarSprite; }
 	Sprite tutBlueCounter(){ return blueCounter; }
 	Sprite tutRedCounter(){ return redCounter; }
+	/** x, y, width, height of the side number (blue on the left, red on the right) as drawn in play */
+	float[] tutCounterRect(boolean blue){
+		BitmapFont f = blue ? bluesFont : redsFont;
+		String t = Integer.toString(blue ? blues : reds);
+		float w = com.spaceship.handlers.FontUtil.bounds(f, t).width, h = com.spaceship.handlers.FontUtil.bounds(f, t).height;
+		float x = blue ? 20 : Gdx.graphics.getWidth() - 20 - w;
+		float y = Gdx.graphics.getHeight()/2 + 3*adHeight/4;
+		return new float[]{x, y - h/2, w, h};
+	}
 	Sprite tutItemRing(){ return ring1; }
 	Sprite tutItemPad(){ return padHorizontalUp; }
 	int tutEnergy(){ return ship.getLifes(); }
