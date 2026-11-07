@@ -252,8 +252,11 @@ public class Spaceship{
 		lifes = l;
 	}
 	
+	/** guided run: while set, the player's touches and keys do not move or switch the ship */
+	public boolean tutLock;
+
 	public void update(){
-		if(canPlay){
+		if(canPlay && !tutLock){
 		// finger
 			if (Gdx.input.isTouched(0)){
 				if(Gdx.input.getX() < PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth() &&

@@ -2160,6 +2160,7 @@ public class PlayScreen implements Screen {
 	int tutEnergy(){ return ship.getLifes(); }
 	boolean tutItemHeld(){ return object1 != -1; }
 	boolean tutBlueX2(){ return blueX2; }
+	void tutLock(boolean on){ ship.tutLock = on; }
 	void tutDrive(float tx, float dt){ ship.tutDrive(tx, dt); }
 	void tutFillEnergy(){ ship.setLifes(barWidth); }
 	/** the wrong colour in the guided run: a visible drain, never lethal */
@@ -2188,6 +2189,7 @@ public class PlayScreen implements Screen {
 		if(tutorial != null)
 			tutorial.dispose();
 		tutorial = null;
+		ship.tutLock = false;
 		dBalls.clear();
 		for(Ball b : balls){
 			b.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2), Gdx.graphics.getHeight() + fxy(20));

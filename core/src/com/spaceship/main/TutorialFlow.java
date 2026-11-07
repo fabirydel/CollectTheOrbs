@@ -143,6 +143,7 @@ class TutorialFlow {
 			if (stepTime > 0.5f && orb == null) {
 				ps.tutSetShield(Spaceship.STATE_RED);
 				ps.tutFillEnergy();
+				ps.tutLock(true);
 				float w = Gdx.graphics.getWidth();
 				float sx = ps.tutShipX();
 				orbX = MathUtils.clamp(sx + (sx < 0.5f * w ? 0.25f : -0.25f) * w, 0.12f * w, 0.88f * w);
@@ -152,8 +153,10 @@ class TutorialFlow {
 				if (ps.tutAlive(orb)) {
 					if (stepTime > 1.0f)
 						ps.tutDrive(orbX, dt);
-				} else
+				} else {
+					ps.tutLock(false);
 					next(1.4f);
+				}
 			}
 			break;
 		case LIFE:
@@ -230,6 +233,7 @@ class TutorialFlow {
 	}
 
 	private void finish() {
+		ps.tutLock(false);
 		step = DONE;
 		Gdx.app.getPreferences("tutorial").putBoolean("done", true);
 		Gdx.app.getPreferences("tutorial").flush();
