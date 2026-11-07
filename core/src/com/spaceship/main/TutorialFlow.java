@@ -255,7 +255,7 @@ class TutorialFlow {
 		sb.draw(px, x, y + bh - t, bw, t);
 		sb.draw(px, x, y, t, bh);
 		sb.draw(px, x + bw - t, y, t, bh);
-		sb.setColor(r, g, b, a * 0.18f);
+		sb.setColor(r, g, b, a * 0.07f);
 		sb.draw(px, x, y, bw, bh);
 	}
 }
