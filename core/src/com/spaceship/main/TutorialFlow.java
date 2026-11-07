@@ -67,23 +67,23 @@ class TutorialFlow {
 		boolean en = english();
 		switch (step) {
 		case MOVE:
-			return en ? "Hold the left or right side of the screen to move" : "Mantén el lado izquierdo o derecho de la pantalla para moverte";
+			return en ? "Hold the left or right side of the screen to move" : "Toca el lado izquierdo o derecho de la pantalla para moverte";
 		case BLUE:
-			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\n¡Atrápalo!";
+			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\nA recogerlo!";
 		case RED:
-			return en ? "Red orb? Tap the middle to switch your shield" : "¿Orbe rojo? Toca el centro para cambiar de escudo";
+			return en ? "Red orb? Tap the middle to switch your shield" : "Orbe rojo: toca el centro para cambiar de escudo";
 		case WRONG:
-			return en ? "The wrong colour drains your energy" : "El color equivocado gasta tu energía";
+			return en ? "The wrong colour drains your energy" : "El color equivocado gasta tu barra";
 		case LIFE:
-			return en ? "Yellow orbs refill your energy" : "Los orbes amarillos recargan tu energía";
+			return en ? "Yellow orbs refill your energy" : "Los orbes amarillos recargan tu barra";
 		case ITEM:
 			return en ? "Catch items to get power-ups" : "Atrapa objetos para obtener poderes";
 		case USE:
 			return en ? "Tap the middle to use it" : "Toca el centro para usarlo";
 		case GAIN:
-			return en ? "Blue orbs count double now!" : "¡Ahora los orbes azules valen doble!";
+			return en ? "Blue orbs count double now!" : "Ahora los orbes azules valen doble!";
 		case EVEN:
-			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n¡Mantenlos parejos!";
+			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\nMantenlos parejos!";
 		case GO:
 			return "GO!";
 		}
