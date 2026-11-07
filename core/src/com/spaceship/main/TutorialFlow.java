@@ -210,8 +210,8 @@ class TutorialFlow {
 			box(sb, ps.tutLifeBar(), 1f, 0.75f, 0.18f, a, u);
 			break;
 		case EVEN:
-			box(sb, ps.tutBlueCounter(), 0.13f, 0.83f, 0.93f, a, u);
-			box(sb, ps.tutRedCounter(), 1f, 0.23f, 0.36f, a, u);
+			rect(sb, 0.005f * w, 0.445f * h, 0.125f * w, 0.11f * h, 0.13f, 0.83f, 0.93f, a, u);
+			rect(sb, 0.87f * w, 0.445f * h, 0.125f * w, 0.11f * h, 1f, 0.23f, 0.36f, a, u);
 			break;
 		}
 		Fx.additiveOff(sb);
@@ -245,8 +245,10 @@ class TutorialFlow {
 	private void box(SpriteBatch sb, Sprite target, float r, float g, float b, float a, float u) {
 		if (target == null)
 			return;
-		float x = target.getX() - 6f * u, y = target.getY() - 6f * u;
-		float bw = target.getWidth() + 12f * u, bh = target.getHeight() + 12f * u;
+		rect(sb, target.getX() - 6f * u, target.getY() - 6f * u, target.getWidth() + 12f * u, target.getHeight() + 12f * u, r, g, b, a, u);
+	}
+
+	private void rect(SpriteBatch sb, float x, float y, float bw, float bh, float r, float g, float b, float a, float u) {
 		float t = 5f * u;
 		sb.setColor(r, g, b, a);
 		sb.draw(px, x, y, bw, t);

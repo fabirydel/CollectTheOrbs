@@ -17,6 +17,8 @@ public class DevMain extends Main {
 	@Override
 	public void create() {
 		super.create();
+		if (System.getenv("CTO_TUTORIAL") != null)
+			Main.setTutorial(true);		// dev driver: play the guided first run in the next game
 		harness.install();
 		harness.speedHook = v -> { if (getPS() == null) return; if (v == -1) getPS().debugCharge(); else if (v == -2) getPS().debugKeepAlive(true); else getPS().debugSetTier(v); };
 	}
