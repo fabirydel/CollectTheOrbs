@@ -131,6 +131,12 @@ public class Ball extends GameObject {
 		}else if(t == B_RED){
 			texSelected = texSpriteR;
 			this.type = B_RED;
+		}else if(t == B_LIFE){
+			texSelected = texSpriteY;
+			this.type = B_LIFE;
+		}else if(t == B_OBJECT){
+			texSelected = texSpriteO;
+			this.type = B_OBJECT;
 		}
 	}
 	

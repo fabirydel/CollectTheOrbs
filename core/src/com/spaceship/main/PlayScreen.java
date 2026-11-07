@@ -1894,7 +1894,7 @@ public class PlayScreen implements Screen {
 					Tween.to(redWrong[redW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(redW != 4) redW++;
 					else redW = 0;
-					if(!redShield && tutorial == null){
+					if(tutorial != null) tutDrain(); else if(!redShield){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
 							if(ship.getLifes() > 1) 
@@ -1946,7 +1946,7 @@ public class PlayScreen implements Screen {
 					Tween.to(blueWrong[blueW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(blueW != 4) blueW++;
 					else blueW = 0;
-					if(!blueShield && tutorial == null){
+					if(tutorial != null) tutDrain(); else if(!blueShield){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
 							if(ship.getLifes() > 1) 
@@ -2039,7 +2039,7 @@ public class PlayScreen implements Screen {
 				objCounter++;
 				ship.tweenObjectFF();	
 				if(object1 == -1 && !(redToBlue || blueToRed || blueX2 || redX2 || slow || blueShield || redShield || blueX3 || redX3 || goldShield)){
-					object1 = randomObject();
+					object1 = tutorial != null ? 2 : randomObject();
 					obj[object1]++;
 					objectsSprites1[object1].setColor(1f, 1f, 1f, 1f); 
 				}else if(game.getMMS().objectsSlots > 1 && object2 == -1){
@@ -2155,6 +2155,18 @@ public class PlayScreen implements Screen {
 	Sprite tutLifeBar(){ return lifeBarSprite; }
 	Sprite tutBlueCounter(){ return blueCounter; }
 	Sprite tutRedCounter(){ return redCounter; }
+	Sprite tutItemRing(){ return ring1; }
+	Sprite tutItemPad(){ return padHorizontalUp; }
+	int tutEnergy(){ return ship.getLifes(); }
+	boolean tutItemHeld(){ return object1 != -1; }
+	boolean tutBlueX2(){ return blueX2; }
+	void tutDrive(float tx, float dt){ ship.tutDrive(tx, dt); }
+	void tutFillEnergy(){ ship.setLifes(barWidth); }
+	/** the wrong colour in the guided run: a visible drain, never lethal */
+	void tutDrain(){
+		ship.setLifes(Math.max(1, barWidth / 2));
+		Tween.call(lifeMeterChangeCallback).start(tweenManager);
+	}
 
 	/** drops one scripted orb of the given colour from the top at x */
 	Ball tutSpawn(int type, float x, int velocity){
@@ -2183,6 +2195,15 @@ public class PlayScreen implements Screen {
 		}
 		blues = 0;
 		reds = 0;
+		blueX2 = false; redX2 = false; blueX3 = false; redX3 = false;
+		bluesValue = 1; redsValue = 1;
+		objectClockEnable = false;
+		object1 = -1; object2 = -1; object3 = -1;
+		for(int i = 0; i < objectsSprites1.length; i++){
+			objectsSprites1[i].setColor(1f, 1f, 1f, 0f);
+			objectsSprites2[i].setColor(1f, 1f, 1f, 0f);
+			objectsSprites3[i].setColor(1f, 1f, 1f, 0f);
+		}
 		ship.setLifes(barWidth);
 		director.reset();
 		velocityBall = 350;

@@ -520,6 +520,12 @@ public class Spaceship{
 	};
 	
 	/** sets the shield colour (STATE_BLUE or STATE_RED) as if the player had switched to it */
+	/** guided run: slides the ship toward x at its normal speed */
+	public void tutDrive(float tx, float dt){
+		float d = tx - ship.x, st = fxy(speed) * dt;
+		ship.x += Math.abs(d) < st ? d : Math.signum(d) * st;
+	}
+
 	public void setShield(int state){
 		if(forceFieldSelected == state)
 			return;

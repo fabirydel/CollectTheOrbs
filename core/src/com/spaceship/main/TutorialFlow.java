@@ -20,7 +20,7 @@ import com.spaceship.objects.Spaceship;
  * keep both colours even.
  */
 class TutorialFlow {
-	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, EVEN = 4, GO = 5, DONE = 6;
+	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, EVEN = 8, GO = 9, DONE = 10;
 	private static final int ORB_SPEED = 240;
 
 	private final PlayScreen ps;
@@ -38,6 +38,8 @@ class TutorialFlow {
 	private float nextSpawn;
 	private float pulse;
 	private boolean skipRequested;
+	private float orbX;
+	private int energyBefore;
 
 	TutorialFlow(PlayScreen ps, Main game) {
 		this.ps = ps;
@@ -72,6 +74,14 @@ class TutorialFlow {
 			return en ? "Red orb? Tap the middle to switch your shield" : "¿Orbe rojo? Toca el centro para cambiar de escudo";
 		case WRONG:
 			return en ? "The wrong colour drains your energy" : "El color equivocado gasta tu energía";
+		case LIFE:
+			return en ? "Yellow orbs refill your energy" : "Los orbes amarillos recargan tu energía";
+		case ITEM:
+			return en ? "Catch items to get power-ups" : "Atrapa objetos para obtener poderes";
+		case USE:
+			return en ? "Tap the middle to use it" : "Toca el centro para usarlo";
+		case GAIN:
+			return en ? "Blue orbs count double now!" : "¡Ahora los orbes azules valen doble!";
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n¡Mantenlos parejos!";
 		case GO:
@@ -132,10 +142,63 @@ class TutorialFlow {
 		case WRONG:
 			if (stepTime > 0.5f && orb == null) {
 				ps.tutSetShield(Spaceship.STATE_RED);
-				orb = spawn(Ball.B_BLUE);
+				ps.tutFillEnergy();
+				float w = Gdx.graphics.getWidth();
+				float sx = ps.tutShipX();
+				orbX = MathUtils.clamp(sx + (sx < 0.5f * w ? 0.25f : -0.25f) * w, 0.12f * w, 0.88f * w);
+				orb = ps.tutSpawn(Ball.B_BLUE, orbX, ORB_SPEED);
+			}
+			if (orb != null) {
+				if (ps.tutAlive(orb)) {
+					if (stepTime > 1.0f)
+						ps.tutDrive(orbX, dt);
+				} else
+					next(1.4f);
+			}
+			break;
+		case LIFE:
+			if (stepTime > 0.5f && orb == null) {
+				energyBefore = ps.tutEnergy();
+				orb = spawn(Ball.B_LIFE);
+			}
+			if (orb != null && !ps.tutAlive(orb)) {
+				if (ps.tutEnergy() > energyBefore)
+					next(0.9f);
+				else if (++tries < 4) {
+					orb = null;
+					stepTime = 0.2f;
+				} else
+					next(0.2f);
+			}
+			break;
+		case ITEM:
+			if (stepTime > 0.5f && orb == null)
+				orb = spawn(Ball.B_OBJECT);
+			if (orb != null && !ps.tutAlive(orb)) {
+				if (ps.tutItemHeld())
+					next(0.9f);
+				else if (++tries < 4) {
+					orb = null;
+					stepTime = 0.2f;
+				} else {
+					step = EVEN - 1;
+					next(0.2f);
+				}
+			}
+			break;
+		case USE:
+			if (stepTime > 0f && !ps.tutItemHeld() && ps.tutBlueX2())
+				next(0.1f);
+			break;
+		case GAIN:
+			if (stepTime > 0f && orb == null) {
+				ps.tutSetShield(Spaceship.STATE_BLUE);
+				float w = Gdx.graphics.getWidth();
+				float x = MathUtils.clamp(ps.tutShipX() + MathUtils.random(-0.1f, 0.1f) * w, 0.12f * w, 0.88f * w);
+				orb = ps.tutSpawn(Ball.B_BLUE, x, 560);
 			}
 			if (orb != null && !ps.tutAlive(orb))
-				next(0.8f);
+				next(0.9f);
 			break;
 		case EVEN:
 			if (stepTime > nextSpawn && evenSpawned < 5) {
@@ -200,14 +263,21 @@ class TutorialFlow {
 		float a = (0.45f + 0.35f * MathUtils.sin(pulse * 5f)) * alpha;
 		switch (step) {
 		case MOVE:
-			box(sb, ps.tutPadLeft(), 0.13f, 0.82f, 1f, a, u);
-			box(sb, ps.tutPadRight(), 0.13f, 0.82f, 1f, a, u);
+			box(sb, ps.tutPadLeft(), 0.85f, 0.88f, 0.95f, a, u);
+			box(sb, ps.tutPadRight(), 0.85f, 0.88f, 0.95f, a, u);
 			break;
 		case RED:
-			box(sb, ps.tutPadShield(), 0.13f, 0.82f, 1f, a, u);
+			box(sb, ps.tutPadShield(), 0.85f, 0.88f, 0.95f, a, u);
 			break;
 		case WRONG:
+		case LIFE:
 			box(sb, ps.tutLifeBar(), 1f, 0.75f, 0.18f, a, u);
+			break;
+		case USE:
+			box(sb, ps.tutItemRing(), 1f, 0.75f, 0.18f, a, u);
+			break;
+		case GAIN:
+			rect(sb, 0.005f * w, 0.445f * h, 0.125f * w, 0.11f * h, 0.13f, 0.83f, 0.93f, a, u);
 			break;
 		case EVEN:
 			rect(sb, 0.005f * w, 0.445f * h, 0.125f * w, 0.11f * h, 0.13f, 0.83f, 0.93f, a, u);
