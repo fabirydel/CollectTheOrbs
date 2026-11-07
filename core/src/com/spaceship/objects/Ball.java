@@ -123,6 +123,17 @@ public class Ball extends GameObject {
 		}
 	}
 	
+	/** the tutorial scripts which orbs fall: make this orb the given type */
+	public void forceType(int t){
+		if(t == B_BLUE){
+			texSelected = texSpriteB;
+			this.type = B_BLUE;
+		}else if(t == B_RED){
+			texSelected = texSpriteR;
+			this.type = B_RED;
+		}
+	}
+	
 	public void reset(){
 		ball.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2),
 				Gdx.graphics.getHeight() + fxy(20));

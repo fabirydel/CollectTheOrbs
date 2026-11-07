@@ -176,6 +176,10 @@ public class PlayScreen implements Screen {
 	public int blueW;
 	public int adHeight;
 	public int ballSpawnSpeed;
+
+	// guided first run (see TutorialFlow): non-null while it is playing
+	private TutorialFlow tutorial;
+
 	public int bluesValue;
 	public int redsValue;
 	public int auxObj;
@@ -517,6 +521,12 @@ public class PlayScreen implements Screen {
 				game.getActionResolver().loadInterstital();
 
 			loadStats();
+
+			boolean seenTutorial = Gdx.app.getPreferences("tutorial").getBoolean("done", false);
+			if(tutorial != null)
+				tutorial.dispose();
+			tutorial = (Main.isTutorial() || (!seenTutorial && games == 0)) ? new TutorialFlow(this, game) : null;
+			Main.setTutorial(false);
 
 			state = PLAY;
 			galaxySelected = game.getMMS().galaxySelected;
@@ -1770,6 +1780,9 @@ public class PlayScreen implements Screen {
 			
 //			effect.draw(game.batch, delta);
 
+			if(tutorial != null && state == PLAY)
+				tutorial.draw(game.batch, greysFont);
+
 			game.batch.end();
 
 			stageHelp.act(delta);
@@ -1777,7 +1790,10 @@ public class PlayScreen implements Screen {
 
 			if(state == PLAY){
 				// the speed director owns the run's speed, the spawn rate and the charge-up before each speed tier
-				updateSpeedDirector();
+				if(tutorial != null)
+					tutorial.update(Gdx.graphics.getDeltaTime());
+				else
+					updateSpeedDirector();
 
 				// move the balls, remove any that hit the ship
 				Iterator<Ball> iter = dBalls.iterator();
@@ -1878,7 +1894,7 @@ public class PlayScreen implements Screen {
 					Tween.to(redWrong[redW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(redW != 4) redW++;
 					else redW = 0;
-					if(!redShield){
+					if(!redShield && tutorial == null){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
 							if(ship.getLifes() > 1) 
@@ -1930,7 +1946,7 @@ public class PlayScreen implements Screen {
 					Tween.to(blueWrong[blueW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(blueW != 4) blueW++;
 					else blueW = 0;
-					if(!blueShield){
+					if(!blueShield && tutorial == null){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
 							if(ship.getLifes() > 1) 
@@ -2124,6 +2140,56 @@ public class PlayScreen implements Screen {
 	private float shipCenterY(){
 		Sprite sp = ship.shipsSprites[ship.shipSelected];
 		return sp.getY() + sp.getHeight()/2;
+	}
+
+	// ---- guided first run hooks ----
+
+	float tutShipX(){ return shipCenterX(); }
+	int tutBlues(){ return blues; }
+	int tutReds(){ return reds; }
+	boolean tutAlive(Ball b){ return dBalls.contains(b, true); }
+	void tutSetShield(int state){ ship.setShield(state); }
+	Sprite tutPadLeft(){ return padVerticalLeft; }
+	Sprite tutPadRight(){ return padVerticalRight; }
+	Sprite tutPadShield(){ return padHorizontalDown; }
+	Sprite tutLifeBar(){ return lifeBarSprite; }
+	Sprite tutBlueCounter(){ return blueCounter; }
+	Sprite tutRedCounter(){ return redCounter; }
+
+	/** drops one scripted orb of the given colour from the top at x */
+	Ball tutSpawn(int type, float x, int velocity){
+		Ball b = balls[ballToAdd];
+		b.reset();
+		b.forceType(type);
+		b.setPosition(x, Gdx.graphics.getHeight() + fxy(20));
+		b.setAngle(0);
+		b.setAngle2(0);
+		b.setVelocity(velocity);
+		b.taken = true;
+		dBalls.add(b);
+		ballToAdd = (ballToAdd + 1) % balls.length;
+		return b;
+	}
+
+	/** the tutorial is over (finished or skipped): clear its orbs and counters and start the real run */
+	void tutFinished(){
+		if(tutorial != null)
+			tutorial.dispose();
+		tutorial = null;
+		dBalls.clear();
+		for(Ball b : balls){
+			b.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2), Gdx.graphics.getHeight() + fxy(20));
+			b.taken = false;
+		}
+		blues = 0;
+		reds = 0;
+		ship.setLifes(barWidth);
+		director.reset();
+		velocityBall = 350;
+		velocityBg = 350;
+		firstBall = true;
+		firstBallHelper = true;
+		lastBallTime = TimeUtils.nanoTime();
 	}
 
 	/** Advances the speed director (play state only) and reacts to its events: orb spawning, the charge-up and the burst. */

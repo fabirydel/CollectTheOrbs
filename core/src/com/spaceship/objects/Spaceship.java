@@ -519,6 +519,18 @@ public class Spaceship{
 		}
 	};
 	
+	/** sets the shield colour (STATE_BLUE or STATE_RED) as if the player had switched to it */
+	public void setShield(int state){
+		if(forceFieldSelected == state)
+			return;
+		if(state == STATE_BLUE)
+			tweenBlueBig();
+		else if(state == STATE_RED)
+			tweenRedBig();
+		forceFieldSelected = state;
+		forceFieldSelected2 = state;
+	}
+
 	public void tweenBlueBig(){
 		Tween.set(ffSprites[0], SpriteAccessor.SCALE).target(ffSprites[0].getScaleX(), ffSprites[0].getScaleY())
 		.ease(TweenEquations.easeInOutSine).start(tweenManager);

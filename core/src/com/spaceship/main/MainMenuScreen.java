@@ -380,6 +380,7 @@ public class MainMenuScreen implements Screen {
 	Label soundLabel;
 	Label musicLabel;
 	Label removeAdsLabel;
+	Label replayLabel;
 	Label vibrationLabel;
 	Label controlsLabel;
 	Label languageLabel;
@@ -1149,6 +1150,17 @@ public class MainMenuScreen implements Screen {
 		stageSettings.addAction(moveTo(0, stageSettings.getHeight()));	
 		stageHelp.addAction(moveTo(0, stageHelp.getHeight()));	
 		
+	}
+
+	/** the Replay tutorial line: says so once it is armed for the next game, and follows the language switch */
+	private void refreshReplayText(){
+		if(replayLabel == null)
+			return;
+		boolean en = language == ON;
+		if(Main.isTutorial())
+			replayLabel.setText(en ? "Tutorial: next game" : "Tutorial: pr\u00f3xima partida");
+		else
+			replayLabel.setText(en ? "Replay tutorial" : "Repetir tutorial");
 	}
 
 	/** the Remove ads / Ads removed line follows the language switch */
@@ -2955,6 +2967,19 @@ public class MainMenuScreen implements Screen {
 			});
 			imgsSttngs.add(removeAdsLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 		}
+		// replay the guided first run in the next game
+		replayLabel = new Label(language == ON ? "Replay tutorial" : "Repetir tutorial", skin);
+		replayLabel.setFontScale(3*x/4, 3*y/4);
+		replayLabel.setAlignment(Align.left);
+		replayLabel.addListener(new ClickListener(){
+			public void clicked(InputEvent event, float x, float y){
+				buttonSmall.play();
+				Main.setTutorial(true);
+				refreshReplayText();
+			}
+		});
+		imgsSttngs.row();
+		imgsSttngs.add(replayLabel).colspan(2).left().padTop(iSoundOn.getHeight()/4);
 	
 		iMusicOn.addListener(new ClickListener(){
 			public void clicked(InputEvent event, float x, float y){
@@ -3078,6 +3103,7 @@ public class MainMenuScreen implements Screen {
 			soundLabel.setAlignment(Align.left);
 			musicLabel.setText("Musica:");
 			refreshRemoveAdsText();
+			refreshReplayText();
 			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibracion:");
 			vibrationLabel.setAlignment(Align.left);
@@ -3208,6 +3234,7 @@ public class MainMenuScreen implements Screen {
 			soundLabel.setAlignment(Align.left);
 			musicLabel.setText("Music:");
 			refreshRemoveAdsText();
+			refreshReplayText();
 			musicLabel.setAlignment(Align.left);
 			vibrationLabel.setText("Vibration:");
 			vibrationLabel.setAlignment(Align.left);

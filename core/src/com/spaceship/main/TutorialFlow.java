@@ -1,0 +1,259 @@
+package com.spaceship.main;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Align;
+import com.spaceship.handlers.Fx;
+import com.spaceship.objects.Ball;
+import com.spaceship.objects.Spaceship;
+
+/**
+ * The guided first run: a few slow, scripted orbs and one line of text per step, played in the player's first game.
+ * Nothing in it can be failed (no energy is lost, the run cannot end); when it finishes the counters are reset and the
+ * real game starts. Steps: move, catch a blue orb, switch the shield and catch a red orb, wrong colour costs energy,
+ * keep both colours even.
+ */
+class TutorialFlow {
+	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, EVEN = 4, GO = 5, DONE = 6;
+	private static final int ORB_SPEED = 240;
+
+	private final PlayScreen ps;
+	private final Main game;
+	private final Texture px;
+	private final GlyphLayout layout = new GlyphLayout();
+
+	private int step = MOVE;
+	private float stepTime;
+	private float travel;
+	private float lastX = -1f;
+	private Ball orb;
+	private int tries;
+	private int evenSpawned;
+	private float nextSpawn;
+	private float pulse;
+	private boolean skipRequested;
+
+	TutorialFlow(PlayScreen ps, Main game) {
+		this.ps = ps;
+		this.game = game;
+		Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+		pm.setColor(1f, 1f, 1f, 1f);
+		pm.fill();
+		px = new Texture(pm);
+		pm.dispose();
+	}
+
+	boolean isFinished() {
+		return step == DONE;
+	}
+
+	void dispose() {
+		px.dispose();
+	}
+
+	private boolean english() {
+		return game.getMMS().language == game.getMMS().ON;
+	}
+
+	private String text() {
+		boolean en = english();
+		switch (step) {
+		case MOVE:
+			return en ? "Hold the left or right side of the screen to move" : "Mantén el lado izquierdo o derecho de la pantalla para moverte";
+		case BLUE:
+			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\n¡Atrápalo!";
+		case RED:
+			return en ? "Red orb? Tap the middle to switch your shield" : "¿Orbe rojo? Toca el centro para cambiar de escudo";
+		case WRONG:
+			return en ? "The wrong colour drains your energy" : "El color equivocado gasta tu energía";
+		case EVEN:
+			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n¡Mantenlos parejos!";
+		case GO:
+			return "GO!";
+		}
+		return "";
+	}
+
+	/** advances the script; call once per frame while the game is playing */
+	void update(float dt) {
+		dt = Math.min(dt, 0.1f);
+		stepTime += dt;
+		pulse += dt;
+		if (Gdx.input.justTouched() && skipHit(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY()))
+			skipRequested = true;
+		if (skipRequested) {
+			finish();
+			return;
+		}
+		switch (step) {
+		case MOVE: {
+			float x = ps.tutShipX();
+			if (lastX >= 0f)
+				travel += Math.abs(x - lastX);
+			lastX = x;
+			if (stepTime > 1.0f && travel > 0.30f * Gdx.graphics.getWidth())
+				next(0.6f);
+			break;
+		}
+		case BLUE:
+			if (stepTime > 0.5f && orb == null) {
+				ps.tutSetShield(Spaceship.STATE_BLUE);
+				orb = spawn(Ball.B_BLUE);
+			}
+			if (orb != null && !ps.tutAlive(orb)) {
+				if (ps.tutBlues() >= 1)
+					next(0.9f);
+				else if (++tries < 4) {
+					orb = null;
+					stepTime = 0.2f;
+				} else
+					next(0.2f);
+			}
+			break;
+		case RED:
+			if (stepTime > 0.5f && orb == null)
+				orb = spawn(Ball.B_RED);
+			if (orb != null && !ps.tutAlive(orb)) {
+				if (ps.tutReds() >= 1)
+					next(0.9f);
+				else if (++tries < 4) {
+					orb = null;
+					stepTime = 0.2f;
+				} else
+					next(0.2f);
+			}
+			break;
+		case WRONG:
+			if (stepTime > 0.5f && orb == null) {
+				ps.tutSetShield(Spaceship.STATE_RED);
+				orb = spawn(Ball.B_BLUE);
+			}
+			if (orb != null && !ps.tutAlive(orb))
+				next(0.8f);
+			break;
+		case EVEN:
+			if (stepTime > nextSpawn && evenSpawned < 5) {
+				spawn(evenSpawned % 2 == 0 ? Ball.B_RED : Ball.B_BLUE);
+				evenSpawned++;
+				nextSpawn = stepTime + 1.9f;
+			}
+			if (evenSpawned >= 5 && stepTime > 11f)
+				next(0f);
+			break;
+		case GO:
+			if (stepTime > 0.9f)
+				finish();
+			break;
+		}
+	}
+
+	private void next(float pause) {
+		step++;
+		stepTime = -pause;
+		orb = null;
+		tries = 0;
+		if (step == EVEN) {
+			evenSpawned = 0;
+			nextSpawn = 0.6f;
+		}
+		if (step == GO)
+			stepTime = 0f;
+	}
+
+	private void finish() {
+		step = DONE;
+		Gdx.app.getPreferences("tutorial").putBoolean("done", true);
+		Gdx.app.getPreferences("tutorial").flush();
+		ps.tutFinished();
+	}
+
+	private Ball spawn(int type) {
+		float w = Gdx.graphics.getWidth();
+		float x = MathUtils.clamp(ps.tutShipX() + MathUtils.random(-0.22f, 0.22f) * w, 0.12f * w, 0.88f * w);
+		return ps.tutSpawn(type, x, ORB_SPEED);
+	}
+
+	// ---- drawing (inside the play screen's open batch) ----
+
+	private boolean skipHit(float sx, float sy) {
+		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
+		return Math.abs(sx - w / 2) < 0.16f * w && sy > 0.60f * h - 0.10f * h && sy < 0.60f * h + 0.02f * h;
+	}
+
+	void draw(SpriteBatch sb, BitmapFont font) {
+		if (step == DONE)
+			return;
+		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
+		float u = Math.min(w / 720f, h / 1280f);
+		float alpha = stepTime < 0f ? 0f : Math.min(1f, stepTime / 0.35f);
+		if (step == GO)
+			alpha = Math.max(0f, 1f - stepTime / 0.9f);
+
+		// highlights under the text
+		Fx.additiveOn(sb);
+		float a = (0.45f + 0.35f * MathUtils.sin(pulse * 5f)) * alpha;
+		switch (step) {
+		case MOVE:
+			box(sb, ps.tutPadLeft(), 0.13f, 0.82f, 1f, a, u);
+			box(sb, ps.tutPadRight(), 0.13f, 0.82f, 1f, a, u);
+			break;
+		case RED:
+			box(sb, ps.tutPadShield(), 0.13f, 0.82f, 1f, a, u);
+			break;
+		case WRONG:
+			box(sb, ps.tutLifeBar(), 1f, 0.75f, 0.18f, a, u);
+			break;
+		case EVEN:
+			box(sb, ps.tutBlueCounter(), 0.13f, 0.83f, 0.93f, a, u);
+			box(sb, ps.tutRedCounter(), 1f, 0.23f, 0.36f, a, u);
+			break;
+		}
+		Fx.additiveOff(sb);
+
+		// the line of text on a dark band
+		float oldScaleX = font.getData().scaleX, oldScaleY = font.getData().scaleY;
+		float s = step == GO ? 1.5f * u : 0.52f * u;
+		font.getData().setScale(s);
+		font.setColor(1f, 1f, 1f, alpha);
+		String t = text();
+		layout.setText(font, t, font.getColor(), 0.84f * w, Align.center, true);
+		float cy = 0.70f * h;
+		float bandH = layout.height + 56f * u;
+		sb.setColor(0f, 0f, 0f, 0.55f * alpha);
+		sb.draw(px, 0, cy - bandH / 2, w, bandH);
+		sb.setColor(1f, 1f, 1f, 1f);
+		font.draw(sb, layout, 0.08f * w, cy + layout.height / 2);
+
+		if (step != GO) {
+			font.getData().setScale(0.34f * u);
+			font.setColor(1f, 1f, 1f, 0.55f * alpha);
+			layout.setText(font, english() ? "Skip" : "Omitir", font.getColor(), w, Align.center, false);
+			font.draw(sb, layout, 0, 0.60f * h);
+		}
+		font.getData().setScale(oldScaleX, oldScaleY);
+		font.setColor(1f, 1f, 1f, 1f);
+		sb.setColor(1f, 1f, 1f, 1f);
+	}
+
+	/** a pulsing frame around a screen rectangle (a pad, the energy bar, a counter) */
+	private void box(SpriteBatch sb, Sprite target, float r, float g, float b, float a, float u) {
+		if (target == null)
+			return;
+		float x = target.getX() - 6f * u, y = target.getY() - 6f * u;
+		float bw = target.getWidth() + 12f * u, bh = target.getHeight() + 12f * u;
+		float t = 5f * u;
+		sb.setColor(r, g, b, a);
+		sb.draw(px, x, y, bw, t);
+		sb.draw(px, x, y + bh - t, bw, t);
+		sb.draw(px, x, y, t, bh);
+		sb.draw(px, x + bw - t, y, t, bh);
+		sb.setColor(r, g, b, a * 0.18f);
+		sb.draw(px, x, y, bw, bh);
+	}
+}
