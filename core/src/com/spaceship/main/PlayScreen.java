@@ -1515,8 +1515,8 @@ public class PlayScreen implements Screen {
 				arrowRight.draw(game.batch);
 	
 				//draw score counters
-				redsFont.draw(game.batch, Integer.toString(reds),Gdx.graphics.getWidth() - 20 - com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).width, Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).height/2 + 3*adHeight/4);		
-				bluesFont.draw(game.batch, Integer.toString(blues), 20, Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(bluesFont, Integer.toString(blues)).height/2 + 3*adHeight/4);
+				redsFont.draw(game.batch, Integer.toString(reds),Gdx.graphics.getWidth() - sideInset() - com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).width, Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).height/2 + 3*adHeight/4);		
+				bluesFont.draw(game.batch, Integer.toString(blues), sideInset(), Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(bluesFont, Integer.toString(blues)).height/2 + 3*adHeight/4);
 				redsFont.getData().setScale(x, y);
 				bluesFont.getData().setScale(x, y);
 				if(upRed && reds > 0){
@@ -2159,11 +2159,14 @@ public class PlayScreen implements Screen {
 	Sprite tutBlueCounter(){ return blueCounter; }
 	Sprite tutRedCounter(){ return redCounter; }
 	/** x, y, width, height of the side number (blue on the left, red on the right) as drawn in play */
+	/** gap between the screen edge and the blue/red numbers beside the playfield */
+	private float sideInset(){ return 0.05f * Gdx.graphics.getWidth(); }
+
 	float[] tutCounterRect(boolean blue){
 		BitmapFont f = blue ? bluesFont : redsFont;
 		String t = Integer.toString(blue ? blues : reds);
 		float w = com.spaceship.handlers.FontUtil.bounds(f, t).width, h = com.spaceship.handlers.FontUtil.bounds(f, t).height;
-		float x = blue ? 20 : Gdx.graphics.getWidth() - 20 - w;
+		float x = blue ? sideInset() : Gdx.graphics.getWidth() - sideInset() - w;
 		float y = Gdx.graphics.getHeight()/2 + 3*adHeight/4;
 		return new float[]{x, y - h/2, w, h};
 	}
