@@ -36,15 +36,15 @@ TEXT = {
     'es': {
         'inst': [
             ('Objetivo:', "recolectar cuantos orbes rojos y azules puedas en IGUALES cantidades antes de perder toda tu "
-                          "energia. Recoge orbes azules con el escudo azul de tu nave y orbes rojos con el escudo rojo."),
-            ('Marca:', "sera determinado por la cantidad de orbes del color del cual hayas conseguido MENOS."),
-            ('Energia:', "tu energia DECREMENTARA cuando intentes recolectar un orbe azul con el escudo rojo de tu nave y "
-                         "viceversa. INCREMENTARA al recoger un orbe de energia."),
-            ('Poderes:', "usalos a tu favor, no aparecen muy frecuentemente asi que si ves uno, ATRÁPALO."),
-            ('Mejoras:', "cada orbe de energia que recojas puede ser canjeado por mejoras para ti y tu nave, las cuales "
+                          "energía. Recoge orbes azules con el escudo azul de tu nave y orbes rojos con el escudo rojo."),
+            ('Marca:', "será determinado por la cantidad de orbes del color del cual hayas conseguido MENOS."),
+            ('Energía:', "tu energía DECREMENTARÁ cuando intentes recolectar un orbe azul con el escudo rojo de tu nave y "
+                         "viceversa. INCREMENTARÁ al recoger un orbe de energía."),
+            ('Poderes:', "úsalos a tu favor, no aparecen muy frecuentemente así que si ves uno, ATRÁPALO."),
+            ('Mejoras:', "cada orbe de energía que recojas puede ser canjeado por mejoras para ti y tu nave, las cuales "
                          "son vitales para mejorar tu rendimiento."),
         ],
-        'orbs': ['Orbe Azul', 'Orbe Rojo', 'Orbe de Poder', 'Orbe de Energia'],
+        'orbs': ['Orbe Azul', 'Orbe Rojo', 'Orbe de Poder', 'Orbe de Energía'],
         'items': ['Convertidor orbes azules', 'Convertidor orbes rojos', 'Orbes azules valen por 2', 'Orbes rojos valen por 2',
                   'Velocidad de los orbes disminuye', 'Inmune a orbes azules', 'Inmune a orbes rojos',
                   'Orbes azules valen por 3', 'Orbes rojos valen por 3', 'Recoge ambos orbes'],
