@@ -330,20 +330,25 @@ def build_play():
     N.set_scale(4)
     font = TubeFont()
     w, h = 196, 98
-    mg = 14        # inset so the bloom fits inside the image
+    bw_, bh_ = 124, 62     # the lit box itself: snug around GO (the image keeps its size, the rest is room for the glow)
+    mx, my = (w - bw_) // 2, (h - bh_) // 2
     size = (int(w * N.U), int(h * N.U))
-    outer = rounded_mask(w - 2 * mg, h - 2 * mg, 20)
-    inner = rounded_mask(w - 2 * mg, h - 2 * mg, 20, 3.0)
+    outer = rounded_mask(bw_, bh_, 20)
+    inner = rounded_mask(bw_, bh_, 20, 3.4)
     ring = Image.new('L', size, 0)
-    ring.paste(ImageChops.subtract(outer, inner), (mg * N.U, mg * N.U))
+    ring.paste(ImageChops.subtract(outer, inner), (mx * N.U, my * N.U))
     fill = Image.new('L', size, 0)
-    fill.paste(outer, (mg * N.U, mg * N.U))
+    fill.paste(outer, (mx * N.U, my * N.U))
     text = tube_text(size, font.mask('GO', 50), 50)
     mask = ImageChops.lighter(ring, text)
-    tube = tube_rgba(mask, TUBE_WHITE, 0.055 * 50 * N.U, sig=(0.3, 0.8, 1.2), fade=6 * N.U)
+    tube = tube_rgba(mask, TUBE_WHITE, 0.055 * 50 * N.U, sig=(0.3, 0.9, 2.2), fade=6 * N.U, strength=1.15)
     base = Image.new('RGBA', size, NAVY + (0,))
     base.putalpha(fill.point(lambda v: int(v * 0.85)))
-    N.finish(Image.alpha_composite(base, tube), w, h, 'gui/bGo.png')
+    # a wide soft halo behind everything so the button reads as the main call to action
+    halo = glow(Image.alpha_composite(Image.new('RGBA', size, (0, 0, 0, 0)), Image.merge('RGBA', (ring, ring, ring, ring))), 5, TUBE_WHITE, 0.55)
+    out = Image.alpha_composite(halo, base)
+    out = Image.alpha_composite(out, tube)
+    N.finish(out, w, h, 'gui/bGo.png')
     for name, w, h, text in [('bQuestionEN', 311, 80, 'Are you sure you\nwant to leave?'),
                              ('bQuestionES', 320, 80, 'Estas seguro de\nque quieres irte?')]:
         size = (int(w * N.U), int(h * N.U))

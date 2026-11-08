@@ -104,6 +104,7 @@ public class MainMenuScreen implements Screen {
 	public Sprite bGalaxies;
 	public Sprite bSettings;
 	private Sprite bGo;
+	private float goPulse;
 	private Sprite bExit;
 	private Sprite bBack;
 	public Sprite bLeaderboard;
@@ -1268,6 +1269,16 @@ public class MainMenuScreen implements Screen {
 		bGalaxies.draw(game.batch);
 		bSettings.draw(game.batch);
 		bGo.draw(game.batch);
+		if(state == STANDBY){
+			// the main call to action breathes: a second additive pass of the same art, slowly pulsing
+			goPulse += delta;
+			float oldA = bGo.getColor().a;
+			bGo.setAlpha(oldA * (0.12f + 0.28f * (0.5f + 0.5f * MathUtils.sin(goPulse * 2.4f))));
+			Fx.additiveOn(game.batch);
+			bGo.draw(game.batch);
+			Fx.additiveOff(game.batch);
+			bGo.setAlpha(oldA);
+		}
 		bExit.draw(game.batch);
 		bTrophy.draw(game.batch);
 		bLeaderboard.draw(game.batch);
