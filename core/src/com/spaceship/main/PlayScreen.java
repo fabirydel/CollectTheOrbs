@@ -1716,13 +1716,13 @@ public class PlayScreen implements Screen {
 					bShare.draw(game.batch);
 					bExit.draw(game.batch);
 					if(game.getMMS().language == game.getMMS().ON){
-						greysFont.draw(game.batch, "    New    \nHighScore", (Gdx.graphics.getWidth()/2 - com.spaceship.handlers.FontUtil.bounds(greysFont, "HighScore").width/2),
+						greysFont.draw(game.batch, "    New    \nHighScore!", (Gdx.graphics.getWidth()/2 - com.spaceship.handlers.FontUtil.bounds(greysFont, "HighScore!").width/2),
 							Gdx.graphics.getHeight() - (Gdx.graphics.getHeight()/2 - 2f*bExit.getHeight() - Gdx.graphics.getHeight()/10)/2 + 3*adHeight/4);
 					
 						greysFont2.draw(game.batch, "Best Score: " + bestScore, (Gdx.graphics.getWidth() - com.spaceship.handlers.FontUtil.bounds(greysFont2, "Best Score: " + bestScore).width)/2, 
 								Gdx.graphics.getHeight()/10 + 3*adHeight/4);
 					}else{
-						greysFont.draw(game.batch, "     Nueva   \nMejor Marca", (Gdx.graphics.getWidth()/2 - com.spaceship.handlers.FontUtil.bounds(greysFont, "Mejor Marca").width/2),
+						greysFont.draw(game.batch, "     Nueva   \nMejor Marca!", (Gdx.graphics.getWidth()/2 - com.spaceship.handlers.FontUtil.bounds(greysFont, "Mejor Marca!").width/2),
 								Gdx.graphics.getHeight() - (Gdx.graphics.getHeight()/2 - 2f*bExit.getHeight() - Gdx.graphics.getHeight()/10)/2 + 3*adHeight/4);
 						greysFont2.draw(game.batch, "Mejor Marca: " + bestScore, (Gdx.graphics.getWidth() - com.spaceship.handlers.FontUtil.bounds(greysFont2, "Mejor Marca: " + bestScore).width)/2, 
 								Gdx.graphics.getHeight()/10 + 3*adHeight/4);
