@@ -330,7 +330,7 @@ def build_play():
     N.set_scale(4)
     font = TubeFont()
     w, h = 196, 98
-    bw_, bh_ = 124, 62     # the lit box itself: snug around GO (the image keeps its size, the rest is room for the glow)
+    bw_, bh_ = 124, 68     # the lit box itself: snug around GO (the image keeps its size, the rest is room for the glow)
     mx, my = (w - bw_) // 2, (h - bh_) // 2
     size = (int(w * N.U), int(h * N.U))
     outer = rounded_mask(bw_, bh_, 20)
