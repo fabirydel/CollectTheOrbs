@@ -87,7 +87,7 @@ class TutorialFlow {
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n\u00a1Mantenlos parejos!";
 		case READY:
-			return en ? "Ready?" : "\u00bfListo?";
+			return en ? "Ready?" : "Listo?";
 		case GO:
 			return "GO!";
 		}
