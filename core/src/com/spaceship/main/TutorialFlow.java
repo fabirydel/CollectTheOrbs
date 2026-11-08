@@ -81,7 +81,7 @@ class TutorialFlow {
 		case USE:
 			return en ? "Tap the middle to use it" : "Toca el centro para usarlo";
 		case GAIN:
-			return en ? "Blue orbs count double for as long as the power is in effect!" : "\u00a1Los orbes azules valen doble mientras el poder est\u00e9 activo!";
+			return en ? "Blue orbs count double for as long as the power-up is in effect!" : "\u00a1Los orbes azules valen doble mientras el poder est\u00e9 activo!";
 		case TIP:
 			return en ? "There are more power-ups that can help you..." : "Hay m\u00e1s poderes que te pueden ayudar...";
 		case EVEN:
