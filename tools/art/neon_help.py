@@ -40,15 +40,15 @@ TEXT = {
             ('Marca:', "sera determinado por la cantidad de orbes del color del cual hayas conseguido MENOS."),
             ('Energia:', "tu energia DECREMENTARA cuando intentes recolectar un orbe azul con el escudo rojo de tu nave y "
                          "viceversa. INCREMENTARA al recoger un orbe de energia."),
-            ('Objetos:', "usalos a tu favor, no aparecen muy frecuentemente asi que si ves uno, CONSIGUELO."),
+            ('Poderes:', "usalos a tu favor, no aparecen muy frecuentemente asi que si ves uno, CONSIGUELO."),
             ('Mejoras:', "cada orbe de energia que recojas puede ser canjeado por mejoras para ti y tu nave, las cuales "
                          "son vitales para mejorar tu rendimiento."),
         ],
-        'orbs': ['Orbe Azul', 'Orbe Rojo', 'Orbe de Objeto', 'Orbe de Energia'],
+        'orbs': ['Orbe Azul', 'Orbe Rojo', 'Orbe de Poder', 'Orbe de Energia'],
         'items': ['Convertidor orbes azules', 'Convertidor orbes rojos', 'Orbes azules valen por 2', 'Orbes rojos valen por 2',
                   'Velocidad de los orbes disminuye', 'Inmune a orbes azules', 'Inmune a orbes rojos',
                   'Orbes azules valen por 3', 'Orbes rojos valen por 3', 'Recoge ambos orbes'],
-        'pads': ['Izquierda', 'Derecha', 'usar\nobjeto', 'cambiar\nescudo'],
+        'pads': ['Izquierda', 'Derecha', 'usar\npoder', 'cambiar\nescudo'],
     },
 }
 
