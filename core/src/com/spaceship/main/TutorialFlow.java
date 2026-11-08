@@ -30,7 +30,7 @@ class TutorialFlow {
 
 	private int step = MOVE;
 	private float stepTime;
-	private float travel;
+	private float travelL, travelR;
 	private float lastX = -1f;
 	private Ball orb;
 	private int tries;
@@ -106,10 +106,15 @@ class TutorialFlow {
 		switch (step) {
 		case MOVE: {
 			float x = ps.tutShipX();
-			if (lastX >= 0f)
-				travel += Math.abs(x - lastX);
+			if (lastX >= 0f) {
+				if (x < lastX)
+					travelL += lastX - x;
+				else
+					travelR += x - lastX;
+			}
 			lastX = x;
-			if (stepTime > 1.0f && travel > 0.30f * Gdx.graphics.getWidth())
+			float need = 0.06f * Gdx.graphics.getWidth();
+			if (stepTime > 1.0f && travelL > need && travelR > need)
 				next(0.6f);
 			break;
 		}
