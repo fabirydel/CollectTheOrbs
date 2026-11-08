@@ -1293,7 +1293,7 @@ public class PlayScreen implements Screen {
 			}	
 
 			if(Gdx.input.justTouched() && !objectClockEnable){
-				if(Gdx.input.getX() > bPause.getX() && Gdx.graphics.getHeight() - Gdx.input.getY() > bPause.getY() && !clicked && ship.canPlay){
+				if(Gdx.input.getX() > bPause.getX() && Gdx.graphics.getHeight() - Gdx.input.getY() > bPause.getY() && !clicked && ship.canPlay && tutorial == null){
 					clicked = true;
 					if(game.getMMS().sound == game.getMMS().ON)
 						game.getMMS().buttonSmall.play();
@@ -1720,7 +1720,7 @@ public class PlayScreen implements Screen {
 				}
 	
 				// draw pads
-				if(game.getMMS().controls == game.getMMS().ON && state != DEAD && state != DEADLEAVING){
+				if((game.getMMS().controls == game.getMMS().ON || tutorial != null) && state != DEAD && state != DEADLEAVING){
 					if(game.getMMS().language == game.getMMS().ON){
 						padVerticalLeft.draw(game.batch);
 						padVerticalRight.draw(game.batch);
@@ -1736,7 +1736,7 @@ public class PlayScreen implements Screen {
 			}
 			//draw play/pause
 			if(state == PLAY){
-				if(!objectClockEnable)
+				if(!objectClockEnable && tutorial == null)
 					bPause.draw(game.batch);
 				else
 					bPauseCant.draw(game.batch);
@@ -2154,7 +2154,7 @@ public class PlayScreen implements Screen {
 	Sprite tutPadShield(){ return english() ? padHorizontalDown : padHorizontalDownEsp; }
 	Sprite tutPadItem(){ return english() ? padHorizontalUp : padHorizontalUpEsp; }
 	private boolean english(){ return game.getMMS().language == game.getMMS().ON; }
-	boolean tutControlsOn(){ return game.getMMS().controls == game.getMMS().ON; }
+	boolean tutControlsOn(){ return true; }
 	Sprite tutLifeBar(){ return lifeBarSprite; }
 	Sprite tutBlueCounter(){ return blueCounter; }
 	Sprite tutRedCounter(){ return redCounter; }
@@ -2726,7 +2726,7 @@ public class PlayScreen implements Screen {
 
 	/** Android Back: pause the run; ignored on the other states so a stray press cannot lose a game. */
 	public void onBack(){
-		if(state == PLAY)
+		if(state == PLAY && tutorial == null)
 			pause();
 	}
 
