@@ -322,6 +322,13 @@ class TutorialFlow {
 		case GAIN:
 			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
 			break;
+		case HIDE:
+			// the control overlays the tip is talking about
+			pad(sb, ps.tutPadLeft(), a);
+			pad(sb, ps.tutPadRight(), a);
+			pad(sb, ps.tutPadShield(), a);
+			pad(sb, ps.tutPadItem(), a);
+			break;
 		case EVEN:
 			// only the colour collected the least is the score
 			if (ps.tutBlues() <= ps.tutReds())
