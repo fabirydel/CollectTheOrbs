@@ -1632,6 +1632,21 @@ public class PlayScreen implements Screen {
 					}
 				}
 	
+				// draw pads (behind the ship, so they never cover it)
+				if((game.getMMS().controls == game.getMMS().ON || tutorial != null) && state != DEAD && state != DEADLEAVING){
+					if(game.getMMS().language == game.getMMS().ON){
+						padVerticalLeft.draw(game.batch);
+						padVerticalRight.draw(game.batch);
+						padHorizontalUp.draw(game.batch);
+						padHorizontalDown.draw(game.batch);
+					}else{
+						padVerticalLeftEsp.draw(game.batch);
+						padVerticalRightEsp.draw(game.batch);
+						padHorizontalUpEsp.draw(game.batch);
+						padHorizontalDownEsp.draw(game.batch);
+					}
+				}	
+
 				// draw ship
 				if(state == PLAY){
 					ship.update();
@@ -1733,20 +1748,6 @@ public class PlayScreen implements Screen {
 					mm.drawBlueRedRow(game.batch, blueText, redText, mm.getCounterBaseY(), blueCounter.getColor().a);
 				}
 	
-				// draw pads
-				if((game.getMMS().controls == game.getMMS().ON || tutorial != null) && state != DEAD && state != DEADLEAVING){
-					if(game.getMMS().language == game.getMMS().ON){
-						padVerticalLeft.draw(game.batch);
-						padVerticalRight.draw(game.batch);
-						padHorizontalUp.draw(game.batch);
-						padHorizontalDown.draw(game.batch);
-					}else{
-						padVerticalLeftEsp.draw(game.batch);
-						padVerticalRightEsp.draw(game.batch);
-						padHorizontalUpEsp.draw(game.batch);
-						padHorizontalDownEsp.draw(game.batch);
-					}
-				}	
 			}
 			//draw play/pause
 			if(state == PLAY){
