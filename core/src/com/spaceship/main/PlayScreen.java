@@ -144,6 +144,7 @@ public class PlayScreen implements Screen {
 	private Ball[] balls;
 	private DatabaseCursor cursor;
 
+	private float scorePulse;
 	public BitmapFont bluesFont;
 	public BitmapFont redsFont;
 	public BitmapFont lifesFont;
@@ -1514,9 +1515,22 @@ public class PlayScreen implements Screen {
 				arrowLeft.draw(game.batch);
 				arrowRight.draw(game.batch);
 	
+				// once the run is over, the lower counter (the final score) pulses like the GO button
+				float blueA = 1f, redA = 1f;
+				if(state == DEAD){
+					scorePulse += delta;
+					float k = 0.5f + 0.5f * MathUtils.sin(scorePulse * 3.8f);
+					float a = 0.4f + 0.6f * k;
+					if(blues <= reds) blueA = a;
+					if(reds <= blues) redA = a;
+				}else{
+					scorePulse = 0f;
+				}
+				if(state == DEAD){ redsFont.setColor(1f, 1f, 1f, redA); bluesFont.setColor(1f, 1f, 1f, blueA); }
 				//draw score counters
 				redsFont.draw(game.batch, Integer.toString(reds),Gdx.graphics.getWidth() - sideInset() - com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).width, Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(redsFont, Integer.toString(reds)).height/2 + 3*adHeight/4);		
 				bluesFont.draw(game.batch, Integer.toString(blues), sideInset(), Gdx.graphics.getHeight()/2 + com.spaceship.handlers.FontUtil.bounds(bluesFont, Integer.toString(blues)).height/2 + 3*adHeight/4);
+				if(state == DEAD){ redsFont.setColor(1f, 1f, 1f, 1f); bluesFont.setColor(1f, 1f, 1f, 1f); }
 				redsFont.getData().setScale(x, y);
 				bluesFont.getData().setScale(x, y);
 				if(upRed && reds > 0){
