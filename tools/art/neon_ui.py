@@ -502,12 +502,21 @@ class TubeFont(BMFont):
     def _scale(self, size):
         return size * N.U / self.size
 
+    def _meta(self, ch):
+        """metrics entry for a letter; accented letters use their base letter's (the hairline face draws the accent)"""
+        if ord(ch) in self.chars:
+            return self.chars[ord(ch)]
+        import unicodedata
+        base = unicodedata.normalize('NFD', ch)[0]
+        return self.chars.get(ord(base)) if base != ch else None
+
     def _adv(self, ch, size):
         """advance of one letter in output px"""
         s = self._scale(size)
-        if ch == ' ' or ord(ch) not in self.chars:
+        m = None if ch == ' ' else self._meta(ch)
+        if m is None:
             return self.chars.get(32, {'xadvance': self.size * 0.3})['xadvance'] * s
-        return self.chars[ord(ch)]['xadvance'] * s
+        return m['xadvance'] * s
 
     def width(self, text, size):
         return sum(self._adv(c, size) for c in text)
@@ -524,7 +533,7 @@ class TubeFont(BMFont):
             yb = (li * self.line_h + self.base) * s
             for c in l:
                 adv = self._adv(c, size)
-                if c != ' ' and ord(c) in self.chars:
+                if c != ' ' and self._meta(c) is not None:
                     l_, t_, r_, b_ = f.getbbox(c, anchor='ls')
                     tw = int(r_ - l_ + 8 * S)
                     tmp = Image.new('L', (tw, H * S), 0)
