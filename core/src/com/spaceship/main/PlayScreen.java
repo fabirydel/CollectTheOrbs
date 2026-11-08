@@ -1519,7 +1519,7 @@ public class PlayScreen implements Screen {
 				float blueA = 1f, redA = 1f;
 				if(state == DEAD){
 					scorePulse += delta;
-					float k = 0.5f + 0.5f * MathUtils.sin(scorePulse * 3.8f);
+					float k = 0.5f + 0.5f * MathUtils.sin(scorePulse * 6.0f);
 					float a = 0.4f + 0.6f * k;
 					if(blues <= reds) blueA = a;
 					if(reds <= blues) redA = a;
