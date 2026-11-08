@@ -1512,8 +1512,11 @@ public class PlayScreen implements Screen {
 					arrowLeft.setPosition(Gdx.graphics.getWidth() / 15, arrowRight.getHeight() * 1.5f + adHeight/2);
 					arrowRight.setPosition(Gdx.graphics.getWidth() - arrowRight.getWidth() - Gdx.graphics.getWidth() / 15, arrowRight.getHeight() * 1.5f + adHeight/2);
 				}
-				arrowLeft.draw(game.batch);
-				arrowRight.draw(game.batch);
+				// the bottom arrows give way to the control overlays when those are shown
+				if(game.getMMS().controls != game.getMMS().ON && tutorial == null){
+					arrowLeft.draw(game.batch);
+					arrowRight.draw(game.batch);
+				}
 	
 				// once the run is over, the lower counter (the final score) pulses like the GO button
 				float blueA = 1f, redA = 1f;
