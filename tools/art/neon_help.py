@@ -23,15 +23,15 @@ TEXT = {
             ('Score:', "it will be determined by the amount of orbs of whichever color you've collected the LEAST."),
             ('Energy:', "your energy bar will DECREASE if and when you collect a blue orb with your ship's red shield and "
                         "vice versa. It will INCREASE by collecting an energy orb."),
-            ('Items:', "use them to your advantage, they don't appear very frequently so when you see one, GET IT."),
+            ('Power-ups:', "use them to your advantage, they don't appear very frequently so when you see one, GET IT."),
             ('Upgrades:', "every energy orb you collect can later be traded for upgrades for you and your ship, "
                           "which are vital to improve your performance."),
         ],
-        'orbs': ['Blue Orb', 'Red Orb', 'Item Orb', 'Energy Orb'],
+        'orbs': ['Blue Orb', 'Red Orb', 'Power-up Orb', 'Energy Orb'],
         'items': ['Blue orbs converter', 'Red orbs converter', 'Blue orbs have a value of 2', 'Red orbs have a value of 2',
                   "Orb's speed decreases", 'No damage from blue orbs', 'No damage from red orbs',
                   'Blue orbs have a value of 3', 'Red orbs have a value of 3', 'Collects both orbs'],
-        'pads': ['Left', 'Right', 'Use Item', 'Switch\nShield'],
+        'pads': ['Left', 'Right', 'Use Power-up', 'Switch\nShield'],
     },
     'es': {
         'inst': [

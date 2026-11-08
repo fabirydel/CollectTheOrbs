@@ -77,7 +77,7 @@ class TutorialFlow {
 		case LIFE:
 			return en ? "Yellow orbs refill your energy" : "Los orbes amarillos recargan tu energ\u00eda";
 		case ITEM:
-			return en ? "Catch items to get power-ups" : "Atrapa objetos para obtener poderes";
+			return en ? "Catch power-up orbs for a boost" : "Atrapa objetos para obtener poderes";
 		case USE:
 			return en ? "Tap the middle to use it" : "Toca el centro para usarlo";
 		case GAIN:

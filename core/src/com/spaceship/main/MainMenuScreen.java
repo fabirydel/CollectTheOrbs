@@ -1977,7 +1977,7 @@ public class MainMenuScreen implements Screen {
 		energyStartLabel.setSize(fx(energyStartLabel.getWidth()/2), fy(energyStartLabel.getHeight()/2));
 
 		if(language == ON){
-			objectsLabel = new Label("Item's Slots", skin);
+			objectsLabel = new Label("Power-up Slots", skin);
 			objectsLabel.setFontScale(x/2, y/2);
 		}else{
 			objectsLabel = new Label("Lugar para objetos", skin);
@@ -1985,14 +1985,14 @@ public class MainMenuScreen implements Screen {
 		}objectsLabel.setSize(fx(objectsLabel.getWidth()/2), fy(objectsLabel.getHeight()/2));
 
 		if(language == ON)
-			objectsStartLabel = new Label("Starting Items", skin);
+			objectsStartLabel = new Label("Starting Power-ups", skin);
 		else
 			objectsStartLabel = new Label("Objetos iniciales", skin);
 		objectsStartLabel.setFontScale(x/2.25f, y/2.25f);
 		objectsStartLabel.setSize(fx(objectsStartLabel.getWidth()/2), fy(objectsStartLabel.getHeight()/2));
 
 		if(language == ON){
-			objectsDurationLabel = new Label("Item's Duration", skin);
+			objectsDurationLabel = new Label("Power-up Duration", skin);
 			objectsDurationLabel.setFontScale(x/2, y/2);
 		}else{
 			objectsDurationLabel = new Label("Duracion de objetos", skin);
@@ -2266,7 +2266,7 @@ public class MainMenuScreen implements Screen {
 		orbsLabel.setSize(fx(orbsLabel.getWidth()/1.5f), fy(orbsLabel.getHeight()/1.5f));
 
 		if(language == ON)
-			itemsLabel = new Label("Items", skin);
+			itemsLabel = new Label("Power-ups", skin);
 		else
 			itemsLabel = new Label("Objetos", skin);
 		itemsLabel.setFontScale(x/1.5f, y/1.5f);
@@ -2465,7 +2465,7 @@ public class MainMenuScreen implements Screen {
 			totalLifesLabeln.setFontScale(x/2, y/2);
 			totalLifesLabeln.setSize(fx(totalLifesLabeln.getWidth()/2), fy(totalLifesLabeln.getHeight()/2));
 			
-			totalObjectsLabel = new Label("   Object orbs: ", skin);
+			totalObjectsLabel = new Label("   Power-up orbs: ", skin);
 			totalObjectsLabel.setFontScale(x/2, y/2);
 			totalObjectsLabel.setSize(fx(totalObjectsLabel.getWidth()/2), fy(totalObjectsLabel.getHeight()/2));
 			totalObjectsLabeln = new Label(String.valueOf(totalObjects), skin);
@@ -3249,7 +3249,7 @@ public class MainMenuScreen implements Screen {
 			languageLabel.setText("Language:");
 			languageLabel.setAlignment(Align.left);
 			
-			itemsLabel.setText("Items");
+			itemsLabel.setText("Power-ups");
 			itemsLabel.setAlignment(Align.left);
 			padsTitleLabel.setText("Controls");
 			padsTitleLabel.setAlignment(Align.left);
@@ -3279,13 +3279,13 @@ public class MainMenuScreen implements Screen {
 			energyStartLabel.setText("Starting energy");
 			energyStartLabel.setAlignment(Align.left);
 			energyStartLabel.setFontScale(x/2, y/2);
-			objectsLabel.setText("Object's slots");
+			objectsLabel.setText("Power-up Slots");
 			objectsLabel.setAlignment(Align.left);
 			objectsLabel.setFontScale(x/2, y/2);
-			objectsStartLabel.setText("Starting objects");
+			objectsStartLabel.setText("Starting Power-ups");
 			objectsStartLabel.setAlignment(Align.left);
 			objectsStartLabel.setFontScale(x/2, y/2);
-			objectsDurationLabel.setText("Object's duration");
+			objectsDurationLabel.setText("Power-up Duration");
 			objectsDurationLabel.setAlignment(Align.left);
 			objectsDurationLabel.setFontScale(x/2, y/2);
 
@@ -3328,7 +3328,7 @@ public class MainMenuScreen implements Screen {
 			totalLifesLabel.setText("   Energy orbs:");
 			totalLifesLabel.setAlignment(Align.left);
 			totalLifesLabel.setFontScale(x/2, y/2);
-			totalObjectsLabel.setText("   Object orbs:");
+			totalObjectsLabel.setText("   Power-up orbs:");
 			totalObjectsLabel.setAlignment(Align.left);
 			totalObjectsLabel.setFontScale(x/2, y/2);
 			obj0Label.setText("      Red-to-blue:");
