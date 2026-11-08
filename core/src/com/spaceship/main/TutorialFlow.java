@@ -69,7 +69,7 @@ class TutorialFlow {
 		case MOVE:
 			return en ? "Hold the left or right side of the screen to move" : "Toca el lado izquierdo o derecho de la pantalla para moverte";
 		case BLUE:
-			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\nAtr\u00e1palo!";
+			return en ? "Blue orb, blue shield.\nCatch it!" : "Orbe azul, escudo azul.\n\u00a1Atr\u00e1palo!";
 		case RED:
 			return en ? "Red orb? Tap the middle to switch your shield" : "Orbe rojo? Toca el centro para cambiar de escudo";
 		case WRONG:
