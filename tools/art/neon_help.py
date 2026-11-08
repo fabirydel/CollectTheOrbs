@@ -31,7 +31,7 @@ TEXT = {
         'items': ['Blue orbs converter', 'Red orbs converter', 'Blue orbs have a value of 2', 'Red orbs have a value of 2',
                   "Orb's speed decreases", 'No damage from blue orbs', 'No damage from red orbs',
                   'Blue orbs have a value of 3', 'Red orbs have a value of 3', 'Collects both orbs'],
-        'pads': ['Left', 'Right', 'Use Power-up', 'Switch\nShield'],
+        'pads': ['Left', 'Right', 'Use\npower-up', 'Switch\nShield'],
     },
     'es': {
         'inst': [

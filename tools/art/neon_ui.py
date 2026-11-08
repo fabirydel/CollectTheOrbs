@@ -378,11 +378,11 @@ def build_pads():
         N.finish(t, w, h, 'hud/%s.png' % name)
     for name, w, h in [('padVertical', 160, 576), ('padHorizontal', 392, 284)]:
         N.finish(glass_pad(w, h), w, h, 'hud/%s.png' % name)
-    for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use Power-up'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
+    for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use\npower-up'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
         t = glass_pad(392, 284)
         m = font.mask(text, 40)
         # the two-line Switch Shield label sits higher so the energy bar under the pad never covers it
-        center_text(t, m, t.width / 2, t.height * (0.34 if '\n' in text else 0.5), TUBE_WHITE, size=40)
+        center_text(t, m, t.width / 2, t.height * (0.34 if text.startswith(('Switch', 'Cambiar')) else 0.5), TUBE_WHITE, size=40)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 
