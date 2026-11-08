@@ -313,7 +313,8 @@ class TutorialFlow {
 		float cy = 0.70f * h;
 		float bandH = layout.height + 56f * u;
 		sb.setColor(0f, 0f, 0f, 0.55f * alpha);
-		sb.draw(px, 0, cy - bandH / 2, w, bandH);
+		float bandW = Math.min(w, layout.width + 56f * u);
+		sb.draw(px, (w - bandW) / 2f, cy - bandH / 2, bandW, bandH);
 		sb.setColor(1f, 1f, 1f, 1f);
 		font.draw(sb, layout, 0.08f * w, cy + layout.height / 2);
 
