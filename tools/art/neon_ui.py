@@ -369,20 +369,33 @@ def chevron(t, w, h, direction):
     t.alpha_composite(Image.alpha_composite(glow(layer, 5, NEUTRAL, 1.0), layer))
 
 
+def guide_pad(w, h, col):
+    """the control overlay in the Help page's style: dark glass with a thin lit border in the pad's colour"""
+    return tile(w, h, (col,), None, 32, alpha=165, bw=4.2, glow_r=3)
+
+
 def build_pads():
     N.set_scale(2)
     font = TubeFont()
-    for name, w, h, d in [('padsLeft', 160, 576, -1), ('padsIzq', 160, 576, -1), ('padsRight', 160, 576, 1), ('padsDer', 160, 576, 1)]:
-        t = glass_pad(w, h)
-        chevron(t, w, h, d)
-        N.finish(t, w, h, 'hud/%s.png' % name)
+    # same look as the Help page overlays: neutral side pads and shield pad, purple power-up pad
+    for name, mirror in [('padsLeft', None), ('padsIzq', None), ('padsRight', 'padsLeft'), ('padsDer', 'padsIzq')]:
+        w, h = 160, 576
+        if mirror is None:
+            t = guide_pad(w, h, NEUTRAL)
+            chevron(t, w, h, -1)
+            N.finish(t, w, h, 'hud/%s.png' % name)
+        else:
+            src = Image.open(os.path.join(ASSETS, 'res/hud/%s.png' % mirror)).convert('RGBA')
+            from PIL import ImageOps
+            ImageOps.mirror(src).save(os.path.join(ASSETS, 'res/hud/%s.png' % name))
     for name, w, h in [('padVertical', 160, 576), ('padHorizontal', 392, 284)]:
         N.finish(glass_pad(w, h), w, h, 'hud/%s.png' % name)
-    for name, text in [('padsShield', 'Switch\nShield'), ('padsItem', 'Use\npower-up'), ('padsShieldEsp', 'Cambiar\nEscudo'), ('padsItemEsp', 'Usar Objeto')]:
-        t = glass_pad(392, 284)
+    for name, text, col in [('padsShield', 'Switch\nShield', NEUTRAL), ('padsItem', 'Use\npower-up', PURPLE),
+                            ('padsShieldEsp', 'Cambiar\nEscudo', NEUTRAL), ('padsItemEsp', 'Usar Objeto', PURPLE)]:
+        t = guide_pad(392, 284, col)
         m = font.mask(text, 40)
         # the two-line Switch Shield label sits higher so the energy bar under the pad never covers it
-        center_text(t, m, t.width / 2, t.height * (0.34 if text.startswith(('Switch', 'Cambiar')) else 0.5), TUBE_WHITE, size=40)
+        center_text(t, m, t.width / 2, t.height * (0.34 if text.startswith(('Switch', 'Cambiar')) else 0.5), col, size=40)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 
