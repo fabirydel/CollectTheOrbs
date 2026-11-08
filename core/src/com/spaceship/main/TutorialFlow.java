@@ -282,7 +282,10 @@ class TutorialFlow {
 			pad(sb, ps.tutPadRight(), a);
 			break;
 		case RED:
-			box(sb, ps.tutPadShield(), 0.85f, 0.88f, 0.95f, a, u);
+			if (ps.tutShieldBlue())
+				pad(sb, ps.tutPadShield(), 1f, 0.23f, 0.36f, a);
+			else
+				pad(sb, ps.tutPadShield(), 0.13f, 0.83f, 0.93f, a);
 			break;
 		case WRONG:
 		case LIFE:
@@ -290,7 +293,7 @@ class TutorialFlow {
 			break;
 		case USE:
 			box(sb, ps.tutItemRing(), 1f, 0.75f, 0.18f, a, u);
-			pad(sb, ps.tutPadItem(), a);
+			pad(sb, ps.tutPadItem(), 0.75f, 0.35f, 1f, a);
 			break;
 		case GAIN:
 			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
@@ -329,12 +332,16 @@ class TutorialFlow {
 
 	/** pulses one of the on-screen control pads (the same boxes the Controls setting shows), drawn even when that setting is off */
 	private void pad(SpriteBatch sb, Sprite pad, float a) {
+		pad(sb, pad, 1f, 1f, 1f, a);
+	}
+
+	private void pad(SpriteBatch sb, Sprite pad, float r, float g, float b, float a) {
 		if (pad == null)
 			return;
-		float old = pad.getColor().a;
-		pad.setAlpha(Math.min(1f, (ps.tutControlsOn() ? 0.5f : 0.8f) * a));
+		float oldR = pad.getColor().r, oldG = pad.getColor().g, oldB = pad.getColor().b, oldA = pad.getColor().a;
+		pad.setColor(r, g, b, Math.min(1f, (ps.tutControlsOn() ? 0.6f : 0.85f) * a));
 		pad.draw(sb);
-		pad.setAlpha(old);
+		pad.setColor(oldR, oldG, oldB, oldA);
 	}
 
 	private void counterBox(SpriteBatch sb, boolean blue, float r, float g, float b, float a, float u) {
