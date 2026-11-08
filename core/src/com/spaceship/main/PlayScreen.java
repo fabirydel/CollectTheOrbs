@@ -846,11 +846,11 @@ public class PlayScreen implements Screen {
 								changeBlueScore = true;
 								totalBlues = totalBlues + blues;
 								if(blues % 2 == 0){
-									totalReds = totalReds + blues/2;
-									totalOrbs = totalOrbs + reds + blues/2 + lifesCounter + objCounter;
+									totalReds = totalReds + blues;
+									totalOrbs = totalOrbs + reds + blues + lifesCounter + objCounter;
 								}else{
-									totalReds = totalReds + (blues - 1)/2;
-									totalOrbs = totalOrbs + reds + (blues - 1)/2 + lifesCounter + objCounter;
+									totalReds = totalReds + blues;
+									totalOrbs = totalOrbs + reds + blues + lifesCounter + objCounter;
 								}
 							}
 						}, 1.46f);
@@ -863,11 +863,11 @@ public class PlayScreen implements Screen {
 								changeRedScore = true;
 								totalReds = totalReds + reds;
 								if(reds % 2 == 0){
-									totalBlues = totalBlues + reds/2;
-									totalOrbs = totalOrbs + reds + reds/2 + lifesCounter + objCounter;
+									totalBlues = totalBlues + reds;
+									totalOrbs = totalOrbs + reds + blues + lifesCounter + objCounter;
 								}else{
-									totalBlues = totalBlues + (reds - 1)/2;
-									totalOrbs = totalOrbs + reds + (reds - 1)/2 + lifesCounter + objCounter;
+									totalBlues = totalBlues + reds;
+									totalOrbs = totalOrbs + reds + blues + lifesCounter + objCounter;
 								}
 							}
 						}, 1.46f);
@@ -1037,16 +1037,10 @@ public class PlayScreen implements Screen {
 								}
 								if(blues > reds){
 									game.getMMS().redBalls = game.getMMS().redBalls + reds; 
-									if(reds % 2 == 0)
-										game.getMMS().blueBalls = game.getMMS().blueBalls + reds/2;
-									else
-										game.getMMS().blueBalls = game.getMMS().blueBalls + (reds - 1)/2;
+									game.getMMS().blueBalls = game.getMMS().blueBalls + reds;
 								}else if(reds > blues){
 									game.getMMS().blueBalls = game.getMMS().blueBalls + blues; 
-									if(blues % 2 == 0)
-										game.getMMS().redBalls = game.getMMS().redBalls + blues/2;
-									else
-										game.getMMS().redBalls = game.getMMS().redBalls + (blues - 1)/2;
+									game.getMMS().redBalls = game.getMMS().redBalls + blues;
 								}else{
 									game.getMMS().redBalls = game.getMMS().redBalls + reds; 
 									game.getMMS().blueBalls = game.getMMS().blueBalls + blues; 
@@ -1548,11 +1542,8 @@ public class PlayScreen implements Screen {
 							canTweenRedScore = false;
 						}	
 					}
-					if(reds > 1){
-						if(reds % 2 == 0)
-							bluesFont3.draw(game.batch, "+" + Integer.toString(reds/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString(reds/2)).width - blueCounter.getWidth()/4, blueFont3Height);		
-						else
-							bluesFont3.draw(game.batch, "+" + Integer.toString((reds - 1)/2), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString((reds - 1)/2)).width - blueCounter.getWidth()/4, blueFont3Height);		
+					if(reds > 0){
+						bluesFont3.draw(game.batch, "+" + Integer.toString(reds), blueCounter.getX() - com.spaceship.handlers.FontUtil.bounds(bluesFont3, "+" + Integer.toString(reds)).width - blueCounter.getWidth()/4, blueFont3Height);		
 						bluesFont3.getData().setScale(x, y);
 						if(bluesFont3.getColor().a > 0){
 							blueFont3Height = blueFont3Height + 2.25f;
@@ -1577,11 +1568,8 @@ public class PlayScreen implements Screen {
 							canTweenBlueScore = false;
 						}	
 					}
-					if(blues > 1){
-						if(blues % 2 == 0)
-							redsFont3.draw(game.batch, "+" + Integer.toString(blues/2),redCounter.getX() + 1.25f*redCounter.getWidth() + com.spaceship.handlers.FontUtil.bounds(redsFont3, Integer.toString(game.getMMS().redBalls/10)).width - com.spaceship.handlers.FontUtil.bounds(redsFont3, "+").width, redFont3Height);		
-						else
-							redsFont3.draw(game.batch, "+" + Integer.toString((blues - 1)/2),redCounter.getX() + 1.25f*redCounter.getWidth() + com.spaceship.handlers.FontUtil.bounds(redsFont3, Integer.toString(game.getMMS().redBalls/10)).width - com.spaceship.handlers.FontUtil.bounds(redsFont3, "+").width, redFont3Height);		
+					if(blues > 0){
+						redsFont3.draw(game.batch, "+" + Integer.toString(blues),redCounter.getX() + 1.25f*redCounter.getWidth() + com.spaceship.handlers.FontUtil.bounds(redsFont3, Integer.toString(game.getMMS().redBalls/10)).width - com.spaceship.handlers.FontUtil.bounds(redsFont3, "+").width, redFont3Height);		
 						redsFont3.getData().setScale(x, y);
 						if(redsFont3.getColor().a > 0){
 							redFont3Height = redFont3Height + 2.25f;
@@ -1738,11 +1726,11 @@ public class PlayScreen implements Screen {
 					String blueText = null, redText = null;
 					if(changeRedScore){
 						redText = String.valueOf(mm.redBalls + reds);
-						blueText = String.valueOf(mm.blueBalls + (reds % 2 == 0 ? reds/2 : (reds - 1)/2));
+						blueText = String.valueOf(mm.blueBalls + reds);
 					}
 					if(changeBlueScore){
 						blueText = String.valueOf(mm.blueBalls + blues);
-						redText = String.valueOf(mm.redBalls + (blues % 2 == 0 ? blues/2 : (blues - 1)/2));
+						redText = String.valueOf(mm.redBalls + blues);
 					}
 					if(changeBothScore){
 						blueText = String.valueOf(mm.blueBalls + blues);
@@ -2518,18 +2506,12 @@ public class PlayScreen implements Screen {
 			if(reds > blues){ 
 				tempB += blues;
 				game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET blueBalls=" + tempB + ";");
-				if(blues % 2 == 0)
-					tempR += blues/2;
-				else
-					tempR += (blues - 1)/2;
+				tempR += blues;
 				game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET redBalls=" + tempR + ";");
 			}else if(blues > reds){
 				tempR += reds;
 				game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET redBalls=" + tempR + ";");
-				if(reds % 2 == 0)
-					tempB += reds/2;
-				else
-					tempB += (reds - 1)/2;
+				tempB += reds;
 				game.getDataBase().execSQL("UPDATE seleccionsAndNumbers SET blueBalls=" + tempB + ";");	
 			}else{
 				tempR += reds;
