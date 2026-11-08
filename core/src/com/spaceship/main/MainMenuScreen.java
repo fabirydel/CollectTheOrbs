@@ -860,7 +860,7 @@ public class MainMenuScreen implements Screen {
 		bGalaxies.setSize((fx(bGalaxies.getWidth()) + fy(bGalaxies.getHeight()))/2, (fx(bGalaxies.getWidth()) + fy(bGalaxies.getHeight()))/2);
 		bSoundOn.setSize((fx(bSoundOn.getWidth()) + fy(bSoundOn.getHeight()))/2, (fx(bSoundOn.getWidth()) + fy(bSoundOn.getHeight()))/2);
 		bSoundOff.setSize((fx(bSoundOff.getWidth()) + fy(bSoundOff.getHeight()))/2, (fx(bSoundOff.getWidth()) + fy(bSoundOff.getHeight()))/2);
-		bBack.setSize((fx(bBack.getWidth()) + fy(bBack.getHeight()))/2, (fy(bBack.getWidth()) + fy(bBack.getHeight()))/2);
+		bBack.setSize(1.4f*(fx(bBack.getWidth()) + fy(bBack.getHeight()))/2, 1.4f*(fy(bBack.getWidth()) + fy(bBack.getHeight()))/2);
 		bYes.setSize((fx(bYes.getWidth()) + fy(bYes.getHeight()))/2, (fx(bYes.getWidth()) + fy(bYes.getHeight()))/2);
 		bNo.setSize((fx(bNo.getWidth()) + fy(bNo.getHeight()))/2, (fx(bNo.getWidth()) + fy(bNo.getHeight()))/2);
 		bQuestionEN.setSize(fx(bQuestionEN.getWidth()), fy(bQuestionEN.getHeight()));
