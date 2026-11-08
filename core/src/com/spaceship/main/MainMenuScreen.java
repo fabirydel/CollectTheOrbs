@@ -1268,16 +1268,20 @@ public class MainMenuScreen implements Screen {
 		bShips.draw(game.batch);
 		bGalaxies.draw(game.batch);
 		bSettings.draw(game.batch);
-		bGo.draw(game.batch);
 		if(state == STANDBY){
-			// the main call to action breathes: a second additive pass of the same art, slowly pulsing
+			// the main call to action breathes: glowing -> dimmer -> glowing...
 			goPulse += delta;
+			float k = 0.5f + 0.5f * MathUtils.sin(goPulse * 3.0f);	// 0..1, ~2s cycle
 			float oldA = bGo.getColor().a;
-			bGo.setAlpha(oldA * (0.12f + 0.28f * (0.5f + 0.5f * MathUtils.sin(goPulse * 2.4f))));
+			bGo.setAlpha(oldA * (0.55f + 0.45f * k));
+			bGo.draw(game.batch);
+			bGo.setAlpha(oldA * 0.75f * k);
 			Fx.additiveOn(game.batch);
 			bGo.draw(game.batch);
 			Fx.additiveOff(game.batch);
 			bGo.setAlpha(oldA);
+		}else{
+			bGo.draw(game.batch);
 		}
 		bExit.draw(game.batch);
 		bTrophy.draw(game.batch);
