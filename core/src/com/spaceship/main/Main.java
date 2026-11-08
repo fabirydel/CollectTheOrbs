@@ -406,9 +406,6 @@ public class Main extends Game{
 		return statsDB;
 	}
 
-	/** the tutorial was started from Settings: when it ends, go back there instead of playing on */
-	public static boolean tutorialFromSettings;
-
 	public static boolean isTutorial() {
 		return tutorial;
 	}

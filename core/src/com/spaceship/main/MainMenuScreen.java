@@ -1149,18 +1149,7 @@ public class MainMenuScreen implements Screen {
 		stageUpgrades.addAction(moveTo(0, stageUpgrades.getHeight()));	
 		stageStats.addAction(moveTo(0, stageStats.getHeight()));	
 		stageSettings.addAction(moveTo(0, stageSettings.getHeight()));	
-		stageHelp.addAction(moveTo(0, stageHelp.getHeight()));	
-
-		// coming back from the tutorial started in Settings: reopen Settings
-		if(Main.tutorialFromSettings){
-			Main.tutorialFromSettings = false;
-			state = SETTINGS;
-			canSelect = true;
-			stageSettings.getRoot().clearActions();
-			stageSettings.addAction(moveTo(0, 0));
-			Gdx.input.setInputProcessor(stageSettings);
-			effectsMenuOn();
-		}
+		stageHelp.addAction(moveTo(0, stageHelp.getHeight()));
 	}
 
 	/** the Repeat tutorial line follows the language switch */
@@ -2952,7 +2941,7 @@ public class MainMenuScreen implements Screen {
 		}else{
 			imgsSttngs.add(iEspanol).width(iEspanol.getWidth()).height(iEspanol.getHeight()).padBottom(iSoundOn.getHeight()/4).right();
 		}
-		// repeat the guided first run: closes Settings and starts it straight away; it returns here when it ends
+		// repeat the guided first run: closes Settings and starts a normal run with the tutorial first
 		replayLabel = new Label(language == ON ? "Repeat tutorial" : "Repetir tutorial", skin);
 		replayLabel.setFontScale(3*x/4, 3*y/4);
 		replayLabel.setAlignment(Align.left);
@@ -2962,7 +2951,6 @@ public class MainMenuScreen implements Screen {
 					return;
 				buttonSmall.play();
 				Main.setTutorial(true);
-				Main.tutorialFromSettings = true;
 				state = STANDBY;
 				stageSettings.addAction(moveTo(0, stageSettings.getHeight(), 0.5f));
 				effectsMenuOff();

@@ -2208,15 +2208,6 @@ public class PlayScreen implements Screen {
 			tutorial.dispose();
 		tutorial = null;
 		ship.tutLock = false;
-		if(Main.tutorialFromSettings){
-			// started from Settings: back to the menu (Settings reopens there), nothing is saved
-			Gdx.app.postRunnable(new Runnable(){
-				public void run(){
-					game.setScreen(game.getMMS());
-				}
-			});
-			return;
-		}
 		dBalls.clear();
 		for(Ball b : balls){
 			b.setPosition(MathUtils.random((fx(20) + fy(20))/2, Gdx.graphics.getWidth() - (fx(20) + fy(20))/2), Gdx.graphics.getHeight() + fxy(20));
