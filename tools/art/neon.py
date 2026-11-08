@@ -407,12 +407,12 @@ def _(p):
 
 @glyph('en')
 def _(p):
-    p.text(0, 0.05, 'EN', 0.95)
+    p.text(0, 0.05, 'EN', 1.2)
 
 
 @glyph('es')
 def _(p):
-    p.text(0, 0.05, 'ES', 0.95)
+    p.text(0, 0.05, 'ES', 1.2)
 
 
 SLASH = ('no',)

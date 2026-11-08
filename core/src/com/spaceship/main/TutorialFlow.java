@@ -20,7 +20,7 @@ import com.spaceship.objects.Spaceship;
  * keep both colours even.
  */
 class TutorialFlow {
-	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, READY = 10, GO = 11, DONE = 12;
+	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, HIDE = 10, READY = 11, GO = 12, DONE = 13;
 	private static final int ORB_SPEED = 240;
 
 	private final PlayScreen ps;
@@ -86,6 +86,8 @@ class TutorialFlow {
 			return en ? "There are more power-ups that can help you..." : "Hay m\u00e1s poderes que te pueden ayudar...";
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n\u00a1Mantenlos parejos!";
+		case HIDE:
+			return en ? "You can hide these controls from the pause menu" : "Puedes ocultar estos controles desde el men\u00fa de pausa";
 		case READY:
 			return en ? "Ready?" : "Listo?";
 		case GO:
@@ -223,6 +225,10 @@ class TutorialFlow {
 			}
 			if (evenSpawned >= 5 && stepTime > 11f)
 				next(0f);
+			break;
+		case HIDE:
+			if (stepTime > 3.2f)
+				next(0.3f);
 			break;
 		case READY:
 			if (stepTime > 1.1f)
