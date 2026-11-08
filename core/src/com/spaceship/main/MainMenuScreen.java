@@ -2010,7 +2010,7 @@ public class MainMenuScreen implements Screen {
 			objectsDurationLabel = new Label("Power-up Duration", skin);
 			objectsDurationLabel.setFontScale(x/2, y/2);
 		}else{
-			objectsDurationLabel = new Label("Duracion de poderes", skin);
+			objectsDurationLabel = new Label("Duraci\u00f3n de poder", skin);
 			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 		}
 		objectsDurationLabel.setSize(fx(objectsDurationLabel.getWidth()/2), fy(objectsDurationLabel.getHeight()/2));
@@ -3169,7 +3169,7 @@ public class MainMenuScreen implements Screen {
 			objectsStartLabel.setText("Poderes iniciales");
 			objectsStartLabel.setAlignment(Align.left);
 			objectsStartLabel.setFontScale(x/2.25f, y/2.25f);
-			objectsDurationLabel.setText("Duracion de poderes");
+			objectsDurationLabel.setText("Duraci\u00f3n de poder");
 			objectsDurationLabel.setAlignment(Align.left);
 			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 
