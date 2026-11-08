@@ -1271,11 +1271,11 @@ public class MainMenuScreen implements Screen {
 		if(state == STANDBY){
 			// the main call to action breathes: glowing -> dimmer -> glowing...
 			goPulse += delta;
-			float k = 0.5f + 0.5f * MathUtils.sin(goPulse * 3.0f);	// 0..1, ~2s cycle
+			float k = 0.5f + 0.5f * MathUtils.sin(goPulse * 3.8f);	// 0..1, ~2s cycle
 			float oldA = bGo.getColor().a;
-			bGo.setAlpha(oldA * (0.55f + 0.45f * k));
+			bGo.setAlpha(oldA * (0.8f + 0.2f * k));
 			bGo.draw(game.batch);
-			bGo.setAlpha(oldA * 0.75f * k);
+			bGo.setAlpha(oldA * 0.32f * k);
 			Fx.additiveOn(game.batch);
 			bGo.draw(game.batch);
 			Fx.additiveOff(game.batch);
