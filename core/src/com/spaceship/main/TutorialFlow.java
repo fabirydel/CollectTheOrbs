@@ -292,7 +292,7 @@ class TutorialFlow {
 			box(sb, ps.tutLifeBar(), 1f, 0.75f, 0.18f, a, u);
 			break;
 		case USE:
-			box(sb, ps.tutItemRing(), 1f, 0.75f, 0.18f, a, u);
+			box(sb, ps.tutItemRing(), 0.75f, 0.35f, 1f, a, u);
 			pad(sb, ps.tutPadItem(), 0.75f, 0.35f, 1f, a);
 			break;
 		case GAIN:
