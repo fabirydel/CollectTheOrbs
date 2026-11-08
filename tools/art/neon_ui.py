@@ -390,12 +390,12 @@ def build_pads():
             ImageOps.mirror(src).save(os.path.join(ASSETS, 'res/hud/%s.png' % name))
     for name, w, h in [('padVertical', 160, 576), ('padHorizontal', 392, 284)]:
         N.finish(glass_pad(w, h), w, h, 'hud/%s.png' % name)
-    for name, text, col in [('padsShield', 'Switch\nShield', NEUTRAL), ('padsItem', 'Use\npower-up', PURPLE),
-                            ('padsShieldEsp', 'Cambiar\nEscudo', NEUTRAL), ('padsItemEsp', 'Usar Objeto', PURPLE)]:
+    for name, text, col in [('padsShield', 'switch\nshield', NEUTRAL), ('padsItem', 'use\npower-up', PURPLE),
+                            ('padsShieldEsp', 'cambiar\nescudo', NEUTRAL), ('padsItemEsp', 'usar\nobjeto', PURPLE)]:
         t = guide_pad(392, 284, col)
         m = font.mask(text, 40)
         # the two-line Switch Shield label sits higher so the energy bar under the pad never covers it
-        center_text(t, m, t.width / 2, t.height * (0.34 if text.startswith(('Switch', 'Cambiar')) else 0.5), col, size=40)
+        center_text(t, m, t.width / 2, t.height * (0.34 if text.startswith(('switch', 'cambiar')) else 0.5), col, size=40)
         N.finish(t, 392, 284, 'hud/%s.png' % name)
 
 

@@ -31,7 +31,7 @@ TEXT = {
         'items': ['Blue orbs converter', 'Red orbs converter', 'Blue orbs have a value of 2', 'Red orbs have a value of 2',
                   "Orb's speed decreases", 'No damage from blue orbs', 'No damage from red orbs',
                   'Blue orbs have a value of 3', 'Red orbs have a value of 3', 'Collects both orbs'],
-        'pads': ['Left', 'Right', 'Use\npower-up', 'Switch\nShield'],
+        'pads': ['Left', 'Right', 'use\npower-up', 'switch\nshield'],
     },
     'es': {
         'inst': [
@@ -48,7 +48,7 @@ TEXT = {
         'items': ['Convertidor orbes azules', 'Convertidor orbes rojos', 'Orbes azules valen por 2', 'Orbes rojos valen por 2',
                   'Velocidad de los orbes disminuye', 'Inmune a orbes azules', 'Inmune a orbes rojos',
                   'Orbes azules valen por 3', 'Orbes rojos valen por 3', 'Recoge ambos orbes'],
-        'pads': ['Izquierda', 'Derecha', 'Usar Objeto', 'Cambiar\nEscudo'],
+        'pads': ['Izquierda', 'Derecha', 'usar\nobjeto', 'cambiar\nescudo'],
     },
 }
 
