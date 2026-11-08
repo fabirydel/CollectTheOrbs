@@ -20,7 +20,7 @@ import com.spaceship.objects.Spaceship;
  * keep both colours even.
  */
 class TutorialFlow {
-	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, GO = 10, DONE = 11;
+	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, READY = 10, GO = 11, DONE = 12;
 	private static final int ORB_SPEED = 240;
 
 	private final PlayScreen ps;
@@ -86,6 +86,8 @@ class TutorialFlow {
 			return en ? "There are more powers that can help you..." : "Hay m\u00e1s poderes que te pueden ayudar...";
 		case EVEN:
 			return en ? "Your score is the colour you collect the least.\nKeep them even!" : "Tu puntaje es el color que menos recoges.\n\u00a1Mantenlos parejos!";
+		case READY:
+			return en ? "Ready?" : "\u00bfListo?";
 		case GO:
 			return "GO!";
 		}
@@ -222,6 +224,10 @@ class TutorialFlow {
 			if (evenSpawned >= 5 && stepTime > 11f)
 				next(0f);
 			break;
+		case READY:
+			if (stepTime > 1.1f)
+				next(0f);
+			break;
 		case GO:
 			if (stepTime > 0.9f)
 				finish();
@@ -242,7 +248,7 @@ class TutorialFlow {
 			evenSpawned = 0;
 			nextSpawn = 0.6f;
 		}
-		if (step == GO)
+		if (step == GO || step == READY)
 			stepTime = 0f;
 	}
 
@@ -305,7 +311,7 @@ class TutorialFlow {
 
 		// the line of text on a dark band
 		float oldScaleX = font.getData().scaleX, oldScaleY = font.getData().scaleY;
-		float s = step == GO ? 1.5f * u : 0.52f * u;
+		float s = (step == GO || step == READY) ? 1.5f * u : 0.52f * u;
 		font.getData().setScale(s);
 		font.setColor(1f, 1f, 1f, alpha);
 		String t = text();
