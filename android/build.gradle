@@ -14,8 +14,8 @@ android {
         applicationId 'com.fabirydel.collecttheorbs'
         minSdk 24
         targetSdk 36
-        versionCode 12
-        versionName '2.0.9'
+        versionCode 13
+        versionName '2.0.10'
         manifestPlaceholders = [appLabel: '@string/app_name', admobAppId: 'ca-app-pub-6364399383456402~4696765155']
         resValue 'string', 'admob_interstitial_id', 'ca-app-pub-6364399383456402/9451106223'
     }
