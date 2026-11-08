@@ -97,8 +97,6 @@ class TutorialFlow {
 		dt = Math.min(dt, 0.1f);
 		stepTime += dt;
 		pulse += dt;
-		if (Gdx.input.justTouched() && skipHit(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY()))
-			skipRequested = true;
 		if (skipRequested) {
 			finish();
 			return;
@@ -264,11 +262,6 @@ class TutorialFlow {
 
 	// ---- drawing (inside the play screen's open batch) ----
 
-	private boolean skipHit(float sx, float sy) {
-		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
-		return Math.abs(sx - w / 2) < 0.16f * w && sy > 0.60f * h - 0.10f * h && sy < 0.60f * h + 0.02f * h;
-	}
-
 	void draw(SpriteBatch sb, BitmapFont font) {
 		if (step == DONE)
 			return;
@@ -324,12 +317,6 @@ class TutorialFlow {
 		sb.setColor(1f, 1f, 1f, 1f);
 		font.draw(sb, layout, 0.08f * w, cy + layout.height / 2);
 
-		if (step != GO) {
-			font.getData().setScale(0.34f * u);
-			font.setColor(1f, 1f, 1f, 0.55f * alpha);
-			layout.setText(font, english() ? "Skip" : "Omitir", font.getColor(), w, Align.center, false);
-			font.draw(sb, layout, 0, 0.60f * h);
-		}
 		font.getData().setScale(oldScaleX, oldScaleY);
 		font.setColor(1f, 1f, 1f, 1f);
 		sb.setColor(1f, 1f, 1f, 1f);
