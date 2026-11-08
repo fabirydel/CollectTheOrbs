@@ -1995,7 +1995,7 @@ public class MainMenuScreen implements Screen {
 			objectsLabel = new Label("Power-up Slots", skin);
 			objectsLabel.setFontScale(x/2, y/2);
 		}else{
-			objectsLabel = new Label("Lugar para poderes", skin);
+			objectsLabel = new Label("Slots de poder", skin);
 			objectsLabel.setFontScale(x/2.25f, y/2.25f);
 		}objectsLabel.setSize(fx(objectsLabel.getWidth()/2), fy(objectsLabel.getHeight()/2));
 
@@ -3163,7 +3163,7 @@ public class MainMenuScreen implements Screen {
 			energyStartLabel.setText("Energia inicial");
 			energyStartLabel.setAlignment(Align.left);
 			energyStartLabel.setFontScale(x/2.25f, y/2.25f);
-			objectsLabel.setText("Lugar para poderes");
+			objectsLabel.setText("Slots de poder");
 			objectsLabel.setAlignment(Align.left);
 			objectsLabel.setFontScale(x/2.25f, y/2.25f);
 			objectsStartLabel.setText("Poderes iniciales");
