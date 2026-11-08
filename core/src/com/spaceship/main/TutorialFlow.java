@@ -303,8 +303,11 @@ class TutorialFlow {
 			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
 			break;
 		case EVEN:
-			counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
-			counterBox(sb, false, 1f, 0.23f, 0.36f, a, u);
+			// only the colour collected the least is the score
+			if (ps.tutBlues() <= ps.tutReds())
+				counterBox(sb, true, 0.13f, 0.83f, 0.93f, a, u);
+			if (ps.tutReds() <= ps.tutBlues())
+				counterBox(sb, false, 1f, 0.23f, 0.36f, a, u);
 			break;
 		}
 		Fx.additiveOff(sb);
