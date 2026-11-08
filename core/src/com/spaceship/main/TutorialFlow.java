@@ -21,6 +21,8 @@ import com.spaceship.objects.Spaceship;
  */
 class TutorialFlow {
 	private static final float FADE = 0.35f;
+	private boolean redStartBlue = true, redSwitched;
+	private float redGlow = 1f;
 	private int fadeStep = -1;
 	private float fadeT = 99f;
 	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, HIDE = 10, READY = 11, GO = 12, DONE = 13;
@@ -140,6 +142,11 @@ class TutorialFlow {
 			}
 			break;
 		case RED:
+			// the shield pad stops flashing once the player has switched shields
+			if (!redSwitched && ps.tutShieldBlue() != redStartBlue)
+				redSwitched = true;
+			if (redSwitched)
+				redGlow = Math.max(0f, redGlow - dt / 0.3f);
 			if (stepTime > 0.5f && orb == null)
 				orb = spawn(Ball.B_RED);
 			if (orb != null && !ps.tutAlive(orb)) {
@@ -252,6 +259,11 @@ class TutorialFlow {
 		stepTime = -pause;
 		orb = null;
 		tries = 0;
+		if (step == RED) {
+			redSwitched = false;
+			redGlow = 1f;
+			redStartBlue = ps.tutShieldBlue();
+		}
 		if (step == GAIN) {
 			evenSpawned = 0;
 			nextSpawn = 0f;
@@ -306,10 +318,10 @@ class TutorialFlow {
 			pad(sb, ps.tutPadRight(), a);
 			break;
 		case RED:
-			if (ps.tutShieldBlue())
-				pad(sb, ps.tutPadShield(), 1f, 0.23f, 0.36f, a);
+			if (redStartBlue)
+				pad(sb, ps.tutPadShield(), 1f, 0.23f, 0.36f, a * redGlow);
 			else
-				pad(sb, ps.tutPadShield(), 0.13f, 0.83f, 0.93f, a);
+				pad(sb, ps.tutPadShield(), 0.13f, 0.83f, 0.93f, a * redGlow);
 			break;
 		case WRONG:
 		case LIFE:
