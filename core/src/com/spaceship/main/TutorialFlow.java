@@ -20,6 +20,9 @@ import com.spaceship.objects.Spaceship;
  * keep both colours even.
  */
 class TutorialFlow {
+	private static final float FADE = 0.35f;
+	private int fadeStep = -1;
+	private float fadeT = 99f;
 	private static final int MOVE = 0, BLUE = 1, RED = 2, WRONG = 3, LIFE = 4, ITEM = 5, USE = 6, GAIN = 7, TIP = 8, EVEN = 9, HIDE = 10, READY = 11, GO = 12, DONE = 13;
 	private static final int ORB_SPEED = 240;
 
@@ -63,9 +66,9 @@ class TutorialFlow {
 		return game.getMMS().language == game.getMMS().ON;
 	}
 
-	private String text() {
+	private String text(int st) {
 		boolean en = english();
-		switch (step) {
+		switch (st) {
 		case MOVE:
 			return en ? "Hold the left or right side of the screen to move" : "Toca el lado izquierdo o derecho de la pantalla para moverte";
 		case BLUE:
@@ -100,6 +103,7 @@ class TutorialFlow {
 	void update(float dt) {
 		dt = Math.min(dt, 0.1f);
 		stepTime += dt;
+		fadeT += dt;
 		pulse += dt;
 		if (skipRequested) {
 			finish();
@@ -219,29 +223,31 @@ class TutorialFlow {
 			break;
 		case EVEN:
 			if (stepTime > nextSpawn && evenSpawned < 5) {
-				spawn(evenSpawned % 2 == 0 ? Ball.B_RED : Ball.B_BLUE);
+				orb = spawn(evenSpawned % 2 == 0 ? Ball.B_RED : Ball.B_BLUE);
 				evenSpawned++;
 				nextSpawn = stepTime + 1.9f;
 			}
-			if (evenSpawned >= 5 && stepTime > 11f)
-				next(0f);
+			if (evenSpawned >= 5 && ((orb != null && !ps.tutAlive(orb)) || stepTime > 20f))
+				next(0.4f);
 			break;
 		case HIDE:
-			if (stepTime > 3.2f)
+			if (stepTime > 3.6f)
 				next(0.3f);
 			break;
 		case READY:
-			if (stepTime > 1.1f)
+			if (stepTime > 2.0f)
 				next(0f);
 			break;
 		case GO:
-			if (stepTime > 0.9f)
+			if (stepTime > 1.0f)
 				finish();
 			break;
 		}
 	}
 
 	private void next(float pause) {
+		fadeStep = step;
+		fadeT = 0f;
 		step++;
 		stepTime = -pause;
 		orb = null;
@@ -255,7 +261,7 @@ class TutorialFlow {
 			nextSpawn = 0.6f;
 		}
 		if (step == GO || step == READY)
-			stepTime = 0f;
+			stepTime = -Math.max(pause, FADE);
 	}
 
 	private void finish() {
@@ -277,16 +283,24 @@ class TutorialFlow {
 	void draw(SpriteBatch sb, BitmapFont font) {
 		if (step == DONE)
 			return;
-		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
-		float u = Math.min(w / 720f, h / 1280f);
+		// the step that just ended fades out while the next one waits its turn
+		if (fadeStep >= 0 && fadeStep != DONE && fadeT < FADE)
+			render(sb, font, fadeStep, 1f - fadeT / FADE);
 		float alpha = stepTime < 0f ? 0f : Math.min(1f, stepTime / 0.35f);
 		if (step == GO)
-			alpha = Math.max(0f, 1f - stepTime / 0.9f);
+			alpha = Math.max(0f, Math.min(Math.min(1f, stepTime / 0.15f), (1.0f - stepTime) / 0.35f));
+		if (alpha > 0f)
+			render(sb, font, step, alpha);
+	}
+
+	private void render(SpriteBatch sb, BitmapFont font, int st, float alpha) {
+		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
+		float u = Math.min(w / 720f, h / 1280f);
 
 		// highlights under the text
 		Fx.additiveOn(sb);
 		float a = (0.45f + 0.35f * MathUtils.sin(pulse * 5f)) * alpha;
-		switch (step) {
+		switch (st) {
 		case MOVE:
 			pad(sb, ps.tutPadLeft(), a);
 			pad(sb, ps.tutPadRight(), a);
@@ -320,10 +334,10 @@ class TutorialFlow {
 
 		// the line of text on a dark band
 		float oldScaleX = font.getData().scaleX, oldScaleY = font.getData().scaleY;
-		float s = (step == GO || step == READY) ? 1.5f * u : 0.52f * u;
+		float s = (st == GO || st == READY) ? 1.5f * u : 0.52f * u;
 		font.getData().setScale(s);
 		font.setColor(1f, 1f, 1f, alpha);
-		String t = text();
+		String t = text(st);
 		layout.setText(font, t, font.getColor(), 0.84f * w, Align.center, true);
 		float cy = 0.70f * h;
 		float bandH = layout.height + 56f * u;
