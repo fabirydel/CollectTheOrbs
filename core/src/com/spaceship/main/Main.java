@@ -140,24 +140,24 @@ public class Main extends Game{
 			cursor = upgradesPriceDB.rawQuery("SELECT COUNT(id) FROM upgradesPrice;");
 			if(cursor != null && cursor.next())
 				if(String.valueOf(cursor.getInt(0)).equals("0")){ 
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (0, 0, 50)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (1, 0, 100)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (2, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (3, 0, 500)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (4, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (5, 0, 500)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (6, 0, 100)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (7, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (8, 0, 500)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (9, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (10, 0, 500)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (11, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (12, 0, 500)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (13, 0, 1000)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (14, 0, 50)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (15, 0, 100)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (16, 0, 250)");
-					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (17, 0, 500)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (0, 0, 25)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (1, 0, 50)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (2, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (3, 0, 150)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (4, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (5, 0, 150)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (6, 0, 50)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (7, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (8, 0, 150)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (9, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (10, 0, 150)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (11, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (12, 0, 150)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (13, 0, 200)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (14, 0, 25)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (15, 0, 50)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (16, 0, 100)");
+					upgradesPriceDB.execSQL("INSERT INTO upgradesPrice (id, bought, lifeBalls) VALUES (17, 0, 150)");
 					
 				}	
 
@@ -343,6 +343,15 @@ public class Main extends Game{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		// upgrade prices were lowered: bring existing saves to the current price list (safe to repeat, bought flags are untouched)
+		try {
+			int[][] upgradePrices = {{0,25},{1,50},{2,100},{3,150},{4,100},{5,150},{6,50},{7,100},{8,150},{9,100},{10,150},{11,100},{12,150},{13,200},{14,25},{15,50},{16,100},{17,150}};
+			for (int[] up : upgradePrices)
+				upgradesPriceDB.execSQL("UPDATE upgradesPrice SET lifeBalls=" + up[1] + " WHERE id=" + up[0] + ";");
+		} catch (SQLiteGdxException e) {
+			e.printStackTrace();
+		}
+
 		// ship prices were lowered: bring existing saves to the current price list (safe to repeat, bought flags are untouched)
 		try {
 			int[][] shipPrices = {{1,50,0},{2,0,50},{3,50,0},{4,0,50},{5,0,60},{6,50,50},{7,60,0},{8,50,50},{9,0,70},{10,70,0},{11,80,0},{12,60,60},{13,60,60},{14,0,80},{15,0,100},{16,100,0},{17,0,100},{18,100,0},{19,0,120},{20,120,0},{21,100,60},{22,80,80},{23,130,0},{24,0,130},{25,70,100},{26,0,150},{27,150,0},{28,150,0},{29,0,150},{30,110,110},{31,110,110},{32,110,110},{33,110,110},{34,150,90},{35,0,200},{36,200,0},{37,0,200},{38,200,0},{39,130,150},{40,150,130},{41,130,150},{42,160,140},{43,0,300},{44,300,0},{45,0,300},{46,300,0},{47,210,110},{48,200,120},{49,225,130},{50,0,400},{51,400,0},{52,175,250},{53,500,0},{54,0,500},{55,625,0},{56,0,625},{57,260,260},{58,260,260},{59,225,375},{60,375,225},{61,0,750},{62,750,0},{63,0,1000},{64,1000,0},{65,500,500},{66,500,500},{67,600,650},{68,1000,750},{69,750,1000},{70,0,2000},{71,2000,0},{72,1600,1200},{73,2000,2000},{74,2000,2000}};

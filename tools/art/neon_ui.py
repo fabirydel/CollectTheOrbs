@@ -309,7 +309,7 @@ def build_cards():
         N.finish(price, 1100, 298, 'bgs/bgsPrice%d.png' % s)
         N.finish(bought, 1100, 298, 'bgs/bgsBought%d.png' % s)
     sheet = N.canvas(745, 149)
-    for j, v in enumerate([50, 100, 250, 500, 1000]):
+    for j, v in enumerate([25, 50, 100, 150, 200]):
         t = tile(149, 149, (GOLD,), None, 14)
         m = font.mask(str(v), 44)
         put_text(t, m, 149 * N.U - 10 * N.U - m.width, 149 * N.U - 10 * N.U - m.height, GOLD, size=44)
