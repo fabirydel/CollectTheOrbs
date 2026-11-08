@@ -266,15 +266,15 @@ public class Main extends Game{
 			if(cursor != null && cursor.next())
 				if(String.valueOf(cursor.getInt(0)).equals("0")){
 					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (0, 1, 0, 0)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (1, 0, 250, 250)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (2, 0, 500, 500)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (3, 0, 750, 750)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (4, 0, 750, 750)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (5, 0, 1500, 1000)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (6, 0, 1000, 1500)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (7, 0, 3000, 2000)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (8, 0, 2000, 3000)");
-					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (9, 0, 5000, 5000)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (1, 0, 50, 50)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (2, 0, 100, 100)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (3, 0, 150, 150)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (4, 0, 150, 150)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (5, 0, 250, 200)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (6, 0, 200, 250)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (7, 0, 400, 300)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (8, 0, 300, 400)");
+					galaxiesDB.execSQL("INSERT INTO galaxies (id, bought, reds, blues) VALUES (9, 0, 500, 500)");
 				}		
 		} catch (SQLiteGdxException e) {
 			e.printStackTrace();
@@ -343,6 +343,15 @@ public class Main extends Game{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		// galaxy prices were lowered: bring existing saves to the current price list (safe to repeat, bought flags are untouched)
+		try {
+			int[][] galaxyPrices = {{1, 50, 50}, {2, 100, 100}, {3, 150, 150}, {4, 150, 150}, {5, 250, 200}, {6, 200, 250}, {7, 400, 300}, {8, 300, 400}, {9, 500, 500}};
+			for (int[] g : galaxyPrices)
+				galaxiesDB.execSQL("UPDATE galaxies SET reds=" + g[1] + ", blues=" + g[2] + " WHERE id=" + g[0] + ";");
+		} catch (SQLiteGdxException e) {
+			e.printStackTrace();
+		}
+
 		
 	    this.setScreen(new Splash(this));
 		
