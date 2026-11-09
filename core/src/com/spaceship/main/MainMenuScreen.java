@@ -2882,7 +2882,7 @@ public class MainMenuScreen implements Screen {
 		if(language == ON)
 			soundLabel = new Label("Sound FXs:", skin);
 		else
-			soundLabel = new Label("Efectos:", skin);
+			soundLabel = new Label("Sonidos:", skin);
 		soundLabel.setFontScale(3*x/4, 3*y/4);
 		soundLabel.setSize(fx(3*soundLabel.getWidth()/4), fy(3*soundLabel.getHeight()/4));
 
@@ -3120,7 +3120,7 @@ public class MainMenuScreen implements Screen {
 			
 			sttngsLabel.setText("Opciones");
 			sttngsLabel.setAlignment(Align.left);
-			soundLabel.setText("Efectos:");
+			soundLabel.setText("Sonidos:");
 			soundLabel.setAlignment(Align.left);
 			musicLabel.setText("Musica:");
 			refreshRemoveAdsText();
