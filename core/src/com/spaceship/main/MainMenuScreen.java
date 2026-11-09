@@ -2008,7 +2008,7 @@ public class MainMenuScreen implements Screen {
 
 		if(language == ON){
 			objectsDurationLabel = new Label("Power-up Duration", skin);
-			objectsDurationLabel.setFontScale(x/2, y/2);
+			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 		}else{
 			objectsDurationLabel = new Label("Duraci\u00f3n de poder", skin);
 			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
@@ -3302,7 +3302,7 @@ public class MainMenuScreen implements Screen {
 			objectsStartLabel.setFontScale(x/2, y/2);
 			objectsDurationLabel.setText("Power-up Duration");
 			objectsDurationLabel.setAlignment(Align.left);
-			objectsDurationLabel.setFontScale(x/2, y/2);
+			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 
 			stsLabel.setText("Stats");
 			stsLabel.setAlignment(Align.left);
