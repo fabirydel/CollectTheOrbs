@@ -3285,13 +3285,13 @@ public class MainMenuScreen implements Screen {
 			
 			upgLabel.setText("Upgrades");
 			upgLabel.setAlignment(Align.left);
-			speedLabel.setText("Ship's speed");
+			speedLabel.setText("Ship's Speed");
 			speedLabel.setAlignment(Align.left);
 			speedLabel.setFontScale(x/2, y/2);
-			energyLabel.setText("Energy bar");
+			energyLabel.setText("Energy Bar");
 			energyLabel.setAlignment(Align.left);
 			energyLabel.setFontScale(x/2, y/2);
-			energyStartLabel.setText("Starting energy");
+			energyStartLabel.setText("Starting Energy");
 			energyStartLabel.setAlignment(Align.left);
 			energyStartLabel.setFontScale(x/2, y/2);
 			objectsLabel.setText("Power-up Slots");
