@@ -132,40 +132,40 @@ public class Splash implements Screen{
 			game.assetManager.load("res/bgs/bgBlack2.png", Texture.class);
 			break;
 		case 1:
-			game.assetManager.load("res/bgs/bgBrownDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBrownDark2.png", Texture.class);			
+			game.assetManager.load("res/bgs/bgBrownDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBrownDark2.jpg", Texture.class);			
 			break;
 		case 2:
-			game.assetManager.load("res/bgs/bgPurple1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgPurple2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgPurple1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgPurple2.jpg", Texture.class);
 			break;
 		case 3:
-			game.assetManager.load("res/bgs/bgBlackRedDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlackRedDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlackRedDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlackRedDark2.jpg", Texture.class);
 			break;
 		case 4:
-			game.assetManager.load("res/bgs/bgAquaDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgAquaDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgAquaDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgAquaDark2.jpg", Texture.class);
 			break;
 		case 5:
-			game.assetManager.load("res/bgs/bgPinkDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgPinkDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgPinkDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgPinkDark2.jpg", Texture.class);
 			break;
 		case 6:
-			game.assetManager.load("res/bgs/bgBlueDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlueDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlueDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlueDark2.jpg", Texture.class);
 			break;
 		case 7:
-			game.assetManager.load("res/bgs/bgDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgDark2.jpg", Texture.class);
 			break;
 		case 8:
-			game.assetManager.load("res/bgs/bgBlue1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlue2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlue1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlue2.jpg", Texture.class);
 			break;
 		case 9:
-			game.assetManager.load("res/bgs/bgGreenBlue1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgGreenBlue2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgGreenBlue1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgGreenBlue2.jpg", Texture.class);
 			break;
 		}
 		

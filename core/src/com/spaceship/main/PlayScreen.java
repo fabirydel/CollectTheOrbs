@@ -2344,40 +2344,40 @@ public class PlayScreen implements Screen {
 			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlack2.png", Texture.class));
 			break;
 		case 1:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.jpg", Texture.class));
 			break;
 		case 2:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgPurple1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgPurple2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgPurple1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgPurple2.jpg", Texture.class));
 			break;
 		case 3:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.jpg", Texture.class));
 			break;
 		case 4:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.png", Texture.class));
-			bgs2= new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.jpg", Texture.class));
+			bgs2= new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.jpg", Texture.class));
 			break;
 		case 5:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.jpg", Texture.class));
 			break;
 		case 6:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.jpg", Texture.class));
 			break;
 		case 7:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgDark1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgDark2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgDark1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgDark2.jpg", Texture.class));
 			break;
 		case 8:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlue1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlue2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgBlue1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgBlue2.jpg", Texture.class));
 			break;
 		case 9:
-			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.png", Texture.class));
-			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.png", Texture.class));
+			bgs1 = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.jpg", Texture.class));
+			bgs2 = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.jpg", Texture.class));
 			break;
 		}
 		bgs1.setSize(Gdx.graphics.getWidth(), bgs1.getHeight()*y);

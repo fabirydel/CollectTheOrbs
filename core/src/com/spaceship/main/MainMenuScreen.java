@@ -3600,40 +3600,40 @@ public class MainMenuScreen implements Screen {
 			game.assetManager.load("res/bgs/bgBlack2.png", Texture.class);			
 			break;
 		case 1:
-			game.assetManager.load("res/bgs/bgBrownDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBrownDark2.png", Texture.class);			
+			game.assetManager.load("res/bgs/bgBrownDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBrownDark2.jpg", Texture.class);			
 			break;
 		case 2:
-			game.assetManager.load("res/bgs/bgPurple1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgPurple2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgPurple1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgPurple2.jpg", Texture.class);
 			break;
 		case 3:
-			game.assetManager.load("res/bgs/bgBlackRedDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlackRedDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlackRedDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlackRedDark2.jpg", Texture.class);
 			break;
 		case 4:
-			game.assetManager.load("res/bgs/bgAquaDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgAquaDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgAquaDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgAquaDark2.jpg", Texture.class);
 			break;
 		case 5:
-			game.assetManager.load("res/bgs/bgPinkDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgPinkDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgPinkDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgPinkDark2.jpg", Texture.class);
 			break;
 		case 6:
-			game.assetManager.load("res/bgs/bgBlueDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlueDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlueDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlueDark2.jpg", Texture.class);
 			break;
 		case 7:
-			game.assetManager.load("res/bgs/bgDark1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgDark2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgDark1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgDark2.jpg", Texture.class);
 			break;
 		case 8:
-			game.assetManager.load("res/bgs/bgBlue1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgBlue2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgBlue1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgBlue2.jpg", Texture.class);
 			break;
 		case 9:
-			game.assetManager.load("res/bgs/bgGreenBlue1.png", Texture.class);
-			game.assetManager.load("res/bgs/bgGreenBlue2.png", Texture.class);
+			game.assetManager.load("res/bgs/bgGreenBlue1.jpg", Texture.class);
+			game.assetManager.load("res/bgs/bgGreenBlue2.jpg", Texture.class);
 			break;
 		}
 		load = true;
@@ -3646,40 +3646,40 @@ public class MainMenuScreen implements Screen {
 			bgs[1] = new Sprite(game.assetManager.get("res/bgs/bgBlack2.png", Texture.class));
 			break;
 		case 1:
-			bgs[2] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.png", Texture.class));
-			bgs[3] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.png", Texture.class));
+			bgs[2] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.jpg", Texture.class));
+			bgs[3] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.jpg", Texture.class));
 			break;
 		case 2:
-			bgs[4] = new Sprite(game.assetManager.get("res/bgs/bgPurple1.png", Texture.class));
-			bgs[5] = new Sprite(game.assetManager.get("res/bgs/bgPurple2.png", Texture.class));
+			bgs[4] = new Sprite(game.assetManager.get("res/bgs/bgPurple1.jpg", Texture.class));
+			bgs[5] = new Sprite(game.assetManager.get("res/bgs/bgPurple2.jpg", Texture.class));
 			break;
 		case 3:
-			bgs[6] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.png", Texture.class));
-			bgs[7] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.png", Texture.class));
+			bgs[6] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.jpg", Texture.class));
+			bgs[7] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.jpg", Texture.class));
 			break;
 		case 4:
-			bgs[8] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.png", Texture.class));
-			bgs[9] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.png", Texture.class));
+			bgs[8] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.jpg", Texture.class));
+			bgs[9] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.jpg", Texture.class));
 			break;
 		case 5:
-			bgs[10] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.png", Texture.class));
-			bgs[11] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.png", Texture.class));
+			bgs[10] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.jpg", Texture.class));
+			bgs[11] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.jpg", Texture.class));
 			break;
 		case 6:
-			bgs[12] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.png", Texture.class));
-			bgs[13] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.png", Texture.class));
+			bgs[12] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.jpg", Texture.class));
+			bgs[13] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.jpg", Texture.class));
 			break;
 		case 7:
-			bgs[14] = new Sprite(game.assetManager.get("res/bgs/bgDark1.png", Texture.class));
-			bgs[15] = new Sprite(game.assetManager.get("res/bgs/bgDark2.png", Texture.class));
+			bgs[14] = new Sprite(game.assetManager.get("res/bgs/bgDark1.jpg", Texture.class));
+			bgs[15] = new Sprite(game.assetManager.get("res/bgs/bgDark2.jpg", Texture.class));
 			break;
 		case 8:
-			bgs[16] = new Sprite(game.assetManager.get("res/bgs/bgBlue1.png", Texture.class));
-			bgs[17] = new Sprite(game.assetManager.get("res/bgs/bgBlue2.png", Texture.class));
+			bgs[16] = new Sprite(game.assetManager.get("res/bgs/bgBlue1.jpg", Texture.class));
+			bgs[17] = new Sprite(game.assetManager.get("res/bgs/bgBlue2.jpg", Texture.class));
 			break;
 		case 9:
-			bgs[18] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.png", Texture.class));
-			bgs[19] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.png", Texture.class));
+			bgs[18] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.jpg", Texture.class));
+			bgs[19] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.jpg", Texture.class));
 			break;
 		}
 	}
@@ -3693,40 +3693,40 @@ public class MainMenuScreen implements Screen {
 					bgs[1] = new Sprite(game.assetManager.get("res/bgs/bgBlack2.png", Texture.class));
 					break;
 				case 1:
-					bgs[2] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.png", Texture.class));
-					bgs[3] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.png", Texture.class));
+					bgs[2] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark1.jpg", Texture.class));
+					bgs[3] = new Sprite(game.assetManager.get("res/bgs/bgBrownDark2.jpg", Texture.class));
 					break;
 				case 2:
-					bgs[4] = new Sprite(game.assetManager.get("res/bgs/bgPurple1.png", Texture.class));
-					bgs[5] = new Sprite(game.assetManager.get("res/bgs/bgPurple2.png", Texture.class));
+					bgs[4] = new Sprite(game.assetManager.get("res/bgs/bgPurple1.jpg", Texture.class));
+					bgs[5] = new Sprite(game.assetManager.get("res/bgs/bgPurple2.jpg", Texture.class));
 					break;
 				case 3:
-					bgs[6] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.png", Texture.class));
-					bgs[7] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.png", Texture.class));
+					bgs[6] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark1.jpg", Texture.class));
+					bgs[7] = new Sprite(game.assetManager.get("res/bgs/bgBlackRedDark2.jpg", Texture.class));
 					break;
 				case 4:
-					bgs[8] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.png", Texture.class));
-					bgs[9] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.png", Texture.class));
+					bgs[8] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark1.jpg", Texture.class));
+					bgs[9] = new Sprite(game.assetManager.get("res/bgs/bgAquaDark2.jpg", Texture.class));
 					break;
 				case 5:
-					bgs[10] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.png", Texture.class));
-					bgs[11] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.png", Texture.class));
+					bgs[10] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark1.jpg", Texture.class));
+					bgs[11] = new Sprite(game.assetManager.get("res/bgs/bgPinkDark2.jpg", Texture.class));
 					break;
 				case 6:
-					bgs[12] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.png", Texture.class));
-					bgs[13] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.png", Texture.class));
+					bgs[12] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark1.jpg", Texture.class));
+					bgs[13] = new Sprite(game.assetManager.get("res/bgs/bgBlueDark2.jpg", Texture.class));
 					break;
 				case 7:
-					bgs[14] = new Sprite(game.assetManager.get("res/bgs/bgDark1.png", Texture.class));
-					bgs[15] = new Sprite(game.assetManager.get("res/bgs/bgDark2.png", Texture.class));
+					bgs[14] = new Sprite(game.assetManager.get("res/bgs/bgDark1.jpg", Texture.class));
+					bgs[15] = new Sprite(game.assetManager.get("res/bgs/bgDark2.jpg", Texture.class));
 					break;
 				case 8:
-					bgs[16] = new Sprite(game.assetManager.get("res/bgs/bgBlue1.png", Texture.class));
-					bgs[17] = new Sprite(game.assetManager.get("res/bgs/bgBlue2.png", Texture.class));
+					bgs[16] = new Sprite(game.assetManager.get("res/bgs/bgBlue1.jpg", Texture.class));
+					bgs[17] = new Sprite(game.assetManager.get("res/bgs/bgBlue2.jpg", Texture.class));
 					break;
 				case 9:
-					bgs[18] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.png", Texture.class));
-					bgs[19] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.png", Texture.class));
+					bgs[18] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue1.jpg", Texture.class));
+					bgs[19] = new Sprite(game.assetManager.get("res/bgs/bgGreenBlue2.jpg", Texture.class));
 					break;
 				}
 				galaxySelected = bgLoaded;
