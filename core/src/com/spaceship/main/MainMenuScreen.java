@@ -1973,26 +1973,26 @@ public class MainMenuScreen implements Screen {
 		upgLabel.setFontScale(x, y);
 		upgLabel.setSize(fx(upgLabel.getWidth()), fy(upgLabel.getHeight()));
 
-		speedLabel = new Label("Ship's Speed", skin);
+		speedLabel = new Label("Ship's speed", skin);
 		speedLabel.setFontScale(x/2, y/2);
 		speedLabel.setSize(fx(speedLabel.getWidth()/2), fy(speedLabel.getHeight()/2));
 
 		if(language == ON)
-			energyLabel = new Label("Energy Bar", skin);
+			energyLabel = new Label("Energy bar", skin);
 		else
 			energyLabel = new Label("Barra de energia", skin);
 		energyLabel.setFontScale(x/2.25f, y/2.25f);
 		energyLabel.setSize(fx(energyLabel.getWidth()/2), fy(energyLabel.getHeight()/2));
 
 		if(language == ON)
-			energyStartLabel = new Label("Starting Energy", skin);
+			energyStartLabel = new Label("Starting energy", skin);
 		else
 			energyStartLabel = new Label("Energia inicial", skin);
 		energyStartLabel.setFontScale(x/2.25f, y/2.25f);
 		energyStartLabel.setSize(fx(energyStartLabel.getWidth()/2), fy(energyStartLabel.getHeight()/2));
 
 		if(language == ON){
-			objectsLabel = new Label("Power-up Slots", skin);
+			objectsLabel = new Label("Power-up slots", skin);
 			objectsLabel.setFontScale(x/2, y/2);
 		}else{
 			objectsLabel = new Label("Slots de poder", skin);
@@ -2000,14 +2000,14 @@ public class MainMenuScreen implements Screen {
 		}objectsLabel.setSize(fx(objectsLabel.getWidth()/2), fy(objectsLabel.getHeight()/2));
 
 		if(language == ON)
-			objectsStartLabel = new Label("Starting Power-ups", skin);
+			objectsStartLabel = new Label("Starting power-ups", skin);
 		else
 			objectsStartLabel = new Label("Poderes iniciales", skin);
 		objectsStartLabel.setFontScale(x/2.25f, y/2.25f);
 		objectsStartLabel.setSize(fx(objectsStartLabel.getWidth()/2), fy(objectsStartLabel.getHeight()/2));
 
 		if(language == ON){
-			objectsDurationLabel = new Label("Power-up Duration", skin);
+			objectsDurationLabel = new Label("Power-up duration", skin);
 			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 		}else{
 			objectsDurationLabel = new Label("Duraci\u00f3n de poder", skin);
@@ -3285,22 +3285,22 @@ public class MainMenuScreen implements Screen {
 			
 			upgLabel.setText("Upgrades");
 			upgLabel.setAlignment(Align.left);
-			speedLabel.setText("Ship's Speed");
+			speedLabel.setText("Ship's speed");
 			speedLabel.setAlignment(Align.left);
 			speedLabel.setFontScale(x/2, y/2);
-			energyLabel.setText("Energy Bar");
+			energyLabel.setText("Energy bar");
 			energyLabel.setAlignment(Align.left);
 			energyLabel.setFontScale(x/2, y/2);
-			energyStartLabel.setText("Starting Energy");
+			energyStartLabel.setText("Starting energy");
 			energyStartLabel.setAlignment(Align.left);
 			energyStartLabel.setFontScale(x/2, y/2);
-			objectsLabel.setText("Power-up Slots");
+			objectsLabel.setText("Power-up slots");
 			objectsLabel.setAlignment(Align.left);
 			objectsLabel.setFontScale(x/2, y/2);
-			objectsStartLabel.setText("Starting Power-ups");
+			objectsStartLabel.setText("Starting power-ups");
 			objectsStartLabel.setAlignment(Align.left);
 			objectsStartLabel.setFontScale(x/2, y/2);
-			objectsDurationLabel.setText("Power-up Duration");
+			objectsDurationLabel.setText("Power-up duration");
 			objectsDurationLabel.setAlignment(Align.left);
 			objectsDurationLabel.setFontScale(x/2.25f, y/2.25f);
 
