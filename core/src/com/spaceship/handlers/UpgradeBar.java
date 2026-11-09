@@ -57,6 +57,7 @@ public class UpgradeBar extends Widget {
 		frame.setColor(1f, 1f, 1f, getColor().a * parentAlpha);
 		bar.draw((SpriteBatch) batch, frame, tint);
 		frame.draw(batch);
+		bar.drawGlass((SpriteBatch) batch, frame, tint);
 		batch.setColor(Color.WHITE);
 	}
 }
