@@ -1691,14 +1691,19 @@ public class PlayScreen implements Screen {
 						blueWrong[h].draw(game.batch);
 					}
 				}else{
-					// game over: the break-up burst, its shockwaves and a white flash where the ship was
+					// game over: the ship's pieces, the burst of embers, shockwaves and a flash where the ship was
+					float ddt = Gdx.graphics.getDeltaTime()*deathSlow();
+					drawShipPieces(ddt);
 					Fx.additiveOn(game.batch);
 					Fx.draw(game.batch);
-					drawHitRings(Gdx.graphics.getDeltaTime()*deathSlow());
-					if(deathTime < 0.45f){
-						float ft = deathTime/0.45f;
-						float fs = fxy(500f)*(0.5f + 1.2f*ft);
-						game.batch.setColor(1f, 1f, 1f, (1f - ft)*(1f - ft)*0.95f);
+					drawHitRings(ddt);
+					if(deathTime < 0.7f){
+						float ft = deathTime/0.7f, fa = (1f - ft)*(1f - ft);
+						float fs = fxy(1500f)*(0.35f + 0.65f*ft);
+						game.batch.setColor(deathColor[0], deathColor[1], deathColor[2], fa*0.8f);
+						game.batch.draw(Fx.glow(), deathX - fs/2, deathY - fs/2, fs, fs);
+						fs *= 0.55f;
+						game.batch.setColor(1f, 1f, 1f, fa);
 						game.batch.draw(Fx.glow(), deathX - fs/2, deathY - fs/2, fs, fs);
 					}
 					Fx.additiveOff(game.batch);
@@ -1884,7 +1889,7 @@ public class PlayScreen implements Screen {
 
 	// catch and miss feedback: shockwave rings at the hit point, bursts of embers in the orb's colour, and a screen shake
 	private static final int HIT_RINGS = 8;
-	private static final float HIT_RING_LIFE = 0.38f, SHAKE_LIFE = 0.32f;
+	private static final float HIT_RING_LIFE = 0.5f, SHAKE_LIFE = 0.32f;
 	private static final float[][] HIT_COLORS = { { 0.25f, 0.85f, 1f }, { 1f, 0.25f, 0.4f }, { 1f, 0.8f, 0.25f }, { 0.75f, 0.4f, 1f } };
 	private final float[] hrX = new float[HIT_RINGS], hrY = new float[HIT_RINGS], hrT = new float[HIT_RINGS], hrSize = new float[HIT_RINGS];
 	private final float[][] hrColor = new float[HIT_RINGS][];
@@ -1922,33 +1927,101 @@ public class PlayScreen implements Screen {
 		embers(bx, by, 16, 600f, c, 1f);
 	}
 
-	private static final float DEATH_SLOW = 0.9f;
+	private static final float DEATH_SLOW = 1.1f;
 	private float deathTime = 9f, deathX, deathY;
+	private float[] deathColor = { 1f, 1f, 1f };
+
+	// the ship's pieces after the final hit: the ship picture cut into a grid, each piece thrown outward and spinning
+	private static final int FRAG_COLS = 5, FRAG_ROWS = 7, FRAGS = FRAG_COLS*FRAG_ROWS;
+	private static final float FRAG_LIFE = 1.5f;
+	private final float[] fgX = new float[FRAGS], fgY = new float[FRAGS], fgVx = new float[FRAGS], fgVy = new float[FRAGS], fgRot = new float[FRAGS], fgSpin = new float[FRAGS];
+	private float fragAge = 9f, fragW, fragH;
+	private Texture fragTex;
+	private int fragSrcX, fragSrcY, fragSrcW, fragSrcH;
 
 	/** time scale after the final hit: a crawl at first, easing back to normal speed */
 	private float deathSlow(){
 		if(deathTime >= DEATH_SLOW) return 1f;
-		if(deathTime < 0.25f) return 0.2f;
-		float t = (deathTime - 0.25f)/(DEATH_SLOW - 0.25f);
-		return 0.2f + 0.8f*t*t;
+		if(deathTime < 0.35f) return 0.16f;
+		float t = (deathTime - 0.35f)/(DEATH_SLOW - 0.35f);
+		return 0.16f + 0.84f*t*t;
 	}
 
-	/** the final hit: the ship bursts into embers and shockwaves, and every orb still on screen pops */
+	/** the final hit: the ship shatters into its pieces with a flash, embers and shockwaves, and every orb still on screen pops */
 	private void deathFx(){
 		deathTime = 0f;
 		deathX = shipCenterX();
 		deathY = shipCenterY();
-		float[] c = shieldColor();
-		hitRing(deathX, deathY, fxy(330f), c);
-		hitRing(deathX, deathY, fxy(580f), new float[]{1f, 1f, 1f});
-		embers(deathX, deathY, 48, 1100f, c, 0.8f);
-		embers(deathX, deathY, 24, 480f, new float[]{1f, 0.6f, 0.25f}, 0.3f);
+		float u = fxy(1);
+		float[] c = deathColor = shieldColor();
+		hitRing(deathX, deathY, fxy(420f), c);
+		hitRing(deathX, deathY, fxy(760f), new float[]{1f, 1f, 1f});
+		hitRing(deathX, deathY, fxy(1150f), c);
+		// hot embers in the shield's colour, then slower orange sparks
+		for(int i = 0; i < 90; i++){
+			float ang = MathUtils.random(MathUtils.PI2), sp = MathUtils.random(250f, 1500f)*u, white = MathUtils.random(0f, 0.8f);
+			Fx.emit(deathX, deathY, MathUtils.cos(ang)*sp, MathUtils.sin(ang)*sp, MathUtils.random(0.5f, 1.1f), MathUtils.random(14f, 34f)*u,
+					c[0] + (1f - c[0])*white, c[1] + (1f - c[1])*white, c[2] + (1f - c[2])*white);
+		}
+		for(int i = 0; i < 40; i++){
+			float ang = MathUtils.random(MathUtils.PI2), sp = MathUtils.random(120f, 700f)*u;
+			Fx.emit(deathX, deathY, MathUtils.cos(ang)*sp, MathUtils.sin(ang)*sp, MathUtils.random(0.7f, 1.4f), MathUtils.random(10f, 22f)*u, 1f, MathUtils.random(0.45f, 0.8f), 0.2f);
+		}
 		for(Ball ball : dBalls){
 			float bx = ball.getPosition().x, by = ball.getPosition().y;
 			if(bx < 0 || bx > Gdx.graphics.getWidth() || by < 0 || by > Gdx.graphics.getHeight()) continue;
 			int t = ball.getType();
-			embers(bx, by, 7, 300f, HIT_COLORS[t == Ball.B_BLUE ? 0 : t == Ball.B_RED ? 1 : t == Ball.B_LIFE ? 2 : 3], 0.4f);
+			float[] bc = HIT_COLORS[t == Ball.B_BLUE ? 0 : t == Ball.B_RED ? 1 : t == Ball.B_LIFE ? 2 : 3];
+			hitRing(bx, by, fxy(70f), bc);
+			embers(bx, by, 9, 380f, bc, 0.4f);
 		}
+		// cut the ship picture into pieces
+		Sprite sp = ship.shipsSprites[ship.shipSelected];
+		fragTex = sp.getTexture();
+		fragSrcX = sp.getRegionX(); fragSrcY = sp.getRegionY(); fragSrcW = sp.getRegionWidth(); fragSrcH = sp.getRegionHeight();
+		float w = sp.getWidth()*sp.getScaleX(), h = sp.getHeight()*sp.getScaleY();
+		fragW = w/FRAG_COLS; fragH = h/FRAG_ROWS;
+		for(int r = 0; r < FRAG_ROWS; r++){
+			for(int col = 0; col < FRAG_COLS; col++){
+				int i = r*FRAG_COLS + col;
+				float ox = (col + 0.5f)*fragW - w/2, oy = h/2 - (r + 0.5f)*fragH;
+				fgX[i] = deathX + ox; fgY[i] = deathY + oy;
+				float len = (float)Math.sqrt(ox*ox + oy*oy) + 0.001f;
+				float ang = MathUtils.atan2(oy, ox) + MathUtils.random(-0.5f, 0.5f), spd = MathUtils.random(160f, 620f)*u*(0.6f + len/(h/2));
+				fgVx[i] = MathUtils.cos(ang)*spd; fgVy[i] = MathUtils.sin(ang)*spd;
+				fgRot[i] = 0f; fgSpin[i] = MathUtils.random(180f, 720f)*(MathUtils.randomBoolean() ? 1f : -1f);
+			}
+		}
+		fragAge = 0f;
+	}
+
+	/** the ship's pieces flying apart, tumbling and fading (normal blending, call outside additiveOn/Off) */
+	private void drawShipPieces(float dt){
+		if(fragAge >= FRAG_LIFE || fragTex == null) return;
+		fragAge += dt;
+		float t = Math.min(1f, fragAge/FRAG_LIFE);
+		float alpha = 1f - t*t, drag = 1f - Math.min(1f, dt*1.1f);
+		int sw = fragSrcW/FRAG_COLS, sh = fragSrcH/FRAG_ROWS;
+		for(int pass = 0; pass < 2; pass++){
+			// second pass: the pieces glow white-hot for the first moments
+			if(pass == 1){
+				if(fragAge > 0.5f) break;
+				Fx.additiveOn(game.batch);
+				game.batch.setColor(1f, 1f, 1f, (1f - fragAge/0.5f)*0.9f);
+			}else
+				game.batch.setColor(1f, 1f, 1f, alpha);
+			for(int i = 0; i < FRAGS; i++){
+				if(pass == 0){
+					fgX[i] += fgVx[i]*dt; fgY[i] += fgVy[i]*dt;
+					fgVx[i] *= drag; fgVy[i] *= drag;
+					fgRot[i] += fgSpin[i]*dt;
+				}
+				game.batch.draw(fragTex, fgX[i] - fragW/2, fgY[i] - fragH/2, fragW/2, fragH/2, fragW, fragH, 1f, 1f, fgRot[i],
+						fragSrcX + (i % FRAG_COLS)*sw, fragSrcY + (i/FRAG_COLS)*sh, sw, sh, false, false);
+			}
+			if(pass == 1) Fx.additiveOff(game.batch);
+		}
+		game.batch.setColor(1f, 1f, 1f, 1f);
 	}
 
 	private void hitShake(float power){
@@ -2026,7 +2099,7 @@ public class PlayScreen implements Screen {
 								Tween.call(lifeMeterChangeCallback).start(tweenManager);
 						}else{ 
 							state = PlayScreen.DEAD;
-							hitShake(2.2f);
+							hitShake(3f);
 							if(game.getMMS().sound == game.getMMS().ON)
 								dead.play(0.35f);
 						}	
@@ -2082,7 +2155,7 @@ public class PlayScreen implements Screen {
 								Tween.call(lifeMeterChangeCallback).start(tweenManager);
 						}else{ 
 							state = PlayScreen.DEAD;
-							hitShake(2.2f);
+							hitShake(3f);
 							if(game.getMMS().sound == game.getMMS().ON)
 								dead.play(0.35f);
 						}	

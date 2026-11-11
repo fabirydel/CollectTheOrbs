@@ -177,6 +177,7 @@ public class Spaceship{
 	}
 	
 	public void effects(){
+		deathStarted = false;
 		Timeline.createSequence().
 		push(Tween.set(ffSprites[forceFieldSelected], SpriteAccessor.SCALE).target(0.05f, 0.05f)).
 		push(Tween.set(ffgSprites[forceFieldSelected], SpriteAccessor.SCALE).target(0.05f, 0.05f)).
@@ -205,9 +206,15 @@ public class Spaceship{
 		
 	}
 	
+	private boolean deathStarted;
+
 	public void effectsDeath(){
-		// the ship breaks up: it vanishes in the flash while the play screen throws the embers and shockwaves
-		Tween.to(shipsSprites[shipSelected], SpriteAccessor.COLOR, 0.22f).target(1f, 1f, 1f, 0f).start(tweenManager);
+		// called every frame while the game is over: start the animation only once
+		if(deathStarted)
+			return;
+		deathStarted = true;
+		// the ship shatters: it is gone at once, and the play screen draws its pieces flying apart
+		shipsSprites[shipSelected].setColor(1f, 1f, 1f, 0f);
 		Tween.to(ffSprites[forceFieldSelected], SpriteAccessor.SCALE, 0.50f).target(fxy(5), fxy(5)).start(tweenManager);
 		Tween.to(ffSprites[forceFieldSelected], SpriteAccessor.COLOR, 0.50f).target(1f, 1f, 1f, 0f).start(tweenManager);
 		Tween.to(ffgSprites[forceFieldSelected], SpriteAccessor.SCALE, 0.50f).target(fxy(5), fxy(5)).start(tweenManager);
@@ -216,6 +223,7 @@ public class Spaceship{
 	}
 	
 	public void Restore(){
+		deathStarted = false;
 		ship.x = Gdx.graphics.getWidth()/2;
 		shipsSprites[shipSelected].setRotation(0f);
 		shipsSprites[shipSelected].setColor(1f, 1f, 1f, 1f);
