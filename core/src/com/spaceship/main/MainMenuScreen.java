@@ -3861,6 +3861,7 @@ public class MainMenuScreen implements Screen {
 		bgs[galaxySelected*2+1].draw(game.batch);
 		// twinkling star layers, dust and shooting stars over the picture
 		Fx.init(game.assetManager);
+		starfield.setGalaxy(galaxySelected);
 		starfield.update(Gdx.graphics.getDeltaTime(), state != LAUNCH ? fy(80) : 0f);
 		starfield.draw(game.batch, bgs[galaxySelected*2].getColor().a);
 		if(TimeUtils.nanoTime() - lastTimeBg > 25000000 && state != LAUNCH){

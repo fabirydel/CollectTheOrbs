@@ -2319,6 +2319,7 @@ public class PlayScreen implements Screen {
 		bgs2.draw(game.batch);
 		// twinkling star layers, dust and shooting stars over the picture; they keep drifting while it stands still
 		float bgScroll = state == PLAY ? backgroundSpeed(velocityBg) : 0f;
+		starfield.setGalaxy(galaxySelected);
 		starfield.update(Gdx.graphics.getDeltaTime(), bgScroll);
 		starfield.warp = state == PLAY ? speedFx.backgroundBoost() : 0f;
 		// lens strain: the colours pull apart toward the screen edges on a speed-up, a hard hit and the final hit
