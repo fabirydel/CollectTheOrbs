@@ -212,6 +212,15 @@ public class MainMenuScreen implements Screen {
 	private UpgradeBar[] upgradeBars = new UpgradeBar[6];
 	private float shieldSwitchTime = 9f, shieldSweepScale = 1f;
 	private float menuHover;
+	private final com.spaceship.handlers.MechDoor mechDoor = new com.spaceship.handlers.MechDoor();
+
+	/** something was just bought: play the mechanical shutter over its card */
+	private void celebrate(com.badlogic.gdx.scenes.scene2d.Actor card){
+		if(card == null) return;
+		com.badlogic.gdx.math.Vector2 p = card.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(0f, 0f));
+		Fx.init(game.assetManager);
+		mechDoor.play(p.x, p.y, card.getWidth(), card.getHeight());
+	}
 	private final com.spaceship.handlers.Starfield starfield = new com.spaceship.handlers.Starfield();
 	private static final int[] UPGRADE_MAX = { 5, 5, 5, 3, 3, 5 };
 	private Image[] upgradeEmptyImages;
@@ -1417,6 +1426,12 @@ public class MainMenuScreen implements Screen {
 		stageSettings.draw();
 		stageHelp.act(delta);
 		stageHelp.draw();
+		// purchase celebration: the mechanical shutter over the card that was just bought
+		if(mechDoor.playing()){
+			game.batch.begin();
+			mechDoor.draw(game.batch, delta);
+			game.batch.end();
+		}
 //		containerSts.drawDebug(stageStats);
 
 		//start game
@@ -1743,6 +1758,7 @@ public class MainMenuScreen implements Screen {
 	
 								if(sound == ON)
 									bought.play();
+								celebrate(event.getListenerActor());
 	
 								shipsNew[i] = true;
 	
@@ -1866,6 +1882,7 @@ public class MainMenuScreen implements Screen {
 	
 								if(sound == ON)
 									bought.play();
+								celebrate(event.getListenerActor());
 	
 								galaxiesNew[i] = true;
 
@@ -2161,6 +2178,7 @@ public class MainMenuScreen implements Screen {
 							
 							if(sound == ON)
 								bought.play();
+							celebrate(event.getListenerActor());
 								
 							upgrades++;
 							boughtUpgrade = true;
