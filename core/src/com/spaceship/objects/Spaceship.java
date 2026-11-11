@@ -396,7 +396,13 @@ public class Spaceship{
 	
 	private float hoverTime, bank, bankPrevX = -1f;
 
-	/** The ship itself: it hovers gently inside its shield and banks into its turns (leaning and narrowing a little). */
+	private final float[] bodyVerts = new float[20];
+
+	/**
+	 * The ship itself: it hovers gently inside its shield and rolls into its turns. The roll is around its nose-to-tail
+	 * axis, seen from above: the picture narrows, the side it turns toward dips away (drawn a little shorter) and the
+	 * other side rises toward the viewer (a little taller).
+	 */
 	private void drawShipBody(SpriteBatch sb){
 		Sprite sp = shipsSprites[shipSelected];
 		int st = game.getPS().getState();
@@ -414,14 +420,19 @@ public class Spaceship{
 			bank += (lateral - bank)*Math.min(1f, dt*9f);
 		}
 		bankPrevX = ship.x;
-		float rot = sp.getRotation(), sx = sp.getScaleX(), y = sp.getY();
-		sp.setRotation(rot - bank*9f);
-		sp.setScale(sx*(1f - 0.10f*Math.abs(bank)), sp.getScaleY());
-		sp.setY(y + fxy(4f)*MathUtils.sin(hoverTime*2.1f));
-		sp.draw(sb);
-		sp.setRotation(rot);
-		sp.setScale(sx, sp.getScaleY());
-		sp.setY(y);
+		// the sprite's corners: bottom-left, top-left, top-right, bottom-right (x, y, colour, u, v each)
+		System.arraycopy(sp.getVertices(), 0, bodyVerts, 0, 20);
+		float cx = sp.getX() + sp.getWidth()/2, cy = sp.getY() + sp.getHeight()/2;
+		float hover = fxy(4f)*MathUtils.sin(hoverTime*2.1f);
+		float narrow = 1f - 0.16f*Math.abs(bank);
+		float shift = bank*0.05f*sp.getWidth()*sp.getScaleX();		// the whole picture leans a little into the turn
+		for(int k = 0; k < 4; k++){
+			boolean leftSide = k < 2;
+			float side = 1f + (leftSide ? 0.10f : -0.10f)*bank;
+			bodyVerts[k*5] = cx + (bodyVerts[k*5] - cx)*narrow + shift;
+			bodyVerts[k*5 + 1] = cy + (bodyVerts[k*5 + 1] - cy)*side + hover;
+		}
+		sb.draw(sp.getTexture(), bodyVerts, 0, 20);
 	}
 
 	private static final float GOLD_FLASH = 0.6f;

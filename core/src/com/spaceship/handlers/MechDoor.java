@@ -41,9 +41,19 @@ public class MechDoor {
 		screw.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 	}
 
-	/** Play the shutter over the card at (x, y) with size (w, h), in screen pixels (y up). */
-	public void play(float x, float y, float w, float h) {
+	/** lock light colours: the orbs that paid for the purchase */
+	public static final float[] BLUE = { 0.25f, 0.85f, 1f }, RED = { 1f, 0.25f, 0.4f }, GOLD = { 1f, 0.8f, 0.25f };
+	private float[] leftLight = GOLD, rightLight = GOLD;
+
+	/**
+	 * Play the shutter over the card at (x, y) with size (w, h), in screen pixels (y up).
+	 * @param left colour of the lock light on the left plate (BLUE, RED or GOLD)
+	 * @param right colour of the lock light on the right plate
+	 */
+	public void play(float x, float y, float w, float h, float[] left, float[] right) {
 		load();
+		leftLight = left;
+		rightLight = right;
 		// the shutter sits inside the card's neon border, so the border stays visible around it
 		float inset = INSET*Math.min(w, h);
 		this.x = x + inset;
@@ -156,18 +166,22 @@ public class MechDoor {
 
 			Fx.additiveOn(sb);
 			float seam = x + w/2 + jx;
-			// lock light on each plate beside the seam: red while locked, green once released
+			// lock light on each plate beside the seam, in the colour of the orbs that paid: it flickers while locked and
+			// burns steady and bright once released
 			// (hidden once the plate has retracted too far to carry it, so it never sits on the card's border)
 			if (open*w/2 + 46f*unit + 16f*unit < w/2) {
-				float blink = unlocked ? 1f : 0.55f + 0.45f*MathUtils.sin(age*38f);
+				float blink = unlocked ? 1f : 0.5f + 0.3f*MathUtils.sin(age*38f);
 				float ls = 26f*unit;
 				for (int side = -1; side <= 1; side += 2) {
 					float lx = seam + side*(open*w/2 + 46f*unit), ly = y + h/2 + jy;
-					if (unlocked)
-						sb.setColor(0.25f, 1f, 0.45f, fade*blink);
-					else
-						sb.setColor(1f, 0.2f, 0.2f, fade*blink);
+					float[] c = side < 0 ? leftLight : rightLight;
+					sb.setColor(c[0], c[1], c[2], fade*blink);
 					sb.draw(Fx.glow(), lx - ls/2, ly - ls/2, ls, ls);
+					if (unlocked) {
+						// a soft halo once it is lit for good
+						sb.setColor(c[0], c[1], c[2], fade*0.45f);
+						sb.draw(Fx.glow(), lx - ls, ly - ls, ls*2f, ls*2f);
+					}
 					sb.setColor(1f, 1f, 1f, fade*blink*0.8f);
 					sb.draw(Fx.glow(), lx - ls*0.2f, ly - ls*0.2f, ls*0.4f, ls*0.4f);
 				}

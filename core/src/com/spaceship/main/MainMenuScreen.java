@@ -255,14 +255,21 @@ public class MainMenuScreen implements Screen {
 	private static final float SHUTTER_SWAP = 0.17f;
 
 	/** something was just bought: play the mechanical shutter over its card */
-	private void celebrate(com.badlogic.gdx.scenes.scene2d.Actor card){
+	/**
+	 * @param blue the purchase cost blue orbs
+	 * @param red the purchase cost red orbs (neither = yellow orbs, an upgrade)
+	 */
+	private void celebrate(com.badlogic.gdx.scenes.scene2d.Actor card, boolean blue, boolean red){
 		if(card == null) return;
 		// the card springs back to full size at once, so the shutter fits exactly inside its border
 		card.clearActions();
 		card.setScale(1f);
 		com.badlogic.gdx.math.Vector2 p = card.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(0f, 0f));
 		Fx.init(game.assetManager);
-		mechDoor.play(p.x, p.y, card.getWidth(), card.getHeight());
+		// the lock lights take the colour of the orbs that paid: both the same, or blue on the left and red on the right
+		float[] B = com.spaceship.handlers.MechDoor.BLUE, R = com.spaceship.handlers.MechDoor.RED, G = com.spaceship.handlers.MechDoor.GOLD;
+		float[] left = blue ? B : red ? R : G, right = red ? R : blue ? B : G;
+		mechDoor.play(p.x, p.y, card.getWidth(), card.getHeight(), left, right);
 	}
 	private final com.spaceship.handlers.Starfield starfield = new com.spaceship.handlers.Starfield();
 	private static final int[] UPGRADE_MAX = { 5, 5, 5, 3, 3, 5 };
@@ -1806,7 +1813,7 @@ public class MainMenuScreen implements Screen {
 	
 								if(sound == ON)
 									bought.play();
-								celebrate(event.getListenerActor());
+								celebrate(event.getListenerActor(), bluesPriceShips[i] > 0, redsPriceShips[i] > 0);
 	
 								shipsNew[i] = true;
 	
@@ -1930,7 +1937,7 @@ public class MainMenuScreen implements Screen {
 	
 								if(sound == ON)
 									bought.play();
-								celebrate(event.getListenerActor());
+								celebrate(event.getListenerActor(), bluesPriceGalaxies[i] > 0, redsPriceGalaxies[i] > 0);
 	
 								galaxiesNew[i] = true;
 
@@ -2226,7 +2233,7 @@ public class MainMenuScreen implements Screen {
 							
 							if(sound == ON)
 								bought.play();
-							celebrate(event.getListenerActor());
+							celebrate(event.getListenerActor(), false, false);
 								
 							upgrades++;
 							boughtUpgrade = true;
