@@ -214,6 +214,43 @@ public class MainMenuScreen implements Screen {
 	private float menuHover;
 	private final com.spaceship.handlers.MechDoor mechDoor = new com.spaceship.handlers.MechDoor();
 
+	/** a menu page arrives: it glides down into place, decelerating, while it fades in */
+	private com.badlogic.gdx.scenes.scene2d.Action pageIn(){
+		return com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(
+				com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo(0, 0, 0.42f, com.badlogic.gdx.math.Interpolation.pow3Out),
+				com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
+						com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha(0f),
+						com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn(0.30f)));
+	}
+
+	/** a menu page leaves: it accelerates up and away while it fades out */
+	private com.badlogic.gdx.scenes.scene2d.Action pageOut(Stage page){
+		return com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(
+				com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo(0, page.getHeight(), 0.40f, com.badlogic.gdx.math.Interpolation.pow2In),
+				com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut(0.34f));
+	}
+
+	/** cards give a little under the finger: they shrink slightly while pressed and spring back on release */
+	private void addPressFeedback(Image[] cards){
+		if(cards == null) return;
+		for(final Image card : cards){
+			if(card == null) continue;
+			card.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener(){
+				@Override
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button){
+					card.setOrigin(card.getWidth()/2, card.getHeight()/2);
+					card.clearActions();
+					card.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(0.93f, 0.93f, 0.06f));
+					return true;
+				}
+				@Override
+				public void touchUp(InputEvent event, float x, float y, int pointer, int button){
+					card.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1f, 1f, 0.16f, com.badlogic.gdx.math.Interpolation.swingOut));
+				}
+			});
+		}
+	}
+
 	/** something was just bought: play the mechanical shutter over its card */
 	private void celebrate(com.badlogic.gdx.scenes.scene2d.Actor card){
 		if(card == null) return;
@@ -955,6 +992,11 @@ public class MainMenuScreen implements Screen {
 		setUpStatsMenu();	
 		setUpSettingsMenu();
 		setUpHelpMenu();
+		addPressFeedback(shipsPriceImage);
+		addPressFeedback(shipsBoughtImage);
+		addPressFeedback(bgsPriceImage);
+		addPressFeedback(bgsBoughtImage);
+		addPressFeedback(upgradesPriceImages);
 			
 	}
 
@@ -1531,7 +1573,7 @@ public class MainMenuScreen implements Screen {
 						buttonSmall.play();
 					state = SHIPS;
 					canSelect = true;
-					stageShips.addAction(moveTo(0, 0, 0.5f));
+					stageShips.addAction(pageIn());
 					Gdx.input.setInputProcessor(stageShips);
 					effectsMenuOn();
 				}
@@ -1544,7 +1586,7 @@ public class MainMenuScreen implements Screen {
 						buttonSmall.play();
 					state = GALAXIES;
 					canSelect = true;
-					stageGalaxies.addAction(moveTo(0, 0, 0.5f));
+					stageGalaxies.addAction(pageIn());
 					Gdx.input.setInputProcessor(stageGalaxies);
 					effectsMenuOn();
 				}	
@@ -1618,7 +1660,7 @@ public class MainMenuScreen implements Screen {
 					buttonSmall.play();
 				state = UPGRADES;
 				canSelect = true;
-				stageUpgrades.addAction(moveTo(0, 0, 0.5f));
+				stageUpgrades.addAction(pageIn());
 				Gdx.input.setInputProcessor(stageUpgrades);
 				effectsMenuOn();
 			}else if(Gdx.input.getX() > bStats.getX() && Gdx.input.getX() < bStats.getX() + bStats.getWidth() && 
@@ -1630,7 +1672,7 @@ public class MainMenuScreen implements Screen {
 						buttonSmall.play();
 					state = STATS;
 					canSelect = true;
-					stageStats.addAction(moveTo(0, 0, 0.5f));
+					stageStats.addAction(pageIn());
 					Gdx.input.setInputProcessor(stageStats);
 					effectsMenuOn();
 				}	
@@ -1643,7 +1685,7 @@ public class MainMenuScreen implements Screen {
 						buttonSmall.play();
 					state = SETTINGS;
 					canSelect = true;
-					stageSettings.addAction(moveTo(0, 0, 0.5f));
+					stageSettings.addAction(pageIn());
 					Gdx.input.setInputProcessor(stageSettings);
 					effectsMenuOn();
 				}	
@@ -1656,7 +1698,7 @@ public class MainMenuScreen implements Screen {
 						buttonSmall.play();
 					state = HELP;
 					canSelect = true;
-					stageHelp.addAction(moveTo(0, 0, 0.5f));
+					stageHelp.addAction(pageIn());
 					Gdx.input.setInputProcessor(stageHelp);
 					effectsMenuOn();
 				}	
@@ -1818,7 +1860,7 @@ public class MainMenuScreen implements Screen {
 							@Override
 							public void run(){
 								state = STANDBY;
-								stageShips.addAction(moveTo(0, stageShips.getHeight(), 0.5f));
+								stageShips.addAction(pageOut(stageShips));
 								effectsMenuOff();
 							}
 						}, 0.3f);
@@ -1847,7 +1889,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageShips.addAction(moveTo(0, stageShips.getHeight(), 0.5f));
+				stageShips.addAction(pageOut(stageShips));
 				effectsMenuOff();
 				updateStatsMenuSpent();
 			}
@@ -1919,7 +1961,7 @@ public class MainMenuScreen implements Screen {
 											@Override
 											public void run(){
 												state = STANDBY;
-												stageGalaxies.addAction(moveTo(0, stageGalaxies.getHeight(), 0.5f));
+												stageGalaxies.addAction(pageOut(stageGalaxies));
 												effectsMenuOff();
 											}
 										}, 0.3f);
@@ -1963,7 +2005,7 @@ public class MainMenuScreen implements Screen {
 								@Override
 								public void run(){
 									state = STANDBY;
-									stageGalaxies.addAction(moveTo(0, stageGalaxies.getHeight(), 0.5f));
+									stageGalaxies.addAction(pageOut(stageGalaxies));
 									effectsMenuOff();
 								}
 							}, 0.3f);
@@ -1993,7 +2035,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageGalaxies.addAction(moveTo(0, stageGalaxies.getHeight(), 0.5f));
+				stageGalaxies.addAction(pageOut(stageGalaxies));
 				effectsMenuOff();
 				updateStatsMenuSpent();
 			}
@@ -2160,7 +2202,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageUpgrades.addAction(moveTo(0, stageUpgrades.getHeight(), 0.5f));
+				stageUpgrades.addAction(pageOut(stageUpgrades));
 				effectsMenuOff();
 				updateStatsMenuSpent();
 			}
@@ -2382,7 +2424,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageHelp.addAction(moveTo(0, stageHelp.getHeight(), 0.5f));
+				stageHelp.addAction(pageOut(stageHelp));
 				effectsMenuOff();
 			}
 		});	
@@ -2898,7 +2940,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageStats.addAction(moveTo(0, stageStats.getHeight(), 0.5f));
+				stageStats.addAction(pageOut(stageStats));
 				effectsMenuOff();
 			}
 		});	
@@ -3012,7 +3054,7 @@ public class MainMenuScreen implements Screen {
 				buttonSmall.play();
 				Main.setTutorial(true);
 				state = STANDBY;
-				stageSettings.addAction(moveTo(0, stageSettings.getHeight(), 0.5f));
+				stageSettings.addAction(pageOut(stageSettings));
 				effectsMenuOff();
 				Timer.schedule(new Task(){
 					@Override
@@ -3151,7 +3193,7 @@ public class MainMenuScreen implements Screen {
 				state = STANDBY;
 				if(sound == ON)
 					buttonSmall.play();
-				stageSettings.addAction(moveTo(0, stageSettings.getHeight(), 0.5f));
+				stageSettings.addAction(pageOut(stageSettings));
 				effectsMenuOff();
 			}
 		});	
@@ -3886,7 +3928,7 @@ public class MainMenuScreen implements Screen {
 		state = STANDBY;
 		if(sound == ON)
 			buttonSmall.play();
-		stage.addAction(moveTo(0, stage.getHeight(), 0.5f));
+		stage.addAction(pageOut(stage));
 		effectsMenuOff();
 		if(spent)
 			updateStatsMenuSpent();
