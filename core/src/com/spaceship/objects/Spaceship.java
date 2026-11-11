@@ -379,7 +379,7 @@ public class Spaceship{
 			}
 		}
 		ship.setPosition(ship.x, ship.y);
-		shipsSprites[shipSelected].draw(sb);
+		drawShipBody(sb);
 		// while the gold flash is up the shield's own color fades out under it, so no edge of it shows through
 		float own = 1f - goldEnvelope();
 		Sprite ffs = ffSprites[forceFieldSelected], ffgs = ffgSprites[forceFieldSelected];
@@ -394,6 +394,36 @@ public class Spaceship{
 		drawShock(sb);
 	}
 	
+	private float hoverTime, bank, bankPrevX = -1f;
+
+	/** The ship itself: it hovers gently inside its shield and banks into its turns (leaning and narrowing a little). */
+	private void drawShipBody(SpriteBatch sb){
+		Sprite sp = shipsSprites[shipSelected];
+		int st = game.getPS().getState();
+		if(st == PlayScreen.DEAD || st == PlayScreen.DEADLEAVING || !canPlay){
+			bankPrevX = -1f;
+			bank = 0f;
+			sp.draw(sb);
+			return;
+		}
+		float dt = Math.min(Gdx.graphics.getDeltaTime(), 0.05f);
+		boolean playing = st == game.getPS().PLAY;
+		if(playing){
+			hoverTime += dt;
+			float lateral = bankPrevX >= 0 && dt > 0 ? MathUtils.clamp((ship.x - bankPrevX)/(dt*fxy(speed)), -1f, 1f) : 0f;
+			bank += (lateral - bank)*Math.min(1f, dt*9f);
+		}
+		bankPrevX = ship.x;
+		float rot = sp.getRotation(), sx = sp.getScaleX(), y = sp.getY();
+		sp.setRotation(rot - bank*9f);
+		sp.setScale(sx*(1f - 0.10f*Math.abs(bank)), sp.getScaleY());
+		sp.setY(y + fxy(4f)*MathUtils.sin(hoverTime*2.1f));
+		sp.draw(sb);
+		sp.setRotation(rot);
+		sp.setScale(sx, sp.getScaleY());
+		sp.setY(y);
+	}
+
 	private static final float GOLD_FLASH = 0.6f;
 	private float switchTime = 9f;
 	private float shieldTime, impactTime = 9f, impactAngle, goldTime = 9f;
