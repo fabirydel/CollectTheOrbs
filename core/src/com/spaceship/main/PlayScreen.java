@@ -810,6 +810,16 @@ public class PlayScreen implements Screen {
 
 			tweenManager.update(delta);
 
+			// screen shake after losing energy: a short, quickly fading jolt
+			float shakeX = 0f, shakeY = 0f;
+			if(shakeTime < SHAKE_LIFE){
+				shakeTime += Math.min(delta, 0.05f);
+				float k = Math.max(0f, 1f - shakeTime/SHAKE_LIFE);
+				float amp = fxy(5f)*shakePower*k*k;
+				shakeX = amp*MathUtils.sin(shakeTime*71f);
+				shakeY = amp*MathUtils.cos(shakeTime*57f);
+			}
+			camera.position.set(Gdx.graphics.getWidth()/2f + shakeX, Gdx.graphics.getHeight()/2f + shakeY, 0f);
 			// tell the camera to update its matrices.
 			camera.update();
 			// tell the SpriteBatch to render in the coordinate system specified by the camera.
@@ -1671,6 +1681,7 @@ public class PlayScreen implements Screen {
 						objectsParticles[h].draw(game.batch);
 					}
 					Fx.draw(game.batch);
+					drawHitRings(Gdx.graphics.getDeltaTime());
 					Fx.additiveOff(game.batch);
 					for(int h = 0; h < 5; h++){
 						redWrong[h].draw(game.batch);
@@ -1856,6 +1867,66 @@ public class PlayScreen implements Screen {
 		}
 	}
 
+	// catch and miss feedback: shockwave rings at the hit point, bursts of embers in the orb's colour, and a screen shake
+	private static final int HIT_RINGS = 8;
+	private static final float HIT_RING_LIFE = 0.38f, SHAKE_LIFE = 0.32f;
+	private static final float[][] HIT_COLORS = { { 0.25f, 0.85f, 1f }, { 1f, 0.25f, 0.4f }, { 1f, 0.8f, 0.25f }, { 0.75f, 0.4f, 1f } };
+	private final float[] hrX = new float[HIT_RINGS], hrY = new float[HIT_RINGS], hrT = new float[HIT_RINGS], hrSize = new float[HIT_RINGS];
+	private final float[][] hrColor = new float[HIT_RINGS][];
+	private int hrNext;
+	private float shakeTime = 9f, shakePower;
+
+	private void hitRing(float x, float y, float size, float[] c){
+		hrX[hrNext] = x; hrY[hrNext] = y; hrT[hrNext] = 0f; hrSize[hrNext] = size; hrColor[hrNext] = c;
+		hrNext = (hrNext + 1) % HIT_RINGS;
+	}
+
+	private void embers(float x, float y, int n, float speed, float[] c, float whiteMax){
+		float u = fxy(1);
+		for(int i = 0; i < n; i++){
+			float ang = MathUtils.random(MathUtils.PI2), sp = MathUtils.random(0.3f, 1f)*speed*u;
+			float white = MathUtils.random(0f, whiteMax);
+			Fx.emit(x, y, MathUtils.cos(ang)*sp, MathUtils.sin(ang)*sp, MathUtils.random(0.3f, 0.6f), MathUtils.random(4f, 9f)*u,
+					c[0] + (1f - c[0])*white, c[1] + (1f - c[1])*white, c[2] + (1f - c[2])*white);
+		}
+	}
+
+	/** an orb was caught: kind 0 = blue, 1 = red, 2 = gold (energy), 3 = purple (power-up) */
+	private void catchFx(Ball ball, int kind){
+		float bx = ball.getPosition().x, by = ball.getPosition().y;
+		hitRing(bx, by, fxy(kind >= 2 ? 64f : 48f), HIT_COLORS[kind]);
+		embers(bx, by, kind >= 2 ? 18 : 12, 210f, HIT_COLORS[kind], 0.5f);
+	}
+
+	/** an orb of the wrong colour hit the shield: a harsher double ring in its colour and white-hot debris */
+	private void missFx(Ball ball){
+		float bx = ball.getPosition().x, by = ball.getPosition().y;
+		float[] c = HIT_COLORS[ball.getType() == Ball.B_BLUE ? 0 : 1];
+		hitRing(bx, by, fxy(60f), c);
+		hitRing(bx, by, fxy(96f), c);
+		embers(bx, by, 16, 320f, c, 1f);
+	}
+
+	private void hitShake(float power){
+		if(shakeTime < SHAKE_LIFE) power = Math.max(power, shakePower*(1f - shakeTime/SHAKE_LIFE));
+		shakePower = power;
+		shakeTime = 0f;
+	}
+
+	/** call between Fx.additiveOn/Off */
+	private void drawHitRings(float dt){
+		for(int i = 0; i < HIT_RINGS; i++){
+			if(hrColor[i] == null || hrT[i] >= HIT_RING_LIFE) continue;
+			if(state == PLAY) hrT[i] += dt;
+			float t = Math.min(1f, hrT[i]/HIT_RING_LIFE);
+			float grow = 1f - (1f - t)*(1f - t);		// fast out, easing to a stop
+			float size = hrSize[i]*(0.35f + 0.9f*grow);
+			float[] c = hrColor[i];
+			game.batch.setColor(c[0], c[1], c[2], (1f - t)*(1f - t)*0.85f);
+			game.batch.draw(Fx.ring(), hrX[i] - size/2, hrY[i] - size/2, size, size);
+		}
+	}
+
 	public boolean shouldRemoveBall(Ball ball){
 		boolean hit = false;
 		if(ship.getCircle().overlaps(ball.getCircle())){	
@@ -1871,6 +1942,7 @@ public class PlayScreen implements Screen {
 						ship.tweenBlueRedFF();
 					blues = blues + bluesValue;
 						addCatchPopup(ball, bluesValue, true);
+						catchFx(ball, 0);
 					for(int h = 0; h < 5; h++){
 						blueParticles[h + blueP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						blueParticles[h + blueP].setColor(1f, 1f, 1f, 1f);
@@ -1895,19 +1967,22 @@ public class PlayScreen implements Screen {
 						else
 							shield.play();
 					ship.tweenBlackFF();
+					missFx(ball);
 					redWrong[redW].setPosition(ball.getPosition().x - 10, ball.getPosition().y);
 					redWrong[redW].setColor(1f, 1f, 1f, 1f);
 					Tween.to(redWrong[redW], SpriteAccessor.COLOR, 0.35f).target(1f, 1f, 1f, 0f).start(tweenManager);
 					Tween.to(redWrong[redW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(redW != 4) redW++;
 					else redW = 0;
-					if(tutorial != null) tutDrain(); else if(!redShield){
+					if(tutorial != null){ tutDrain(); hitShake(1f); } else if(!redShield){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
+							hitShake(1f);
 							if(ship.getLifes() > 1) 
 								Tween.call(lifeMeterChangeCallback).start(tweenManager);
 						}else{ 
 							state = PlayScreen.DEAD;
+							hitShake(2.2f);
 							if(game.getMMS().sound == game.getMMS().ON)
 								dead.play(0.35f);
 						}	
@@ -1923,6 +1998,7 @@ public class PlayScreen implements Screen {
 						ship.tweenRedBlueFF();
 					reds = reds + redsValue;
 						addCatchPopup(ball, redsValue, false);
+						catchFx(ball, 1);
 					for(int h = 0; h < 5; h++){
 						redParticles[h + redP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						redParticles[h + redP].setColor(1f, 1f, 1f, 1f);
@@ -1947,19 +2023,22 @@ public class PlayScreen implements Screen {
 						else
 							shield.play();
 					ship.tweenBlackFF();
+					missFx(ball);
 					blueWrong[blueW].setPosition(ball.getPosition().x-10, ball.getPosition().y);
 					blueWrong[blueW].setColor(1f, 1f, 1f, 1f);
 					Tween.to(blueWrong[blueW], SpriteAccessor.COLOR, 0.35f).target(1f, 1f, 1f, 0f).start(tweenManager);
 					Tween.to(blueWrong[blueW], SpriteAccessor.SCALE, 0.35f).target(2, 2).repeatYoyo(1, 0).start(tweenManager);
 					if(blueW != 4) blueW++;
 					else blueW = 0;
-					if(tutorial != null) tutDrain(); else if(!blueShield){
+					if(tutorial != null){ tutDrain(); hitShake(1f); } else if(!blueShield){
 						if(ship.getLifes() > 0){
 							ship.setLifes(ship.getLifes() - 1);
+							hitShake(1f);
 							if(ship.getLifes() > 1) 
 								Tween.call(lifeMeterChangeCallback).start(tweenManager);
 						}else{ 
 							state = PlayScreen.DEAD;
+							hitShake(2.2f);
 							if(game.getMMS().sound == game.getMMS().ON)
 								dead.play(0.35f);
 						}	
@@ -1972,6 +2051,7 @@ public class PlayScreen implements Screen {
 					ship.tweenGoldFF();
 					reds = reds + redsValue;
 						addCatchPopup(ball, redsValue, false);
+						catchFx(ball, 1);
 					for(int h = 0; h < 5; h++){
 						redParticles[h + redP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						redParticles[h + redP].setColor(1f, 1f, 1f, 1f);
@@ -1993,6 +2073,7 @@ public class PlayScreen implements Screen {
 					ship.tweenGoldFF();
 					blues = blues + bluesValue;
 						addCatchPopup(ball, bluesValue, true);
+						catchFx(ball, 0);
 					for(int h = 0; h < 5; h++){
 						blueParticles[h + blueP].setPosition(ball.getPosition().x, ball.getPosition().y);
 						blueParticles[h + blueP].setColor(1f, 1f, 1f, 1f);
@@ -2017,6 +2098,7 @@ public class PlayScreen implements Screen {
 				lifesCounter++;
 				ship.tweenYellowFF();
 				ship.goldFlash();
+				catchFx(ball, 2);
 				if(ship.getLifes() < game.getMMS().energyMeter) 
 					ship.setLifes(ship.getLifes() + 1);
 				if(ship.getLifes() > 1) 
@@ -2044,7 +2126,8 @@ public class PlayScreen implements Screen {
 				if(game.getMMS().sound == game.getMMS().ON)
 					object.play(0.75f);
 				objCounter++;
-				ship.tweenObjectFF();	
+				ship.tweenObjectFF();
+				catchFx(ball, 3);	
 				if(object1 == -1 && !(redToBlue || blueToRed || blueX2 || redX2 || slow || blueShield || redShield || blueX3 || redX3 || goldShield)){
 					object1 = tutorial != null ? 2 : randomObject();
 					obj[object1]++;
