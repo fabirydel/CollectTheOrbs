@@ -1357,6 +1357,13 @@ public class MainMenuScreen implements Screen {
 		bStats.draw(game.batch);
 		bHelp.draw(game.batch);
 		
+		// the ship hovers gently inside its shield while it waits, and its engine flames move with it
+		Sprite hoverShip = shipsSprites[shipSelected];
+		float hoverBaseY = hoverShip.getY();
+		if(state == STANDBY){
+			menuHover += delta;
+			hoverShip.setY(hoverBaseY + fy(4f)*MathUtils.sin(menuHover*2.1f));
+		}
 		//engine plume
 		if(startTrace && drawTrace){
 			Fx.init(game.assetManager);
@@ -1366,17 +1373,8 @@ public class MainMenuScreen implements Screen {
 			Fx.additiveOff(game.batch);
 		}
 
-		{
-			// the ship hovers gently inside its shield while it waits
-			Sprite hs = shipsSprites[shipSelected];
-			float hy = hs.getY();
-			if(state == STANDBY){
-				menuHover += delta;
-				hs.setY(hy + fy(4f)*MathUtils.sin(menuHover*2.1f));
-			}
-			hs.draw(game.batch);
-			hs.setY(hy);
-		}
+		hoverShip.draw(game.batch);
+		hoverShip.setY(hoverBaseY);
 		ffSprites[forceFieldSelected].draw(game.batch);
 		// shield switched: the same colour sweep around the rim as in the game
 		if(shieldSwitchTime < Fx.SWITCH_SWEEP){
