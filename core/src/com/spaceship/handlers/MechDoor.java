@@ -157,7 +157,8 @@ public class MechDoor {
 			Fx.additiveOn(sb);
 			float seam = x + w/2 + jx;
 			// lock light on each plate beside the seam: red while locked, green once released
-			if (plate > 30f*unit) {
+			// (hidden once the plate has retracted too far to carry it, so it never sits on the card's border)
+			if (open*w/2 + 46f*unit + 16f*unit < w/2) {
 				float blink = unlocked ? 1f : 0.55f + 0.45f*MathUtils.sin(age*38f);
 				float ls = 26f*unit;
 				for (int side = -1; side <= 1; side += 2) {

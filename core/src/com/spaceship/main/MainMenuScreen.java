@@ -245,15 +245,21 @@ public class MainMenuScreen implements Screen {
 				}
 				@Override
 				public void touchUp(InputEvent event, float x, float y, int pointer, int button){
-					card.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1f, 1f, 0.16f, com.badlogic.gdx.math.Interpolation.swingOut));
+					card.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1f, 1f, 0.12f, com.badlogic.gdx.math.Interpolation.pow2Out));
 				}
 			});
 		}
 	}
 
+	/** seconds after a purchase when the card is swapped: just after the shutter has shut, so the swap is hidden behind it */
+	private static final float SHUTTER_SWAP = 0.17f;
+
 	/** something was just bought: play the mechanical shutter over its card */
 	private void celebrate(com.badlogic.gdx.scenes.scene2d.Actor card){
 		if(card == null) return;
+		// the card springs back to full size at once, so the shutter fits exactly inside its border
+		card.clearActions();
+		card.setScale(1f);
 		com.badlogic.gdx.math.Vector2 p = card.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(0f, 0f));
 		Fx.init(game.assetManager);
 		mechDoor.play(p.x, p.y, card.getWidth(), card.getHeight());
@@ -1809,15 +1815,15 @@ public class MainMenuScreen implements Screen {
 								blueBalls -= bluesPriceShips[i]; 
 								redBalls -= redsPriceShips[i];
 								shipsBought[i] = 1;
-								Tween.set(shipsBoughtImage[i], ImageAccessor.COLOR).target(1f, 1f, 1f, 0f).start(tweenManager);
-								Tween.to(shipsPriceImage[i], ImageAccessor.COLOR, 0.1f).target(1f, 1f, 1f, 0f).start(tweenManager);
+								// the price card stays until the shutter is shut; the unlocked card takes its place behind it
 								Timer.schedule(new Task(){
 									@Override
 									public void run(){
+										shipsBoughtImage[i].setColor(1f, 1f, 1f, 1f);
+										shipsBoughtImage[i].setScale(1f);
 										imgsShips.getCell(shipsPriceImage[i]).setActor(shipsBoughtImage[i]);
 									}
-								}, 0.1f);
-								Tween.to(shipsBoughtImage[i], ImageAccessor.COLOR, 0.1f).delay(0.1f).target(1f, 1f, 1f, 1f).start(tweenManager);
+								}, SHUTTER_SWAP);
 	
 								ships++;
 								boughtShip = true;
@@ -1933,15 +1939,15 @@ public class MainMenuScreen implements Screen {
 								blueBalls -= bluesPriceGalaxies[i]; 
 								redBalls -= redsPriceGalaxies[i];
 								galaxiesBought[i] = 1;
-								Tween.set(bgsBoughtImage[i], ImageAccessor.COLOR).target(1f, 1f, 1f, 0f).start(tweenManager);
-								Tween.to(bgsBoughtImage[i], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 0f).start(tweenManager);
+								// the price card stays until the shutter is shut; the unlocked card takes its place behind it
 								Timer.schedule(new Task(){
 									@Override
 									public void run(){
+										bgsBoughtImage[i].setColor(1f, 1f, 1f, 1f);
+										bgsBoughtImage[i].setScale(1f);
 										imgsBgs.getCell(bgsPriceImage[i]).setActor(bgsBoughtImage[i]);
 									}
-								}, 0.25f);
-								Tween.to(bgsBoughtImage[i], ImageAccessor.COLOR, 0.25f).delay(0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+								}, SHUTTER_SWAP);
 	
 								galaxies++;
 								boughtGalaxy = true;
@@ -2265,7 +2271,7 @@ public class MainMenuScreen implements Screen {
 							final int barIndex = i < 4 ? 0 : i < 6 ? 1 : i < 9 ? 2 : i < 11 ? 3 : i < 14 ? 4 : 5;
 							final int newLevel = barIndex == 0 ? shipSpeed : barIndex == 1 ? energyMeter : barIndex == 2 ? energyStart : barIndex == 3 ? objectsSlots : barIndex == 4 ? objectStart : objectsDuration;
 							upgradeBars[barIndex].setLevel(newLevel/(float) UPGRADE_MAX[barIndex]);
-							Tween.to(upgradesPriceImages[i], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 0f).start(tweenManager);
+							// the price card stays until the shutter is shut; the next level's card takes its place behind it
 							Timer.schedule(new Task(){
 								@Override
 								public void run(){
@@ -2274,41 +2280,49 @@ public class MainMenuScreen implements Screen {
 										imgsUpg.getCell(upgradesPriceImages[i]).setActor(upgradesPriceImages[i+1]);
 										if(i == 6){
 											if(energyMeter >= 4){
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 											}else
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
 										}else if(i == 7){
 											if(energyMeter == 5){
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 											}else
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
 										}else if(i == 4){
-											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
-											Tween.to(upgradesPriceImages[7], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[7], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 										}else if(i == 11){
 											if(objectsSlots >= 2){
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 											}else
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
 										}else if(i == 12){
 											if(objectsSlots == 3){
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 											}else
-												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
+												Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(0.5f, 0.5f, 0.5f, 1f).start(tweenManager);
 										}else if(i == 9){
-											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
-											Tween.to(upgradesPriceImages[12], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[12], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 										}else
-											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[i + 1], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 									}else{
-										upgradesPriceImages[i].remove();			
+										// last level: the shutter opens on the card fading away, then it is gone
+										final Image last = upgradesPriceImages[i];
+										Tween.to(last, ImageAccessor.COLOR, 0.4f).delay(0.3f).target(1f, 1f, 1f, 0f).start(tweenManager);
+										Timer.schedule(new Task(){
+											@Override
+											public void run(){
+												last.remove();
+											}
+										}, 0.95f);
 										if(i == 5)
-											Tween.to(upgradesPriceImages[8], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[8], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 										if(i == 10)	
-											Tween.to(upgradesPriceImages[13], ImageAccessor.COLOR, 0.25f).target(1f, 1f, 1f, 1f).start(tweenManager);
+											Tween.to(upgradesPriceImages[13], ImageAccessor.COLOR, 0.02f).target(1f, 1f, 1f, 1f).start(tweenManager);
 									}	
 								}
-							}, 0.25f);
+							}, SHUTTER_SWAP);
 							
 						}else{
 							if(sound == ON)
