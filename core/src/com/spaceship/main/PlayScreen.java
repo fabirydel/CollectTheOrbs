@@ -808,14 +808,16 @@ public class PlayScreen implements Screen {
 			Gdx.gl.glClearColor(0, 0, 0, 0);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-			tweenManager.update(delta);
+			// game over: time runs slow for a moment after the final hit, then eases back
+			if(deathTime < DEATH_SLOW) deathTime += delta;
+			tweenManager.update(delta*deathSlow());
 
 			// screen shake after losing energy: a short, quickly fading jolt
 			float shakeX = 0f, shakeY = 0f;
 			if(shakeTime < SHAKE_LIFE){
 				shakeTime += Math.min(delta, 0.05f);
 				float k = Math.max(0f, 1f - shakeTime/SHAKE_LIFE);
-				float amp = fxy(5f)*shakePower*k*k;
+				float amp = fxy(9f)*shakePower*k*k;
 				shakeX = amp*MathUtils.sin(shakeTime*71f);
 				shakeY = amp*MathUtils.cos(shakeTime*57f);
 			}
@@ -828,6 +830,7 @@ public class PlayScreen implements Screen {
 			//tween death
 			if(state == DEAD){
 				if(firstDeath){
+					deathFx();
 					if(Gdx.app.getType().equals(ApplicationType.Android)){
 						// an interstitial every few game overs (skipped once the ads are removed): the launcher decides
 						Timer.schedule(new Task(){
@@ -1687,6 +1690,18 @@ public class PlayScreen implements Screen {
 						redWrong[h].draw(game.batch);
 						blueWrong[h].draw(game.batch);
 					}
+				}else{
+					// game over: the break-up burst, its shockwaves and a white flash where the ship was
+					Fx.additiveOn(game.batch);
+					Fx.draw(game.batch);
+					drawHitRings(Gdx.graphics.getDeltaTime()*deathSlow());
+					if(deathTime < 0.45f){
+						float ft = deathTime/0.45f;
+						float fs = fxy(500f)*(0.5f + 1.2f*ft);
+						game.batch.setColor(1f, 1f, 1f, (1f - ft)*(1f - ft)*0.95f);
+						game.batch.draw(Fx.glow(), deathX - fs/2, deathY - fs/2, fs, fs);
+					}
+					Fx.additiveOff(game.batch);
 				}
 	
 				drawLifeMeter();
@@ -1733,7 +1748,7 @@ public class PlayScreen implements Screen {
 					greysFont.getData().setScale(x, y);
 					// the counter row is the main menu's own (same orbs, same animation, same spacing); the animation clock only runs by itself while playing
 					if(state == DEAD || state == DEADLEAVING)
-						Fx.update(Gdx.graphics.getDeltaTime());
+						Fx.update(Gdx.graphics.getDeltaTime()*deathSlow());
 					MainMenuScreen mm = game.getMMS();
 					String blueText = null, redText = null;
 					if(changeRedScore){
@@ -1886,7 +1901,7 @@ public class PlayScreen implements Screen {
 		for(int i = 0; i < n; i++){
 			float ang = MathUtils.random(MathUtils.PI2), sp = MathUtils.random(0.3f, 1f)*speed*u;
 			float white = MathUtils.random(0f, whiteMax);
-			Fx.emit(x, y, MathUtils.cos(ang)*sp, MathUtils.sin(ang)*sp, MathUtils.random(0.3f, 0.6f), MathUtils.random(4f, 9f)*u,
+			Fx.emit(x, y, MathUtils.cos(ang)*sp, MathUtils.sin(ang)*sp, MathUtils.random(0.3f, 0.6f), MathUtils.random(8f, 17f)*u,
 					c[0] + (1f - c[0])*white, c[1] + (1f - c[1])*white, c[2] + (1f - c[2])*white);
 		}
 	}
@@ -1894,17 +1909,46 @@ public class PlayScreen implements Screen {
 	/** an orb was caught: kind 0 = blue, 1 = red, 2 = gold (energy), 3 = purple (power-up) */
 	private void catchFx(Ball ball, int kind){
 		float bx = ball.getPosition().x, by = ball.getPosition().y;
-		hitRing(bx, by, fxy(kind >= 2 ? 64f : 48f), HIT_COLORS[kind]);
-		embers(bx, by, kind >= 2 ? 18 : 12, 210f, HIT_COLORS[kind], 0.5f);
+		hitRing(bx, by, fxy(kind >= 2 ? 120f : 90f), HIT_COLORS[kind]);
+		embers(bx, by, kind >= 2 ? 18 : 12, 400f, HIT_COLORS[kind], 0.5f);
 	}
 
 	/** an orb of the wrong colour hit the shield: a harsher double ring in its colour and white-hot debris */
 	private void missFx(Ball ball){
 		float bx = ball.getPosition().x, by = ball.getPosition().y;
 		float[] c = HIT_COLORS[ball.getType() == Ball.B_BLUE ? 0 : 1];
-		hitRing(bx, by, fxy(60f), c);
-		hitRing(bx, by, fxy(96f), c);
-		embers(bx, by, 16, 320f, c, 1f);
+		hitRing(bx, by, fxy(110f), c);
+		hitRing(bx, by, fxy(180f), c);
+		embers(bx, by, 16, 600f, c, 1f);
+	}
+
+	private static final float DEATH_SLOW = 0.9f;
+	private float deathTime = 9f, deathX, deathY;
+
+	/** time scale after the final hit: a crawl at first, easing back to normal speed */
+	private float deathSlow(){
+		if(deathTime >= DEATH_SLOW) return 1f;
+		if(deathTime < 0.25f) return 0.2f;
+		float t = (deathTime - 0.25f)/(DEATH_SLOW - 0.25f);
+		return 0.2f + 0.8f*t*t;
+	}
+
+	/** the final hit: the ship bursts into embers and shockwaves, and every orb still on screen pops */
+	private void deathFx(){
+		deathTime = 0f;
+		deathX = shipCenterX();
+		deathY = shipCenterY();
+		float[] c = shieldColor();
+		hitRing(deathX, deathY, fxy(330f), c);
+		hitRing(deathX, deathY, fxy(580f), new float[]{1f, 1f, 1f});
+		embers(deathX, deathY, 48, 1100f, c, 0.8f);
+		embers(deathX, deathY, 24, 480f, new float[]{1f, 0.6f, 0.25f}, 0.3f);
+		for(Ball ball : dBalls){
+			float bx = ball.getPosition().x, by = ball.getPosition().y;
+			if(bx < 0 || bx > Gdx.graphics.getWidth() || by < 0 || by > Gdx.graphics.getHeight()) continue;
+			int t = ball.getType();
+			embers(bx, by, 7, 300f, HIT_COLORS[t == Ball.B_BLUE ? 0 : t == Ball.B_RED ? 1 : t == Ball.B_LIFE ? 2 : 3], 0.4f);
+		}
 	}
 
 	private void hitShake(float power){
@@ -1917,7 +1961,7 @@ public class PlayScreen implements Screen {
 	private void drawHitRings(float dt){
 		for(int i = 0; i < HIT_RINGS; i++){
 			if(hrColor[i] == null || hrT[i] >= HIT_RING_LIFE) continue;
-			if(state == PLAY) hrT[i] += dt;
+			if(state == PLAY || state == DEAD) hrT[i] += dt;
 			float t = Math.min(1f, hrT[i]/HIT_RING_LIFE);
 			float grow = 1f - (1f - t)*(1f - t);		// fast out, easing to a stop
 			float size = hrSize[i]*(0.35f + 0.9f*grow);
