@@ -32,6 +32,8 @@ public class Starfield {
 	private float nextShot, shotT = -1f, shotX, shotY, shotDx, shotDy, shotLife;
 
 	private float time;
+	/** 0..1: the stars stretch into streaks, the nearer the longer (the rush right after a speed-up) */
+	public float warp;
 
 	public Starfield() {
 		for (int l = 0; l < LAYERS; l++) {
@@ -127,7 +129,12 @@ public class Starfield {
 				float[] c = TINTS[tint[l][i]];
 				float x = sx[l][i]*w, y = sy[l][i]*h;
 				sb.setColor(c[0], c[1], c[2], alpha*ALPHA[l]*tw);
-				sb.draw(Fx.glow(), x - s/2, y - s/2, s, s);
+				if (warp > 0.02f) {
+					// a streak trailing upward (the stars rush down)
+					float len = s*(1f + warp*(6f + 9f*l));
+					sb.draw(Fx.glow(), x - s/2, y - s/2, s, len);
+				} else
+					sb.draw(Fx.glow(), x - s/2, y - s/2, s, s);
 				if (l == LAYERS - 1) {		// the nearest stars get a hot core
 					sb.setColor(1f, 1f, 1f, alpha*0.5f*tw);
 					sb.draw(Fx.glow(), x - s*0.22f, y - s*0.22f, s*0.44f, s*0.44f);

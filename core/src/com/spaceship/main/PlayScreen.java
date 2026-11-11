@@ -2320,6 +2320,12 @@ public class PlayScreen implements Screen {
 		// twinkling star layers, dust and shooting stars over the picture; they keep drifting while it stands still
 		float bgScroll = state == PLAY ? backgroundSpeed(velocityBg) : 0f;
 		starfield.update(Gdx.graphics.getDeltaTime(), bgScroll);
+		starfield.warp = state == PLAY ? speedFx.backgroundBoost() : 0f;
+		// lens strain: the colours pull apart toward the screen edges on a speed-up, a hard hit and the final hit
+		float strain = state == PLAY ? 0.85f*speedFx.backgroundBoost() : 0f;
+		if(shakeTime < SHAKE_LIFE) strain = Math.max(strain, 0.3f*shakePower*(1f - shakeTime/SHAKE_LIFE));
+		if(deathTime < 0.8f) strain = Math.max(strain, 1f - deathTime/0.8f);
+		com.spaceship.handlers.Bloom.fringe = strain;
 		starfield.draw(game.batch, bgs1.getColor().a);
 		if(state == PLAY){
 			// move the separator: speed follows the orbs' speed, frame-rate independent

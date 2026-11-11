@@ -20,6 +20,13 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 public class Bloom {
 	/** master switch (e.g. for comparing with and without) */
 	public static boolean ENABLED = true;
+	/**
+	 * 0..1: colour fringing toward the screen edges (red and blue pulled apart, like a lens under strain). The play screen
+	 * raises it for a moment on a speed-up, a hard hit and the final hit; 0 = a clean picture.
+	 */
+	public static float fringe;
+	/** how far apart the colours go at the screen edge at full strength, as a fraction of the screen */
+	private static final float FRINGE_REACH = 0.022f;
 
 	/** brightness (0..1) where the glow starts, and how gradually it comes in */
 	private static final float THRESHOLD = 0.66f, KNEE = 0.30f;
@@ -49,9 +56,10 @@ public class Bloom {
 			+ " gl_FragColor = vec4(c, 1.0);\n}";
 	private static final String COPY = HEAD + "void main(){ gl_FragColor = vec4(texture2D(u_texture, v_uv).rgb, 1.0); }";
 	// scene + glow, combined like light on a screen so bright areas do not clip harshly
-	private static final String COMPOSITE = HEAD + "uniform sampler2D u_tight;\nuniform sampler2D u_wide;\nuniform float u_a;\nuniform float u_b;\n"
+	private static final String COMPOSITE = HEAD + "uniform sampler2D u_tight;\nuniform sampler2D u_wide;\nuniform float u_a;\nuniform float u_b;\nuniform float u_fringe;\n"
 			+ "void main(){\n"
-			+ " vec3 s = texture2D(u_texture, v_uv).rgb;\n"
+			+ " vec2 d = (v_uv - 0.5)*u_fringe;\n"
+			+ " vec3 s = vec3(texture2D(u_texture, v_uv + d).r, texture2D(u_texture, v_uv).g, texture2D(u_texture, v_uv - d).b);\n"
 			+ " vec3 g = texture2D(u_tight, v_uv).rgb*u_a + texture2D(u_wide, v_uv).rgb*u_b;\n"
 			+ " gl_FragColor = vec4(s + g*(1.0 - s*0.55), 1.0);\n}";
 
@@ -158,6 +166,7 @@ public class Bloom {
 		composite.setUniformi("u_wide", 2);
 		composite.setUniformf("u_a", TIGHT);
 		composite.setUniformf("u_b", WIDE);
+		composite.setUniformf("u_fringe", Math.max(0f, Math.min(1f, fringe))*FRINGE_REACH);
 		quad.draw(scene.getColorBufferTexture(), 0, 0, 1, 1, 0, 0, 1, 1);
 		quad.end();
 	}

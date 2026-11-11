@@ -385,6 +385,8 @@ public class Main extends Game{
 	public void render() {
 		// the menu and the game are drawn through the bloom pass (the splash has its own light effects)
 		com.badlogic.gdx.Screen before = getScreen();
+		if(!(before instanceof PlayScreen))
+			com.spaceship.handlers.Bloom.fringe = 0f;
 		boolean glow = (before instanceof MainMenuScreen || before instanceof PlayScreen) && bloom.begin();
         super.render(); 
 		if(glow){
