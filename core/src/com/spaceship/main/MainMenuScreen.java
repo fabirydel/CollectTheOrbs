@@ -896,7 +896,8 @@ public class MainMenuScreen implements Screen {
 		ffChange = game.assetManager.get("audio/change2.ogg", Sound.class);
 		buttonSmall = game.assetManager.get("audio/buttonSmall.ogg", Sound.class);
 		buttonLarge = game.assetManager.get("audio/buttonLarge.ogg", Sound.class);
-		bought = game.assetManager.get("audio/bought.ogg", Sound.class);
+		// purchases play the airlock door that goes with the shutter animation (bought.ogg is still the score tally in the game)
+		bought = game.assetManager.get("audio/door.ogg", Sound.class);
 		cant = game.assetManager.get("audio/select.ogg", Sound.class);
 		launch = game.assetManager.get("audio/launch.ogg", Sound.class);
 		pre = game.assetManager.get("audio/pre.ogg", Sound.class);
@@ -2226,7 +2227,9 @@ public class MainMenuScreen implements Screen {
 					if(canSelect){
 						canSelect = false;
 						if((i == 7 && energyMeter < 4) || (i == 8 && energyMeter < 5) || (i == 12 && objectsSlots < 2)|| (i == 13 && objectsSlots < 3)){
-							
+							// locked until another upgrade is bought: the same refusal sound as not having enough orbs
+							if(sound == ON)
+								cant.play(1.5f);
 						}else if(Integer.valueOf(lifeBalls) >= upgradesPrice[Integer.valueOf(event.getListenerActor().getName())]){
 							
 							if(sound == ON)

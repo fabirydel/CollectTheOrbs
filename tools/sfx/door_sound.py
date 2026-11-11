@@ -10,14 +10,15 @@ Pieces taken from the recording (times in the source):
   8.30-8.62  a low thud                -> the plates hitting their stops, at 1.08 s
 
 Run from the repo root:  python3 tools/sfx/door_sound.py [out.ogg]
-Needs ffmpeg (its built-in Vorbis encoder) and numpy. The previous sound is kept in tools/sfx/originals/bought.ogg.
+Needs ffmpeg (its built-in Vorbis encoder) and numpy. Writes android/assets/audio/door.ogg; bought.ogg (the old purchase
+sound) is still used for the score tally at game over.
 """
 import os, subprocess, sys, tempfile, wave
 import numpy as np
 
 HERE = os.path.dirname(__file__)
 SRC = os.path.join(HERE, 'sources', 'airlock_freesound_607265.mp3')
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, '..', '..', 'android', 'assets', 'audio', 'bought.ogg')
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, '..', '..', 'android', 'assets', 'audio', 'door.ogg')
 SR = 44100
 LENGTH = 1.55
 
