@@ -116,6 +116,7 @@ public class PlayScreen implements Screen {
 	public static Sprite padHorizontalDownEsp;
 	public Sprite cover;
 
+	private final com.spaceship.handlers.Starfield starfield = new com.spaceship.handlers.Starfield();
 	public static Sprite bgs1;
 	public static Sprite bgs2;
 
@@ -2116,9 +2117,13 @@ public class PlayScreen implements Screen {
 		bgs2.setPosition(-(bgs2.getWidth()-Gdx.graphics.getWidth())/2, 
 				currentBgY - bgs1.getHeight() - 2*bgs2.getHeight());
 		bgs2.draw(game.batch);
+		// twinkling star layers, dust and shooting stars over the picture; they keep drifting while it stands still
+		float bgScroll = state == PLAY ? backgroundSpeed(velocityBg) : 0f;
+		starfield.update(Gdx.graphics.getDeltaTime(), bgScroll);
+		starfield.draw(game.batch, bgs1.getColor().a);
 		if(state == PLAY){
 			// move the separator: speed follows the orbs' speed, frame-rate independent
-			currentBgY -= backgroundSpeed(velocityBg)*Gdx.graphics.getDeltaTime();
+			currentBgY -= bgScroll*Gdx.graphics.getDeltaTime();
 		}
 		// if the separator reaches the screen edge, move it back to the first position
 		if(currentBgY <= bgs1.getHeight() - Gdx.graphics.getDeltaTime()) currentBgY = bgs1.getHeight() + 2*bgs2.getHeight();

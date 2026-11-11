@@ -210,6 +210,7 @@ public class MainMenuScreen implements Screen {
 	private Image[] upgradesPriceImages;
 	private Image[] upgradeFullImages;
 	private UpgradeBar[] upgradeBars = new UpgradeBar[6];
+	private final com.spaceship.handlers.Starfield starfield = new com.spaceship.handlers.Starfield();
 	private static final int[] UPGRADE_MAX = { 5, 5, 5, 3, 3, 5 };
 	private Image[] upgradeEmptyImages;
 	private Image padsControlsEN;
@@ -3750,6 +3751,10 @@ public class MainMenuScreen implements Screen {
 		bgs[galaxySelected*2+1].setPosition(currentBgX - bgs[galaxySelected*2].getWidth(), 
 				currentBgY - bgs[galaxySelected*2].getHeight() - 2*bgs[galaxySelected*2+1].getHeight());
 		bgs[galaxySelected*2+1].draw(game.batch);
+		// twinkling star layers, dust and shooting stars over the picture
+		Fx.init(game.assetManager);
+		starfield.update(Gdx.graphics.getDeltaTime(), state != LAUNCH ? fy(80) : 0f);
+		starfield.draw(game.batch, bgs[galaxySelected*2].getColor().a);
 		if(TimeUtils.nanoTime() - lastTimeBg > 25000000 && state != LAUNCH){
 			// move the separator
 			currentBgY -= fy(2);

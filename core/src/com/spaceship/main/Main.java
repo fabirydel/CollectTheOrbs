@@ -380,8 +380,17 @@ public class Main extends Game{
 		super.resize(width, height);
 	}	
 	
+	private final com.spaceship.handlers.Bloom bloom = new com.spaceship.handlers.Bloom();
+
 	public void render() {
+		// the menu and the game are drawn through the bloom pass (the splash has its own light effects)
+		com.badlogic.gdx.Screen before = getScreen();
+		boolean glow = (before instanceof MainMenuScreen || before instanceof PlayScreen) && bloom.begin();
         super.render(); 
+		if(glow){
+			bloom.end();
+			bloom.watch(com.badlogic.gdx.Gdx.graphics.getDeltaTime());
+		}
         if(com.badlogic.gdx.Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.BACK)){
         	com.badlogic.gdx.Screen s = getScreen();
         	if(s instanceof MainMenuScreen)
@@ -392,6 +401,7 @@ public class Main extends Game{
     }
 
     public void dispose() {
+        bloom.dispose();
         batch.dispose();
         font.dispose();
         assetManager.dispose();
