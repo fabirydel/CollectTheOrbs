@@ -173,6 +173,28 @@ public class Fx {
 		sb.draw(bolt, x0, y0 - th / 2, 0, th / 2, len + th * 0.35f, th, 1f, 1f, deg, 0, 0, bolt.getWidth(), bolt.getHeight(), false, false);
 	}
 
+	public static final float SWITCH_SWEEP = 0.36f;
+
+	/**
+	 * Shield switched: the new colour sweeps once around the rim with a fading trail, and a ring pushes out.
+	 * Call between additiveOn/Off while time (seconds since the switch) is below SWITCH_SWEEP.
+	 * @param full the shield's drawn diameter
+	 */
+	public static void shieldSweep(SpriteBatch sb, float cx, float cy, float full, float time, float r, float g, float b) {
+		if (time < 0f || time >= SWITCH_SWEEP)
+			return;
+		float t = time / SWITCH_SWEEP, e = 1f - (1f - t) * (1f - t);
+		float head = 90f - 360f * t;		// steady speed, so the highlight never lingers in one spot
+		for (int k = 0; k < 5; k++) {
+			float fade = (1f - t) * (1f - t) * (1f - k * 0.19f);
+			sb.setColor(r, g, b, fade * (k == 0 ? 0.75f : 0.55f));
+			sb.draw(shieldGlint, cx - full / 2, cy - full / 2, full / 2, full / 2, full, full, 1.04f, 1.04f, head + k * 20f * (1f - 0.5f * t), 0, 0, 256, 256, false, false);
+		}
+		float size = full * (1.0f + 0.55f * e);
+		sb.setColor(r, g, b, (1f - t) * 0.55f);
+		sb.draw(ring, cx - size / 2, cy - size / 2, size, size);
+	}
+
 	/** Looping energy animation frames for an orb: 0 = blue, 1 = red, 2 = gold (energy), 3 = purple (item). */
 	public static com.badlogic.gdx.graphics.g2d.TextureRegion[] orbFrames(int kind) {
 		return orbFrames[kind];

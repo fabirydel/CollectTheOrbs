@@ -210,6 +210,7 @@ public class MainMenuScreen implements Screen {
 	private Image[] upgradesPriceImages;
 	private Image[] upgradeFullImages;
 	private UpgradeBar[] upgradeBars = new UpgradeBar[6];
+	private float shieldSwitchTime = 9f, shieldSweepScale = 1f;
 	private final com.spaceship.handlers.Starfield starfield = new com.spaceship.handlers.Starfield();
 	private static final int[] UPGRADE_MAX = { 5, 5, 5, 3, 3, 5 };
 	private Image[] upgradeEmptyImages;
@@ -1302,6 +1303,16 @@ public class MainMenuScreen implements Screen {
 
 		shipsSprites[shipSelected].draw(game.batch);
 		ffSprites[forceFieldSelected].draw(game.batch);
+		// shield switched: the same colour sweep around the rim as in the game
+		if(shieldSwitchTime < Fx.SWITCH_SWEEP){
+			shieldSwitchTime += delta;
+			Sprite ffS = ffSprites[forceFieldSelected];
+			boolean blueS = forceFieldSelected == 0;
+			Fx.additiveOn(game.batch);
+			Fx.shieldSweep(game.batch, ffS.getX() + ffS.getWidth()/2, ffS.getY() + ffS.getHeight()/2, ffS.getWidth()*Math.abs(shieldSweepScale),
+					shieldSwitchTime, blueS ? 0.45f : 1f, blueS ? 0.8f : 0.45f, blueS ? 1f : 0.4f);
+			Fx.additiveOff(game.batch);
+		}
 		
 		if(Fx.CLASSIC_LIGHTNING){
 			// original effect (two sprite flashes at random angles), now drawn additively for extra shine
@@ -1647,12 +1658,16 @@ public class MainMenuScreen implements Screen {
 				switch(forceFieldSelected){
 				case 0 :
 					forceFieldSelected = 1;
+					shieldSweepScale = ffSprites[1].getScaleX();
+					shieldSwitchTime = 0f;
 					if(sound == ON)
 						ffChange.play(1f);
 					tweenRedBig();
 					break;
 				case 1 : 
 					forceFieldSelected = 0;
+					shieldSweepScale = ffSprites[0].getScaleX();
+					shieldSwitchTime = 0f;
 					if(sound == ON)
 						ffChange.play(1f);
 					tweenBlueBig();
