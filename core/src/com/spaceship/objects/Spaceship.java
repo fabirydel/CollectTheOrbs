@@ -458,14 +458,13 @@ public class Spaceship{
 			sb.setColor(r, g, b, a*(1f - t)*(blue ? 0.25f : 0.45f));
 			sb.draw(Fx.ring(), ship.x - ring/2, ship.y - ring/2, ring, ring);
 		}
-		// shield switched: the new colour sweeps once around the rim, a white-hot head with a fading trail, and a ring pushes out
+		// shield switched: the new colour sweeps once around the rim with a fading trail, and a ring pushes out
 		if(switchTime < SWITCH_SWEEP && (forceFieldSelected == STATE_BLUE || forceFieldSelected == STATE_RED)){
 			float t = switchTime/SWITCH_SWEEP, e = 1f - (1f - t)*(1f - t);
-			float head = 90f - 360f*e;
+			float head = 90f - 360f*t;		// steady speed, so the highlight never lingers in one spot
 			for(int k = 0; k < 5; k++){
-				float fade = (1f - t)*(1f - k*0.19f);
-				if(k == 0) sb.setColor(1f, 1f, 1f, fade);
-				else sb.setColor(r, g, b, fade*0.9f);
+				float fade = (1f - t)*(1f - t)*(1f - k*0.19f);
+				sb.setColor(r, g, b, fade*(k == 0 ? 0.75f : 0.55f));
 				sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1.04f, 1.04f, head + k*20f*(1f - 0.5f*t), 0, 0, 256, 256, false, false);
 			}
 			float ring = full*(1.0f + 0.55f*e);
