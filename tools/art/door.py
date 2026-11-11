@@ -2,6 +2,7 @@
 
 Three small pieces, drawn at their own aspect by the code so the shutter fits any card shape:
   res/fx/door_metal.png  brushed gunmetal plate (stretched to the plate; only horizontal detail, so stretching is safe)
+  res/fx/door_cap.png    the plate's outer end, with rounded outer corners (follows the card's rounded corners)
   res/fx/door_grip.png   the grooved edge that leads the plate (same grooves as the energy bar's end caps)
   res/fx/door_screw.png  a slotted screw head
 
@@ -41,6 +42,18 @@ def metal():
         d.rectangle([0, y0, W, y0 + 1], fill=(18, 19, 24, 255))
         d.rectangle([0, y0 + 2, W, y0 + 3], fill=(118, 122, 134, 255))
     im.save(os.path.join(OUT, 'door_metal.png'))
+
+
+def cap():
+    """The plate's outer end: the same metal with its two outer corners rounded to follow the card's rounded corners."""
+    W, H = 24, 256
+    src = Image.open(os.path.join(OUT, 'door_metal.png')).resize((W * K, H * K), Image.BILINEAR)
+    mask = Image.new('L', (W * K, H * K), 0)
+    d = ImageDraw.Draw(mask)
+    # rounded on the left only: a rounded rectangle that runs off the right edge
+    d.rounded_rectangle([0, 0, W * K * 3, H * K - 1], radius=W * K, fill=255)
+    src.putalpha(mask)
+    src.resize((W, H), Image.LANCZOS).save(os.path.join(OUT, 'door_cap.png'))
 
 
 def grip():
@@ -85,6 +98,7 @@ def screw():
 
 if __name__ == '__main__':
     metal()
+    cap()
     grip()
     screw()
-    print('wrote door_metal.png, door_grip.png, door_screw.png')
+    print('wrote door_metal.png, door_cap.png, door_grip.png, door_screw.png')

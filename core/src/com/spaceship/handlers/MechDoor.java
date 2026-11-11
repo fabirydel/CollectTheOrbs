@@ -17,8 +17,10 @@ public class MechDoor {
 	// timeline, seconds
 	private static final float SLAM = 0.13f, UNLOCK = 0.36f, JOLT = 0.46f, JOLT_END = 0.52f, OPEN = 0.62f, END = 1.12f;
 	private static final int MAX = 160;
+	/** how far inside the card's edge the shutter sits, as a fraction of the card's shorter side */
+	private static final float INSET = 0.035f;
 
-	private Texture metal, grip, screw;
+	private Texture metal, cap, grip, screw;
 	private float x, y, w, h, age = 99f, unit = 1f;
 	private boolean slammed, unlocked, jolted;
 
@@ -30,6 +32,8 @@ public class MechDoor {
 		if (metal != null)
 			return;
 		metal = new Texture(Gdx.files.internal("res/fx/door_metal.png"));
+		cap = new Texture(Gdx.files.internal("res/fx/door_cap.png"));
+		cap.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		grip = new Texture(Gdx.files.internal("res/fx/door_grip.png"));
 		screw = new Texture(Gdx.files.internal("res/fx/door_screw.png"));
 		metal.setFilter(TextureFilter.Linear, TextureFilter.Linear);
@@ -40,10 +44,12 @@ public class MechDoor {
 	/** Play the shutter over the card at (x, y) with size (w, h), in screen pixels (y up). */
 	public void play(float x, float y, float w, float h) {
 		load();
-		this.x = x;
-		this.y = y;
-		this.w = w;
-		this.h = h;
+		// the shutter sits inside the card's neon border, so the border stays visible around it
+		float inset = INSET*Math.min(w, h);
+		this.x = x + inset;
+		this.y = y + inset;
+		this.w = w - 2f*inset;
+		this.h = h - 2f*inset;
 		unit = Gdx.graphics.getWidth()/720f;
 		age = 0f;
 		count = 0;
@@ -140,7 +146,7 @@ public class MechDoor {
 			float jx = 0f, jy = 0f;
 			float since = age >= JOLT ? age - JOLT : age >= SLAM ? age - SLAM : 9f;
 			if (since < 0.09f) {
-				float k = (1f - since/0.09f)*3f*unit;
+				float k = (1f - since/0.09f)*1.5f*unit;
 				jx = MathUtils.random(-k, k);
 				jy = MathUtils.random(-k, k);
 			}
@@ -168,16 +174,16 @@ public class MechDoor {
 			// light spilling through the gap as it opens
 			if (age >= JOLT) {
 				float k = Math.max(0f, 1f - (age - JOLT)/0.5f);
-				float gw = (open*w + 34f*unit);
+				float gw = Math.min(w, open*w + 34f*unit);
 				sb.setColor(1f, 0.82f, 0.45f, 0.85f*k*fade);
-				sb.draw(Fx.glow(), seam - gw/2, y - h*0.1f, gw, h*1.2f);
+				sb.draw(Fx.glow(), seam - gw/2, y, gw, h);
 			}
 			// a hot flash on the seam when the plates meet
 			if (age >= SLAM && age < SLAM + 0.12f) {
 				float k = 1f - (age - SLAM)/0.12f;
 				float gw = 60f*unit;
 				sb.setColor(1f, 0.9f, 0.7f, k);
-				sb.draw(Fx.glow(), seam - gw/2, y - h*0.1f, gw, h*1.2f);
+				sb.draw(Fx.glow(), seam - gw/2, y, gw, h);
 			}
 			Fx.additiveOff(sb);
 		}
@@ -201,22 +207,21 @@ public class MechDoor {
 			return;
 		sb.setColor(1f, 1f, 1f, alpha);
 		float gw = Math.min(width, h*grip.getWidth()/grip.getHeight()*0.55f);
-		float body = width - gw;
-		if (!mirrored) {
-			if (body > 0f)
-				sb.draw(metal, edgeX, py0, body, h);
-			sb.draw(grip, edgeX + body, py0, gw, h);
-		} else {
-			if (body > 0f)
-				sb.draw(metal, edgeX - body, py0, body, h);
-			sb.draw(grip, edgeX - body, py0, -gw, h);		// flipped: its lip faces the seam
-		}
-		// screws in the outer corners, as long as there is room for them
-		float s = Math.min(h*0.16f, 30f*unit);
-		if (body > s*2.2f) {
-			float sx0 = mirrored ? edgeX - s*1.4f : edgeX + s*0.4f;
-			sb.draw(screw, sx0, py0 + s*0.4f, s, s);
-			sb.draw(screw, sx0, py0 + h - s*1.4f, s, s);
+		// the outer end has rounded corners, like the card it covers
+		float cw = Math.min(width - gw, h*cap.getWidth()/cap.getHeight());
+		float body = width - gw - cw;
+		float dir = mirrored ? -1f : 1f;		// the right-hand plate is the left one flipped
+		if (cw > 0f)
+			sb.draw(cap, edgeX, py0, dir*cw, h);
+		if (body > 0f)
+			sb.draw(metal, edgeX + dir*cw, py0, dir*body, h);
+		sb.draw(grip, edgeX + dir*(cw + body), py0, dir*gw, h);
+		// screws near the outer corners, as long as there is room for them
+		float s = h*0.11f;
+		if (cw + body > s*2.4f) {
+			float sx0 = mirrored ? edgeX - s*1.9f : edgeX + s*0.9f;
+			sb.draw(screw, sx0, py0 + s*0.9f, s, s);
+			sb.draw(screw, sx0, py0 + h - s*1.9f, s, s);
 		}
 		sb.setColor(1f, 1f, 1f, 1f);
 	}
@@ -224,6 +229,7 @@ public class MechDoor {
 	public void dispose() {
 		if (metal != null) {
 			metal.dispose();
+			cap.dispose();
 			grip.dispose();
 			screw.dispose();
 			metal = null;
