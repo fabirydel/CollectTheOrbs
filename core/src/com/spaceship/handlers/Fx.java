@@ -186,12 +186,14 @@ public class Fx {
 		float t = time / SWITCH_SWEEP, e = 1f - (1f - t) * (1f - t);
 		float head = 90f - 360f * t;		// steady speed, so the highlight never lingers in one spot
 		for (int k = 0; k < 5; k++) {
-			float fade = (1f - t) * (1f - t) * (1f - k * 0.19f);
-			sb.setColor(r, g, b, fade * (k == 0 ? 0.75f : 0.55f));
+			float fade = (1f - t) * (0.45f + 0.55f * (1f - t)) * (1f - k * 0.17f);
+			// the leading edge is a lighter tint of the shield colour (never pure white)
+			float w = k == 0 ? 0.35f : 0.15f;
+			sb.setColor(r + (1f - r) * w, g + (1f - g) * w, b + (1f - b) * w, fade * (k == 0 ? 1f : 0.8f));
 			sb.draw(shieldGlint, cx - full / 2, cy - full / 2, full / 2, full / 2, full, full, 1.04f, 1.04f, head + k * 20f * (1f - 0.5f * t), 0, 0, 256, 256, false, false);
 		}
 		float size = full * (1.0f + 0.55f * e);
-		sb.setColor(r, g, b, (1f - t) * 0.55f);
+		sb.setColor(r, g, b, (1f - t) * 0.8f);
 		sb.draw(ring, cx - size / 2, cy - size / 2, size, size);
 	}
 
