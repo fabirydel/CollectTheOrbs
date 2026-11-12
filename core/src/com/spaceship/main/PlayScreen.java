@@ -1711,27 +1711,8 @@ public class PlayScreen implements Screen {
 	
 				drawLifeMeter();
 	
-				// draw objects
-				ring1.draw(game.batch);
-				if(state != DEAD)
-					for(int i = 0; i < objectsSprites1.length; i++){
-						objectsSprites1[i].draw(game.batch);
-					}
-				if(game.getMMS().objectsSlots == 2){
-					ring2.draw(game.batch);
-					if(state != DEAD)
-						for(int i = 0; i < objectsSprites2.length; i++){
-							objectsSprites2[i].draw(game.batch);
-						}
-				}else if(game.getMMS().objectsSlots == 3){
-					ring2.draw(game.batch);
-					ring3.draw(game.batch);
-					if(state != DEAD)
-						for(int i = 0; i < objectsSprites1.length; i++){
-							objectsSprites2[i].draw(game.batch);
-							objectsSprites3[i].draw(game.batch);
-						}
-				}
+				// held power-ups: badges that travel with the ship (they used to sit in rings in the top-left corner)
+				drawPowerBadges(Gdx.graphics.getDeltaTime());
 	
 				if(state == PlayScreen.DEAD){
 					bHome.draw(game.batch);
@@ -1884,6 +1865,157 @@ public class PlayScreen implements Screen {
 				ballToAdd = 0;
 			}	
 			lastBallTime = TimeUtils.nanoTime();
+		}
+	}
+
+	// ---- held power-ups, shown as badges that travel with the ship ----
+	// Slot 1 (the next one to use, or the one in use) sits to the lower right of the shield, slot 2 to the lower left and
+	// slot 3 under the engines: close to where the player is looking, and clear of the orbs, which arrive from above.
+	private static final float PU_FLY = 0.45f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
+	private static final float[] PU_ANGLE = { 300f, 240f, 270f }, PU_DIST = { 1.7f, 1.7f, 2.35f }, PU_SIZE = { 1.0f, 0.8f, 0.8f };
+	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
+	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
+	private final float[] puFlyT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3];
+	private float puLabelT = 9f, puHintT = 9f, puIdle, puClock;
+	private int puLabelType, puPrevSlot1 = -1;
+	private Sprite puTutBox;
+
+	/** a power-up orb was caught: its icon flies from the orb to its badge, its name pops up, and the tap area lights up */
+	private void powerPickup(int slot, int type, Ball ball){
+		puFlyT[slot] = 0f;
+		puFromX[slot] = ball.getPosition().x;
+		puFromY[slot] = ball.getPosition().y;
+		puLabelT = 0f;
+		puLabelType = type;
+		if(slot == 0){
+			puHintT = 0f;
+			puIdle = 0f;
+		}
+	}
+
+	private float puDockX(int slot){ return shipCenterX() + MathUtils.cosDeg(PU_ANGLE[slot])*PU_DIST[slot]*ship.getRadius(); }
+	private float puDockY(int slot){ return shipCenterY() + MathUtils.sinDeg(PU_ANGLE[slot])*PU_DIST[slot]*ship.getRadius(); }
+
+	private void drawPowerBadges(float dt){
+		if(puTutBox == null) puTutBox = new Sprite(ring1);
+		float R = ship.getRadius();
+		// where the tutorial points when it says "use it"
+		float tb = PU_SIZE[0]*R*1.3f;
+		puTutBox.setBounds(puDockX(0) - tb/2, puDockY(0) - tb/2, tb, tb);
+		if(state == DEAD || state == DEADLEAVING) return;
+		boolean running = state == PLAY;
+		if(dt > 0.05f) dt = 0.05f;
+		if(running) puClock += dt;
+		boolean active = objectClockEnable;
+		int[] type = { active ? auxObj : object1, object2, object3 };
+		Sprite[][] icons = { objectsSprites1, objectsSprites2, objectsSprites3 };
+
+		// slot 1 just got a usable power-up without a pickup (the next one moved up): it slides over from slot 2
+		if(object1 != -1 && puPrevSlot1 == -1){
+			if(puFlyT[0] >= PU_FLY){
+				puFlyT[0] = 0f;
+				puFromX[0] = puDockX(1);
+				puFromY[0] = puDockY(1);
+			}
+			puHintT = 0f;
+			puIdle = 0f;
+		}
+		puPrevSlot1 = object1;
+		// a held power-up that is not being used asks for attention every few seconds
+		boolean remind = false;
+		if(object1 != -1 && !active && running && tutorial == null){
+			float before = puIdle;
+			puIdle += dt;
+			if((int)(puIdle/PU_REMIND) > (int)(before/PU_REMIND)) puHintT = 0f;
+			remind = puIdle >= PU_REMIND && puIdle % PU_REMIND < 0.9f;
+		}
+
+		// the tap area lights up, with the icon in it: "tap here to use it"
+		if(puHintT < PU_HINT && object1 != -1 && !active && tutorial == null){
+			if(running) puHintT += dt;
+			float k = MathUtils.sin(Math.min(1f, puHintT/PU_HINT)*MathUtils.PI);
+			Sprite padS = english() ? padHorizontalUp : padHorizontalUpEsp;
+			float pr = padS.getColor().r, pg = padS.getColor().g, pb = padS.getColor().b, pa = padS.getColor().a;
+			Fx.additiveOn(game.batch);
+			padS.setColor(0.8f, 0.5f, 1f, 0.75f*k);
+			padS.draw(game.batch);
+			Fx.additiveOff(game.batch);
+			padS.setColor(pr, pg, pb, pa);
+			float hs = R*2.6f;
+			game.batch.setColor(1f, 1f, 1f, 0.8f*k);
+			game.batch.draw(objectsSprites1[object1], padS.getX() + padS.getWidth()/2 - hs/2, padS.getY() + padS.getHeight()*0.5f - hs/2, hs, hs);
+			game.batch.setColor(1f, 1f, 1f, 1f);
+		}
+
+		for(int sl = 2; sl >= 0; sl--){
+			int ty = type[sl];
+			if(ty < 0 || ty >= icons[sl].length) continue;
+			float a = icons[sl][ty].getColor().a;
+			boolean inUse = sl == 0 && active;
+			if(inUse) a = 0.6f + 0.4f*a;		// the icon keeps the beat of the countdown ticks without ever vanishing
+			if(a <= 0.02f) continue;
+			float d = PU_SIZE[sl]*R;
+			float px = puDockX(sl), py = puDockY(sl);
+			if(puFlyT[sl] < PU_FLY){
+				if(running) puFlyT[sl] += dt;
+				float t = Math.min(1f, puFlyT[sl]/PU_FLY), e = 1f - (1f - t)*(1f - t)*(1f - t);
+				px = puFromX[sl] + (px - puFromX[sl])*e;
+				py = puFromY[sl] + (py - puFromY[sl])*e;
+				d *= 1f + 0.7f*MathUtils.sin(t*MathUtils.PI);
+			}
+			if(sl == 0 && remind){
+				float ph = (puIdle % PU_REMIND)/0.9f;
+				d *= 1f + 0.28f*Math.abs(MathUtils.sin(ph*MathUtils.PI2));
+			}
+			// a dark cushion so the icon reads over any galaxy, then its ring and the icon
+			game.batch.setColor(0f, 0f, 0f, 0.6f*a);
+			game.batch.draw(Fx.glow(), px - d*0.85f, py - d*0.85f, d*1.7f, d*1.7f);
+			game.batch.setColor(1f, 1f, 1f, 0.9f*a);
+			game.batch.draw(ring1, px - d*0.62f, py - d*0.62f, d*1.24f, d*1.24f);
+			game.batch.setColor(1f, 1f, 1f, a);
+			// (the icon art has a wide empty margin: drawn larger so the picture fills the ring)
+			game.batch.draw(icons[sl][ty], px - d*0.8f, py - d*0.8f, d*1.6f, d*1.6f);
+			if(inUse){
+				// time left: a ring of lights around the badge going out one by one, turning red near the end
+				float total = 3f + 2f*game.getMMS().objectsDuration;
+				float left = MathUtils.clamp(1f - (TimeUtils.nanoTime() - objectClock)/1e9f/total, 0f, 1f);
+				int n = 26, lit = MathUtils.ceil(left*n);
+				boolean ending = left < 0.3f;
+				float ds = d*0.2f;
+				Fx.additiveOn(game.batch);
+				for(int i = 0; i < lit; i++){
+					float ang = 90f - i*360f/n;
+					float dx = MathUtils.cosDeg(ang)*d*0.74f, dy = MathUtils.sinDeg(ang)*d*0.74f;
+					if(ending) game.batch.setColor(1f, 0.3f, 0.3f, 0.95f);
+					else game.batch.setColor(0.85f, 0.6f, 1f, 0.95f);
+					game.batch.draw(Fx.glow(), px + dx - ds/2, py + dy - ds/2, ds, ds);
+				}
+				Fx.additiveOff(game.batch);
+			}else if(sl == 0 && tutorial == null){
+				// ready to use: a soft breathing halo
+				float br = 0.5f + 0.5f*MathUtils.sin(puClock*4f);
+				Fx.additiveOn(game.batch);
+				game.batch.setColor(0.8f, 0.5f, 1f, (0.18f + 0.22f*br)*a);
+				game.batch.draw(Fx.glow(), px - d*0.9f, py - d*0.9f, d*1.8f, d*1.8f);
+				Fx.additiveOff(game.batch);
+			}
+		}
+		game.batch.setColor(1f, 1f, 1f, 1f);
+
+		// the name of the power-up just caught, rising above the ship
+		if(puLabelT < PU_LABEL && tutorial == null){
+			if(running) puLabelT += dt;
+			float t = Math.min(1f, puLabelT/PU_LABEL);
+			String name = (english() ? PU_NAMES_EN : PU_NAMES_ES)[puLabelType];
+			float sx = greysFont.getData().scaleX, sy = greysFont.getData().scaleY;
+			greysFont.getData().setScale(x*0.42f, y*0.42f);
+			float tw = com.spaceship.handlers.FontUtil.bounds(greysFont, name).width;
+			float lx = MathUtils.clamp(shipCenterX() - tw/2, fxy(12f), Gdx.graphics.getWidth() - tw - fxy(12f));
+			float fade = t < 0.12f ? t/0.12f : t > 0.7f ? (1f - t)/0.3f : 1f;
+			greysFont.setColor(1f, 1f, 1f, fade);
+			greysFont.draw(game.batch, name, lx, shipCenterY() + R*(1.75f + 0.5f*t));
+			greysFont.setColor(1f, 1f, 1f, 1f);
+			greysFont.getData().setScale(sx, sy);
 		}
 	}
 
@@ -2249,14 +2381,17 @@ public class PlayScreen implements Screen {
 					object1 = tutorial != null ? 2 : randomObject();
 					obj[object1]++;
 					objectsSprites1[object1].setColor(1f, 1f, 1f, 1f); 
+					powerPickup(0, object1, ball);
 				}else if(game.getMMS().objectsSlots > 1 && object2 == -1){
 					object2 = randomObject();
 					obj[object2]++;
 					objectsSprites2[object2].setColor(1f, 1f, 1f, 1f); 
+					powerPickup(1, object2, ball);
 				}else if(game.getMMS().objectsSlots > 2 && object2 != -1 && object3 == -1){
 					object3 = randomObject();
 					obj[object3]++;
 					objectsSprites3[object3].setColor(1f, 1f, 1f, 1f); 
+					powerPickup(2, object3, ball);
 				}
 				for(int h = 0; h < 5; h++){
 					objectsParticles[h + objectsP].setPosition(ball.getPosition().x, ball.getPosition().y);
@@ -2388,7 +2523,7 @@ public class PlayScreen implements Screen {
 		float y = Gdx.graphics.getHeight()/2 + 3*adHeight/4;
 		return new float[]{x, y - h/2, w, h};
 	}
-	Sprite tutItemRing(){ return ring1; }
+	Sprite tutItemRing(){ return puTutBox; }
 	Sprite tutItemPad(){ return padHorizontalUp; }
 	int tutEnergy(){ return ship.getLifes(); }
 	boolean tutItemHeld(){ return object1 != -1; }
