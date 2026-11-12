@@ -1869,18 +1869,18 @@ public class PlayScreen implements Screen {
 	}
 
 	// ---- held power-ups, shown as badges that travel with the ship ----
-	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower left, the
-	// largest, and any others side by side to its right. Close to where the player is looking, and clear of the orbs,
+	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower right, the
+	// largest, and any others side by side to its left. Close to where the player is looking, and clear of the orbs,
 	// which arrive from above.
-	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
+	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f, PU_HINT = 1.1f;
 	/** badge centres relative to the ship's centre, and badge sizes, all in shield radii */
-	private static final float[] PU_DX = { -0.85f, 0.02f, 0.78f }, PU_DY = { -1.5f, -1.5f, -1.5f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
+	private static final float[] PU_DX = { 0.85f, 0.05f, -0.63f }, PU_DY = { -1.45f, -1.45f, -1.45f }, PU_SIZE = { 0.7f, 0.56f, 0.56f };
 	private static final float[] PU_PURPLE = { 0.8f, 0.5f, 1f };
 	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
 	private final float[] puFlyT = { 9f, 9f, 9f }, puLandT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3], puSwing = new float[3];
 	private final boolean[] puCaught = new boolean[3];
-	private float puLabelT = 9f, puHintT = 9f, puIdle, puClock;
+	private float puLabelT = 9f, puHintT = 9f, puClock;
 	private int puLabelType, puPrevSlot1 = -1;
 	private Sprite puTutBox;
 
@@ -1896,7 +1896,6 @@ public class PlayScreen implements Screen {
 		puLabelType = type;
 		if(slot == 0){
 			puHintT = 0f;
-			puIdle = 0f;
 		}
 	}
 
@@ -1927,18 +1926,8 @@ public class PlayScreen implements Screen {
 				puFromY[0] = puDockY(1);
 			}
 			puHintT = 0f;
-			puIdle = 0f;
 		}
 		puPrevSlot1 = object1;
-		// a held power-up that is not being used asks for attention every few seconds
-		boolean remind = false;
-		if(object1 != -1 && !active && running && tutorial == null){
-			float before = puIdle;
-			puIdle += dt;
-			if((int)(puIdle/PU_REMIND) > (int)(before/PU_REMIND)) puHintT = 0f;
-			remind = puIdle >= PU_REMIND && puIdle % PU_REMIND < 0.9f;
-		}
-
 		// the tap area lights up, with its "use power-up" label: "tap here to use it"
 		if(puHintT < PU_HINT && object1 != -1 && !active && tutorial == null){
 			if(running) puHintT += dt;
@@ -1996,10 +1985,6 @@ public class PlayScreen implements Screen {
 			}else if(puLandT[sl] < PU_LAND){
 				if(running) puLandT[sl] += dt;
 				d *= 1f + 0.35f*MathUtils.sin(Math.min(1f, puLandT[sl]/PU_LAND)*MathUtils.PI);
-			}
-			if(sl == 0 && remind){
-				float ph = (puIdle % PU_REMIND)/0.9f;
-				d *= 1f + 0.28f*Math.abs(MathUtils.sin(ph*MathUtils.PI2));
 			}
 			{
 				// the badge glows, brighter in slow pulses (and strongly while it flies in)
