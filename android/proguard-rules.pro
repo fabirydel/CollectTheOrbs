@@ -31,3 +31,10 @@
 -keep class aurelienribon.tweenengine.** { *; }
 -keep class com.badlogic.gdx.sql.** { *; }
 -keep class com.badlogic.gdx.sqlite.** { *; }
+
+# WorkManager (pulled in by the ads SDK) creates its Room database and its workers by reflection; R8 in full mode
+# otherwise strips the constructors it cannot see being called
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
+-keep class * extends androidx.work.ListenableWorker { <init>(android.content.Context, androidx.work.WorkerParameters); }
+-keep class * extends androidx.work.InputMerger { <init>(); }
+-keep class androidx.work.impl.** { <init>(...); }
