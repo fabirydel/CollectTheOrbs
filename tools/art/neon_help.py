@@ -141,6 +141,11 @@ def controls_image(lang, name):
             (310, 20, 660, 460, PURPLE, t[2], 0), (310, 500, 660, 460, NEUTRAL, t[3], 0)]
     for x, y, pw, ph, col, label, d in pads:
         tl = U.tile(pw, ph, (col,), None, 54, alpha=165, bw=7.0, glow_r=5)
+        if d > 0:
+            # the tile's glow sits toward its right edge: mirrored on the Right pad, so the two side pads glow toward
+            # the middle of the picture, symmetrically
+            from PIL import ImageOps
+            tl = ImageOps.mirror(tl)
         cx, cy = tl.width / 2, tl.height / 2
         if d:
             lay = Image.new('RGBA', tl.size, (0, 0, 0, 0))
