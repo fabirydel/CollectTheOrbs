@@ -1362,8 +1362,22 @@ public class PlayScreen implements Screen {
 					ball.changeRed();
 				}	
 			}
+			// a held power-up can also be used by tapping its badge under the shield, whichever one it is: the tapped one
+			// jumps the queue
+			boolean badgeTap = false;
+			if(object1 != -1 && state == PLAY && !objectClockEnable && !clicked && Gdx.input.justTouched()){
+				int tapped = puTappedSlot();
+				if(tapped >= 0){
+					if(tapped > 0) puBringToFront(tapped);
+					badgeTap = true;
+					// the badges sit inside the "switch shield" area: this tap is not a switch
+					ship.shieldCan = false;
+					ship.shieldCan2 = false;
+					ship.shieldCan3 = false;
+				}
+			}
 			if(object1 != -1 && state == PLAY){
-				if(Gdx.input.justTouched() && (Gdx.input.getX() >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX() <= PlayScreen.padVerticalRight.getX() && 
+				if(badgeTap || Gdx.input.justTouched() && (Gdx.input.getX() >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX() <= PlayScreen.padVerticalRight.getX() && 
 						Gdx.graphics.getHeight() - Gdx.input.getY() > PlayScreen.padHorizontalDown.getY() + PlayScreen.padHorizontalDown.getHeight()) && 
 						Gdx.graphics.getHeight() - Gdx.input.getY() < PlayScreen.padHorizontalUp.getY() + PlayScreen.padHorizontalUp.getHeight() && !clicked 
 						|| (Gdx.input.getX(1) >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX(1) <= PlayScreen.padVerticalRight.getX() && 
@@ -1919,6 +1933,46 @@ public class PlayScreen implements Screen {
 		return shipCenterX() + PU_DX[slot]*R + slide;
 	}
 	private float puDockY(int slot){ return shipCenterY() + PU_DY[slot]*ship.getRadius(); }
+
+	/** which held power-up's badge a new touch landed on (0 = the first), or -1 */
+	private int puTappedSlot(){
+		int[] type = { object1, object2, object3 };
+		float R = ship.getRadius();
+		int best = -1;
+		float bestD = Float.MAX_VALUE;
+		for(int p = 0; p < 2; p++){
+			if(!Gdx.input.isTouched(p)) continue;
+			float tx = Gdx.input.getX(p), ty = Gdx.graphics.getHeight() - Gdx.input.getY(p);
+			for(int sl = 0; sl < 3; sl++){
+				if(type[sl] < 0) continue;
+				// a forgiving target, at least a fingertip wide; the targets overlap, so the nearest badge wins
+				float reach = Math.max(PU_SIZE[sl]*R*0.95f, fxy(48f));
+				float dx = tx - puDockX(sl), dy = ty - puDockY(sl), d2 = dx*dx + dy*dy;
+				if(d2 <= reach*reach && d2 < bestD){
+					bestD = d2;
+					best = sl;
+				}
+			}
+		}
+		return best;
+	}
+
+	/** the power-up in a later slot swaps places with the first one, so it is the one used next */
+	private void puBringToFront(int slot){
+		Sprite[] from = slot == 1 ? objectsSprites2 : objectsSprites3;
+		int first = object1, picked = slot == 1 ? object2 : object3;
+		if(picked < 0) return;
+		objectsSprites1[first].setColor(1f, 1f, 1f, 0f);
+		from[picked].setColor(1f, 1f, 1f, 0f);
+		objectsSprites1[picked].setColor(1f, 1f, 1f, 1f);
+		from[first].setColor(1f, 1f, 1f, 1f);
+		object1 = picked;
+		if(slot == 1) object2 = first; else object3 = first;
+		// the two badges hop across to each other's place
+		float ax = puDockX(0), ay = puDockY(0), bx = puDockX(slot), by = puDockY(slot);
+		puFlyT[0] = PU_FLY*0.55f; puCaught[0] = false; puSwing[0] = 0f; puFromX[0] = bx; puFromY[0] = by;
+		puFlyT[slot] = PU_FLY*0.55f; puCaught[slot] = false; puSwing[slot] = 0f; puFromX[slot] = ax; puFromY[slot] = ay;
+	}
 
 	private void drawPowerBadges(float dt){
 		if(puTutBox == null) puTutBox = new Sprite(ring1);
