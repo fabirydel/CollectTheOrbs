@@ -7,9 +7,10 @@ W, H, SLANT = 720, 1440, 0.08
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'android', 'assets', 'res', 'splash')
 TINT = np.array([0.55, 0.65, 0.85])
 # name, count, length, width, alpha, blur, gain
-DEPTHS = [('rain_far', 1800, (8, 20), 1, (0.2, 0.55), 0, 0.22),
-          ('rain_mid', 500, (24, 55), 1, (0.3, 0.8), 0.35, 0.38),
-          ('rain_near', 30, (150, 330), 3, (0.25, 0.55), 2.6, 0.50)]
+# (a heavier downpour than the first version: more streaks at every depth, and thicker, brighter ones in the middle and near layers)
+DEPTHS = [('rain_far', 2600, (10, 24), 1, (0.25, 0.6), 0, 0.30),
+          ('rain_mid', 800, (28, 62), 2, (0.3, 0.8), 0.5, 0.50),
+          ('rain_near', 60, (160, 340), 5, (0.3, 0.6), 2.8, 0.62)]
 for seed, (name, n, L, wd, a, bl, gain) in enumerate(DEPTHS):
     r = np.random.default_rng(seed + 11)
     im = Image.new('L', (W, H), 0); d = ImageDraw.Draw(im)

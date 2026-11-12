@@ -44,7 +44,7 @@ public class Splash implements Screen{
 	private static final String[] RAIN_NAMES = {"rain_far", "rain_mid", "rain_near"};
 	private static final float[] RAIN_SPEEDS = {450, 800, 1500};
 	private Texture[] rainTextures;
-	private static final float RAIN_AMBIENT = 0.08f;
+	private static final float RAIN_AMBIENT = 0.13f;
 	private SpriteBatch fxBatch;
 	// neon sounds, following the same events as the light (respecting the game's sound setting)
 	private boolean soundOn = true;
