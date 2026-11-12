@@ -111,4 +111,5 @@ def run(fnt, png):
 
 if __name__ == '__main__':
     run('prototype96grey.fnt', 'neon_prototype96grey.png')
-    run('prototype96grey2.fnt', 'neon_prototype96grey2.png')
+    # prototype96grey2.fnt shares neon_prototype96grey.png (the two pages were identical copies): after running this,
+    # copy the new 'char' lines from prototype96grey.fnt into prototype96grey2.fnt

@@ -71,6 +71,8 @@ rain = wash + 0.35 * drops / np.abs(drops).max()
 save('storm_rain', rain, 0.5)
 
 # thunder: a distant crack, then rolls of low rumble that swell and fade; two variants
+# (the game ships the two thunders as .ogg: after regenerating them here, convert with
+#  ffmpeg -i X.wav -af "pan=stereo|c0=c0|c1=c0" -c:a vorbis -strict -2 -b:a 128k X.ogg  and delete the .wav)
 for name, dur, rolls in (('storm_thunder1', 4.2, (0.15, 0.9, 1.9)), ('storm_thunder2', 5.0, (0.2, 1.4, 2.6, 3.4))):
     n = int(dur * SR); t = np.arange(n) / SR
     rumble = shaped(n, 40, 420, 0.6); rumble /= np.abs(rumble).max()

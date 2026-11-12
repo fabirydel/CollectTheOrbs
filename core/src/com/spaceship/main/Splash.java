@@ -456,8 +456,8 @@ public class Splash implements Screen{
 			stormRain.setLooping(true);
 			stormRain.setVolume(0.22f);
 			stormRain.play();
-			stormThunder = new Sound[]{Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder1.wav")),
-					Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder2.wav"))};
+			stormThunder = new Sound[]{Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder1.ogg")),
+					Gdx.audio.newSound(Gdx.files.internal("audio/storm_thunder2.ogg"))};
 			thunderTimer = 3.5f + (float)Math.random()*3f;
 		}
 		glowStrike = new float[n];
