@@ -2047,10 +2047,13 @@ public class PlayScreen implements Screen {
 			float tw = com.spaceship.handlers.FontUtil.bounds(greysFont, name).width;
 			float lx = MathUtils.clamp(shipCenterX() - tw/2, fxy(12f), Gdx.graphics.getWidth() - tw - fxy(12f));
 			float fade = t < 0.12f ? t/0.12f : t > 0.7f ? (1f - t)/0.3f : 1f;
+			// this font's own alpha is what hides and shows "New HighScore!" at game over: put it back exactly as it was
+			com.badlogic.gdx.graphics.Color fc = greysFont.getColor();
+			float fr = fc.r, fg = fc.g, fb = fc.b, fa = fc.a;
 			greysFont.setColor(1f, 1f, 1f, fade);
 			// just above the shield, under the tap area's own label
 			greysFont.draw(game.batch, name, lx, shipCenterY() + R*(1.42f + 0.2f*t));
-			greysFont.setColor(1f, 1f, 1f, 1f);
+			greysFont.setColor(fr, fg, fb, fa);
 			greysFont.getData().setScale(sx, sy);
 		}
 	}
