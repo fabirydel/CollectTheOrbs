@@ -24,7 +24,7 @@ public class DevMain extends Main {
 			com.spaceship.handlers.Starfield.DEV_OFTEN = true;		// dev driver: constant shooting stars
 		if (System.getenv("CTO_NO_BLOOM") != null)
 			com.spaceship.handlers.Bloom.ENABLED = false;		// dev driver: compare with and without the glow pass
-		harness.speedHook = v -> { if (getPS() == null) return; if (v == -1) getPS().debugCharge(); else if (v == -2) getPS().debugKeepAlive(true); else getPS().debugSetTier(v); };
+		harness.speedHook = v -> { if (getPS() == null) return; if (v == -1) getPS().debugCharge(); else if (v == -2) getPS().debugKeepAlive(true); else if (v == -3) getPS().debugItem(); else getPS().debugSetTier(v); };
 	}
 
 	@Override

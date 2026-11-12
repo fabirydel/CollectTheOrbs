@@ -1869,15 +1869,17 @@ public class PlayScreen implements Screen {
 	}
 
 	// ---- held power-ups, shown as badges that travel with the ship ----
-	// They circle the shield, a third of a turn apart, each trailing a short glowing tail; slot 1 (the next one to use,
-	// or the one in use) is the largest.
-	private static final float PU_FLY = 0.45f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
-	private static final float[] PU_ANGLE = { 300f, 180f, 60f }, PU_DIST = { 1.75f, 1.75f, 1.75f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
-	/** how fast the badges circle the shield, degrees per second (clockwise) */
-	private static final float PU_ORBIT = 48f;
+	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower left, the
+	// largest, and any others side by side to its right. Close to where the player is looking, and clear of the orbs,
+	// which arrive from above.
+	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
+	/** badge centres relative to the ship's centre, and badge sizes, all in shield radii */
+	private static final float[] PU_DX = { -0.85f, 0.02f, 0.78f }, PU_DY = { -1.5f, -1.5f, -1.5f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
+	private static final float[] PU_PURPLE = { 0.8f, 0.5f, 1f };
 	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
-	private final float[] puFlyT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3];
+	private final float[] puFlyT = { 9f, 9f, 9f }, puLandT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3], puSwing = new float[3];
+	private final boolean[] puCaught = new boolean[3];
 	private float puLabelT = 9f, puHintT = 9f, puIdle, puClock;
 	private int puLabelType, puPrevSlot1 = -1;
 	private Sprite puTutBox;
@@ -1885,8 +1887,11 @@ public class PlayScreen implements Screen {
 	/** a power-up orb was caught: its icon flies from the orb to its badge, its name pops up, and the tap area lights up */
 	private void powerPickup(int slot, int type, Ball ball){
 		puFlyT[slot] = 0f;
+		puCaught[slot] = true;
 		puFromX[slot] = ball.getPosition().x;
 		puFromY[slot] = ball.getPosition().y;
+		// it swings out to one side on its way down (away from the ship's middle, so it sweeps around the shield)
+		puSwing[slot] = (ball.getPosition().x >= shipCenterX() ? 1f : -1f)*MathUtils.random(1.6f, 2.3f);
 		puLabelT = 0f;
 		puLabelType = type;
 		if(slot == 0){
@@ -1895,14 +1900,8 @@ public class PlayScreen implements Screen {
 		}
 	}
 
-	private float puAngle(int slot){ return PU_ANGLE[slot] - puClock*PU_ORBIT; }
-	/** where a slot's badge is on its circle around the ship right now (kept on screen when the ship hugs an edge) */
-	private float puDockX(int slot){ return puOrbitX(slot, puAngle(slot)); }
-	private float puDockY(int slot){ return shipCenterY() + MathUtils.sinDeg(puAngle(slot))*PU_DIST[slot]*ship.getRadius(); }
-	private float puOrbitX(int slot, float angle){
-		float m = PU_SIZE[slot]*ship.getRadius()*0.7f;
-		return MathUtils.clamp(shipCenterX() + MathUtils.cosDeg(angle)*PU_DIST[slot]*ship.getRadius(), m, Gdx.graphics.getWidth() - m);
-	}
+	private float puDockX(int slot){ return shipCenterX() + PU_DX[slot]*ship.getRadius(); }
+	private float puDockY(int slot){ return shipCenterY() + PU_DY[slot]*ship.getRadius(); }
 
 	private void drawPowerBadges(float dt){
 		if(puTutBox == null) puTutBox = new Sprite(ring1);
@@ -1921,7 +1920,9 @@ public class PlayScreen implements Screen {
 		// slot 1 just got a usable power-up without a pickup (the next one moved up): it slides over from slot 2
 		if(object1 != -1 && puPrevSlot1 == -1){
 			if(puFlyT[0] >= PU_FLY){
-				puFlyT[0] = 0f;
+				puFlyT[0] = PU_FLY*0.55f;		// a short hop, not the long flight of a catch
+				puCaught[0] = false;
+				puSwing[0] = 0f;
 				puFromX[0] = puDockX(1);
 				puFromY[0] = puDockY(1);
 			}
@@ -1938,7 +1939,7 @@ public class PlayScreen implements Screen {
 			remind = puIdle >= PU_REMIND && puIdle % PU_REMIND < 0.9f;
 		}
 
-		// the tap area lights up, with the icon in it: "tap here to use it"
+		// the tap area lights up, with its "use power-up" label: "tap here to use it"
 		if(puHintT < PU_HINT && object1 != -1 && !active && tutorial == null){
 			if(running) puHintT += dt;
 			float k = MathUtils.sin(Math.min(1f, puHintT/PU_HINT)*MathUtils.PI);
@@ -1949,9 +1950,6 @@ public class PlayScreen implements Screen {
 			padS.draw(game.batch);
 			Fx.additiveOff(game.batch);
 			padS.setColor(pr, pg, pb, pa);
-			float hs = R*2.6f;
-			game.batch.setColor(1f, 1f, 1f, 0.8f*k);
-			game.batch.draw(objectsSprites1[object1], padS.getX() + padS.getWidth()/2 - hs/2, padS.getY() + padS.getHeight()*0.5f - hs/2, hs, hs);
 			game.batch.setColor(1f, 1f, 1f, 1f);
 		}
 
@@ -1964,30 +1962,50 @@ public class PlayScreen implements Screen {
 			if(a <= 0.02f) continue;
 			float d = PU_SIZE[sl]*R;
 			float px = puDockX(sl), py = puDockY(sl);
-			if(puFlyT[sl] < PU_FLY){
+			boolean flying = puFlyT[sl] < PU_FLY;
+			if(flying){
 				if(running) puFlyT[sl] += dt;
-				float t = Math.min(1f, puFlyT[sl]/PU_FLY), e = 1f - (1f - t)*(1f - t)*(1f - t);
-				px = puFromX[sl] + (px - puFromX[sl])*e;
-				py = puFromY[sl] + (py - puFromY[sl])*e;
-				d *= 1f + 0.7f*MathUtils.sin(t*MathUtils.PI);
+				float t = Math.min(1f, puFlyT[sl]/PU_FLY);
+				// the catch: the icon bursts out of the orb large and bright, swings out around the shield on a curve and
+				// dives into its place, shedding sparks all the way
+				float e = t*t*(3f - 2f*t);
+				float cxp = (puFromX[sl] + px)/2 + puSwing[sl]*R, cyp = Math.max(puFromY[sl], py) + (puCaught[sl] ? 0.9f*R : 0f);
+				float u1 = 1f - e;
+				float bx = u1*u1*puFromX[sl] + 2f*u1*e*cxp + e*e*px, by = u1*u1*puFromY[sl] + 2f*u1*e*cyp + e*e*py;
+				px = bx; py = by;
+				if(puCaught[sl]){
+					d *= 1f + 1.1f*(1f - e) + 0.25f*MathUtils.sin(t*MathUtils.PI);
+					if(running){
+						float u = fxy(1);
+						for(int k = 0; k < 2; k++){
+							float white = MathUtils.random(0f, 0.6f);
+							Fx.emit(px + MathUtils.random(-d, d)*0.25f, py + MathUtils.random(-d, d)*0.25f, MathUtils.random(-60f, 60f)*u, MathUtils.random(-60f, 60f)*u,
+									MathUtils.random(0.3f, 0.6f), MathUtils.random(9f, 18f)*u,
+									PU_PURPLE[0] + (1f - PU_PURPLE[0])*white, PU_PURPLE[1] + (1f - PU_PURPLE[1])*white, PU_PURPLE[2] + (1f - PU_PURPLE[2])*white);
+						}
+					}
+				}
+				if(puFlyT[sl] >= PU_FLY){
+					// it lands: a ring and a puff of sparks, and the badge bounces
+					puLandT[sl] = 0f;
+					if(puCaught[sl]){
+						hitRing(puDockX(sl), puDockY(sl), fxy(150f), PU_PURPLE);
+						embers(puDockX(sl), puDockY(sl), 12, 330f, PU_PURPLE, 0.6f);
+					}
+				}
+			}else if(puLandT[sl] < PU_LAND){
+				if(running) puLandT[sl] += dt;
+				d *= 1f + 0.35f*MathUtils.sin(Math.min(1f, puLandT[sl]/PU_LAND)*MathUtils.PI);
 			}
 			if(sl == 0 && remind){
 				float ph = (puIdle % PU_REMIND)/0.9f;
 				d *= 1f + 0.28f*Math.abs(MathUtils.sin(ph*MathUtils.PI2));
 			}
-			if(puFlyT[sl] >= PU_FLY){
-				// a glowing tail along the circle behind the badge
-				Fx.additiveOn(game.batch);
-				for(int k = 1; k <= 7; k++){
-					float ta = puAngle(sl) + k*6.5f;
-					float tx = puOrbitX(sl, ta), tyy = shipCenterY() + MathUtils.sinDeg(ta)*PU_DIST[sl]*R;
-					float ts = d*(0.95f - 0.1f*k);
-					game.batch.setColor(0.8f, 0.5f, 1f, a*0.42f*(1f - k/8f));
-					game.batch.draw(Fx.glow(), tx - ts/2, tyy - ts/2, ts, ts);
-				}
-				// the badge itself glows, brighter in slow pulses
+			{
+				// the badge glows, brighter in slow pulses (and strongly while it flies in)
 				float gl = 0.5f + 0.5f*MathUtils.sin(puClock*3.2f + sl*2f);
-				game.batch.setColor(0.8f, 0.5f, 1f, a*(0.22f + 0.2f*gl));
+				Fx.additiveOn(game.batch);
+				game.batch.setColor(0.8f, 0.5f, 1f, a*(flying && puCaught[sl] ? 0.75f : 0.2f + 0.18f*gl));
 				game.batch.draw(Fx.glow(), px - d*1.05f, py - d*1.05f, d*2.1f, d*2.1f);
 				Fx.additiveOff(game.batch);
 			}
@@ -2042,7 +2060,8 @@ public class PlayScreen implements Screen {
 			float lx = MathUtils.clamp(shipCenterX() - tw/2, fxy(12f), Gdx.graphics.getWidth() - tw - fxy(12f));
 			float fade = t < 0.12f ? t/0.12f : t > 0.7f ? (1f - t)/0.3f : 1f;
 			greysFont.setColor(1f, 1f, 1f, fade);
-			greysFont.draw(game.batch, name, lx, shipCenterY() + R*(1.75f + 0.5f*t));
+			// just above the shield, under the tap area's own label
+			greysFont.draw(game.batch, name, lx, shipCenterY() + R*(1.42f + 0.2f*t));
 			greysFont.setColor(1f, 1f, 1f, 1f);
 			greysFont.getData().setScale(sx, sy);
 		}
@@ -2683,6 +2702,11 @@ public class PlayScreen implements Screen {
 	}
 
 	/** Test hook: start the charge-up now (dev driver). */
+	/** dev driver: drop a power-up orb straight onto the ship */
+	public void debugItem(){
+		tutSpawn(Ball.B_OBJECT, shipCenterX() + fxy(60f), 520);
+	}
+
 	public void debugCharge(){
 		director.debugCharge();
 	}
