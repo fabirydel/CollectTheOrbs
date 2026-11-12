@@ -529,6 +529,9 @@ public class PlayScreen implements Screen {
 				tutorial.dispose();
 			tutorial = (Main.isTutorial() || (!seenTutorial && games == 0)) ? new TutorialFlow(this, game) : null;
 			Main.setTutorial(false);
+			// a tutorial run plays as on a fresh install, whatever upgrades have been bought (see the up...() getters)
+			freshInstallRun = tutorial != null;
+			ship.speed = 600 + 100*(freshInstallRun ? 1 : game.getMMS().shipSpeed);
 
 			state = PLAY;
 			galaxySelected = game.getMMS().galaxySelected;
@@ -592,8 +595,8 @@ public class PlayScreen implements Screen {
 			redsValue = 1;
 
 			//set ship stuff
-			ship.setLifes(game.getMMS().energyStart);
-			if(energyBar != null) energyBar.snap(game.getMMS().energyStart/(float)barWidth);
+			ship.setLifes(upEnergyStart());
+			if(energyBar != null) energyBar.snap(upEnergyStart()/(float)barWidth);
 			ship.shipSelected = game.getMMS().shipSelected;
 			ship.setShipScale();
 			deathAngle = MathUtils.random(0, 1);
@@ -608,7 +611,7 @@ public class PlayScreen implements Screen {
 				e.printStackTrace();
 			}
 
-			barWidth = game.getMMS().energyMeter;
+			barWidth = upEnergyMeter();
 
 			// load life bar
 			switch(barWidth){
@@ -766,17 +769,17 @@ public class PlayScreen implements Screen {
 			ship.startTrace = true;
 
 			//set objects
-			if(game.getMMS().objectStart >= 1){
+			if(upObjectStart() >= 1){
 				object1 = randomObject();
 				objectsSprites1[object1].setColor(1f, 1f, 1f, 1f); 
 			}else
 				object1 = -1;
-			if(game.getMMS().objectStart >= 2){
+			if(upObjectStart() >= 2){
 				object2 = randomObject();
 				objectsSprites2[object2].setColor(1f, 1f, 1f, 1f); 
 			}else
 				object2 = -1;
-			if(game.getMMS().objectStart == 3){
+			if(upObjectStart() == 3){
 				object3 = randomObject();
 				objectsSprites3[object3].setColor(1f, 1f, 1f, 1f); 
 			}else
@@ -1429,7 +1432,7 @@ public class PlayScreen implements Screen {
 				}
 			}
 			
-			if(canPlayRetreat && TimeUtils.nanoTime() - objectClock > 2000000000f*game.getMMS().objectsDuration){
+			if(canPlayRetreat && TimeUtils.nanoTime() - objectClock > 2000000000f*upObjectsDuration()){
 				canPlayRetreat = false;
 				if(slow)
 					Timer.schedule(new Task(){
@@ -1465,7 +1468,7 @@ public class PlayScreen implements Screen {
 					}, 2.75f);
 			}
 
-			if(objectClockEnable && TimeUtils.nanoTime() - objectClock > 3000000000f + 2000000000f*game.getMMS().objectsDuration){
+			if(objectClockEnable && TimeUtils.nanoTime() - objectClock > 3000000000f + 2000000000f*upObjectsDuration()){
 				redToBlue = false;
 				blueToRed = false;
 				if(slow){
@@ -1868,6 +1871,17 @@ public class PlayScreen implements Screen {
 		}
 	}
 
+	// ---- upgrades as this run sees them ----
+	// The guided first run is scripted around a new player's ship (3 energy cells with 2 filled, one power-up slot, no
+	// starting power-ups, the shortest power-up time, the slowest ship), so a run that starts with the tutorial ignores
+	// every upgrade, from its first frame to its game over.
+	private boolean freshInstallRun;
+	private int upObjectStart(){ return freshInstallRun ? 0 : game.getMMS().objectStart; }
+	private int upObjectsSlots(){ return freshInstallRun ? 1 : game.getMMS().objectsSlots; }
+	private int upEnergyStart(){ return freshInstallRun ? 2 : game.getMMS().energyStart; }
+	private int upEnergyMeter(){ return freshInstallRun ? 3 : game.getMMS().energyMeter; }
+	private int upObjectsDuration(){ return freshInstallRun ? 1 : game.getMMS().objectsDuration; }
+
 	// ---- held power-ups, shown as badges that travel with the ship ----
 	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower right, the
 	// largest, and any others side by side to its right (the row slides left when the ship is near the right edge). Close to where the player is looking, and clear of the orbs,
@@ -1998,7 +2012,7 @@ public class PlayScreen implements Screen {
 			game.batch.draw(icons[sl][ty], px - iw/2, py - d*0.8f, iw, d*1.6f);
 			if(inUse){
 				// time left: a ring of lights around the badge going out one by one, turning red near the end
-				float total = 3f + 2f*game.getMMS().objectsDuration;
+				float total = 3f + 2f*upObjectsDuration();
 				float left = MathUtils.clamp(1f - (TimeUtils.nanoTime() - objectClock)/1e9f/total, 0f, 1f);
 				int n = 26, lit = MathUtils.ceil(left*n);
 				boolean ending = left < 0.3f;
@@ -2370,7 +2384,7 @@ public class PlayScreen implements Screen {
 				ship.tweenYellowFF();
 				ship.goldFlash();
 				catchFx(ball, 2);
-				if(ship.getLifes() < game.getMMS().energyMeter) 
+				if(ship.getLifes() < upEnergyMeter()) 
 					ship.setLifes(ship.getLifes() + 1);
 				if(ship.getLifes() > 1) 
 					Tween.call(lifeMeterChangeCallback).start(tweenManager);	
@@ -2404,12 +2418,12 @@ public class PlayScreen implements Screen {
 					obj[object1]++;
 					objectsSprites1[object1].setColor(1f, 1f, 1f, 1f); 
 					powerPickup(0, object1, ball);
-				}else if(game.getMMS().objectsSlots > 1 && object2 == -1){
+				}else if(upObjectsSlots() > 1 && object2 == -1){
 					object2 = randomObject();
 					obj[object2]++;
 					objectsSprites2[object2].setColor(1f, 1f, 1f, 1f); 
 					powerPickup(1, object2, ball);
-				}else if(game.getMMS().objectsSlots > 2 && object2 != -1 && object3 == -1){
+				}else if(upObjectsSlots() > 2 && object2 != -1 && object3 == -1){
 					object3 = randomObject();
 					obj[object3]++;
 					objectsSprites3[object3].setColor(1f, 1f, 1f, 1f); 
@@ -2829,12 +2843,12 @@ public class PlayScreen implements Screen {
 
 	private final TweenCallback objectCallback = new TweenCallback() {
 		public void onEvent(int type, BaseTween<?> source) {	
-			if(objectClockEnable && TimeUtils.nanoTime() - objectClock < 2000000000f*game.getMMS().objectsDuration){
+			if(objectClockEnable && TimeUtils.nanoTime() - objectClock < 2000000000f*upObjectsDuration()){
 				Tween.to(objectsSprites1[auxObj], SpriteAccessor.COLOR, 0.4f).target(1f, 1f, 1f, 0f).repeatYoyo(1, 0).
 				setCallback(objectCallback).start(tweenManager);
 				if(game.getMMS().sound == game.getMMS().ON && state == PLAY)
 					objectCount.play();
-			}else if(objectClockEnable && TimeUtils.nanoTime() - objectClock > 2000000000f*game.getMMS().objectsDuration){
+			}else if(objectClockEnable && TimeUtils.nanoTime() - objectClock > 2000000000f*upObjectsDuration()){
 				Tween.to(objectsSprites1[auxObj], SpriteAccessor.COLOR, 0.15f).target(1f, 1f, 1f, 0f).repeatYoyo(1, 0).
 				setCallback(objectCallback).start(tweenManager);
 				if(game.getMMS().sound == game.getMMS().ON && state == PLAY)
