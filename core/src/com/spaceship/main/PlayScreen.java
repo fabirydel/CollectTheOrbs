@@ -1870,11 +1870,11 @@ public class PlayScreen implements Screen {
 
 	// ---- held power-ups, shown as badges that travel with the ship ----
 	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower right, the
-	// largest, and any others side by side to its left. Close to where the player is looking, and clear of the orbs,
+	// largest, and any others side by side to its right (the row slides left when the ship is near the right edge). Close to where the player is looking, and clear of the orbs,
 	// which arrive from above.
 	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f;
 	/** badge centres relative to the ship's centre, and badge sizes, all in shield radii */
-	private static final float[] PU_DX = { 0.85f, 0.05f, -0.63f }, PU_DY = { -1.45f, -1.45f, -1.45f }, PU_SIZE = { 0.7f, 0.56f, 0.56f };
+	private static final float[] PU_DX = { 0.85f, 1.58f, 2.24f }, PU_DY = { -1.45f, -1.45f, -1.45f }, PU_SIZE = { 0.7f, 0.56f, 0.56f };
 	private static final float[] PU_PURPLE = { 0.8f, 0.5f, 1f };
 	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
@@ -1896,7 +1896,14 @@ public class PlayScreen implements Screen {
 		puLabelType = type;
 	}
 
-	private float puDockX(int slot){ return shipCenterX() + PU_DX[slot]*ship.getRadius(); }
+	private float puDockX(int slot){
+		float R = ship.getRadius();
+		// keep the whole row on screen: when the last held badge would cross the right edge, the row slides left
+		int last = object3 != -1 ? 2 : object2 != -1 ? 1 : 0;
+		float right = shipCenterX() + (PU_DX[last] + PU_SIZE[last]*0.7f)*R;
+		float slide = Math.min(0f, Gdx.graphics.getWidth() - fxy(6f) - right);
+		return shipCenterX() + PU_DX[slot]*R + slide;
+	}
 	private float puDockY(int slot){ return shipCenterY() + PU_DY[slot]*ship.getRadius(); }
 
 	private void drawPowerBadges(float dt){
