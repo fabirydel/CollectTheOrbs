@@ -2136,11 +2136,28 @@ public class PlayScreen implements Screen {
 		}
 	}
 
-	/** an orb was caught: kind 0 = blue, 1 = red, 2 = gold (energy), 3 = purple (power-up) */
+	/**
+	 * An orb was caught (kind 0 = blue, 1 = red, 2 = gold energy, 3 = purple power-up): the shield takes it in like water
+	 * takes a drop. Ripples run around the shield from where it landed while its light sinks in (drawn by the ship), and
+	 * a small crown of droplets splashes up from the surface.
+	 */
 	private void catchFx(Ball ball, int kind){
 		float bx = ball.getPosition().x, by = ball.getPosition().y;
-		hitRing(bx, by, fxy(kind >= 2 ? 120f : 90f), HIT_COLORS[kind]);
-		embers(bx, by, kind >= 2 ? 18 : 12, 400f, HIT_COLORS[kind], 0.5f);
+		float[] c = HIT_COLORS[kind];
+		ship.shieldAbsorb(bx, by, c[0], c[1], c[2]);
+		// the splash: droplets thrown up and out along the surface on both sides of the landing point
+		float sx = shipCenterX(), sy = shipCenterY();
+		float nx = bx - sx, ny = by - sy, len = (float)Math.sqrt(nx*nx + ny*ny) + 0.001f;
+		nx /= len; ny /= len;
+		float u = fxy(1);
+		int n = kind >= 2 ? 12 : 8;
+		for(int i = 0; i < n; i++){
+			float side = (i % 2 == 0 ? 1f : -1f)*MathUtils.random(60f, 300f)*u;
+			float up = MathUtils.random(90f, 330f)*u;
+			float white = MathUtils.random(0.1f, 0.6f);
+			Fx.emit(bx, by, nx*up - ny*side, ny*up + nx*side, MathUtils.random(0.28f, 0.5f), MathUtils.random(7f, 13f)*u,
+					c[0] + (1f - c[0])*white, c[1] + (1f - c[1])*white, c[2] + (1f - c[2])*white);
+		}
 	}
 
 	/** an orb of the wrong colour hit the shield: a harsher double ring in its colour and white-hot debris */

@@ -479,6 +479,57 @@ public class Spaceship{
 		goldTime = 0f;
 	}
 
+	// orbs sinking into the shield: each catch sends ripples running around the rim, both ways from where the orb landed,
+	// while the orb's light is drawn in toward the ship (several can overlap when orbs arrive together)
+	private static final int RIPPLES = 5;
+	private static final float RIPPLE_LIFE = 0.7f;
+	private final float[] ripT = { 9f, 9f, 9f, 9f, 9f }, ripA = new float[RIPPLES];
+	private final float[][] ripC = new float[RIPPLES][3];
+	private int ripNext;
+
+	/** An orb of colour (r, g, b) was absorbed where it touched the force field at (bx, by). */
+	public void shieldAbsorb(float bx, float by, float r, float g, float b){
+		int i = ripNext;
+		ripNext = (ripNext + 1) % RIPPLES;
+		ripT[i] = 0f;
+		ripA[i] = MathUtils.atan2(by - ship.y, bx - ship.x)*MathUtils.radiansToDegrees;
+		ripC[i][0] = r; ripC[i][1] = g; ripC[i][2] = b;
+	}
+
+	/** call between Fx.additiveOn/Off; full = the shield's drawn diameter, (r, g, b) = the shield's colour */
+	private void drawRipples(SpriteBatch sb, float dt, float full, float a, float r, float g, float b){
+		for(int i = 0; i < RIPPLES; i++){
+			if(ripT[i] >= RIPPLE_LIFE) continue;
+			ripT[i] += dt;
+			float[] c = ripC[i];
+			// four wave fronts, one after the other, each running around the rim both ways and dying out; they start in
+			// the orb's colour and melt into the shield's
+			for(int w = 0; w < 4; w++){
+				float t = (ripT[i] - w*0.08f)/0.5f;
+				if(t <= 0f || t >= 1f) continue;
+				float e = 1f - (1f - t)*(1f - t);
+				float spread = 150f*e;
+				float fade = Math.min(1f, 1.6f*(1f - t)*(1f - t)*(1f - 0.2f*w))*a;
+				float k = Math.min(1f, t*1.4f);
+				sb.setColor(c[0] + (r - c[0])*k, c[1] + (g - c[1])*k, c[2] + (b - c[2])*k, fade);
+				float sc = 1.015f + 0.02f*w;
+				sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, sc, sc, ripA[i] + spread, 0, 0, 256, 256, false, false);
+				sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, sc, sc, ripA[i] - spread, 0, 0, 256, 256, false, false);
+			}
+			// the orb's light sinking in: a glow that slides from the rim toward the ship, shrinking as it goes
+			float p = ripT[i]/0.32f;
+			if(p < 1f){
+				float rad = full*0.36f*(1f - 0.8f*p*p);
+				float gx = ship.x + MathUtils.cosDeg(ripA[i])*rad, gy = ship.y + MathUtils.sinDeg(ripA[i])*rad;
+				float gs = full*0.34f*(1f - 0.55f*p);
+				sb.setColor(c[0], c[1], c[2], (1f - p)*0.9f*a);
+				sb.draw(Fx.glow(), gx - gs/2, gy - gs/2, gs, gs);
+				sb.setColor(1f, 1f, 1f, (1f - p)*0.5f*a);
+				sb.draw(Fx.glow(), gx - gs*0.25f, gy - gs*0.25f, gs*0.5f, gs*0.5f);
+			}
+		}
+	}
+
 	/** A ball touched the force field at (bx, by): flex the shield and send a ripple out from that side. */
 	public void shieldImpact(float bx, float by){
 		impactAngle = MathUtils.atan2(by - ship.y, bx - ship.x)*MathUtils.radiansToDegrees;
@@ -516,15 +567,14 @@ public class Spaceship{
 		sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f, 1f, shieldTime*38f, 0, 0, 256, 256, false, false);
 		sb.setColor(r, g, b, a*(0.20f + 0.10f*(1f - pulse)));
 		sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f, 1f, 180f + shieldTime*38f, 0, 0, 256, 256, false, false);
-		// impact: a flare at the hit point and a ring spreading off the rim
+		// impact: a flare at the hit point
 		if(impactTime < 0.45f){
 			float t = impactTime/0.45f;
 			sb.setColor(1f, 1f, 1f, a*(1f - t)*(blue ? 0.75f : 0.9f));
 			sb.draw(Fx.shieldGlint(), ship.x - full/2, ship.y - full/2, full/2, full/2, full, full, 1f + 0.05f*t, 1f + 0.05f*t, impactAngle, 0, 0, 256, 256, false, false);
-			float ring = full*(1.05f + 0.35f*t);
-			sb.setColor(r, g, b, a*(1f - t)*(blue ? 0.25f : 0.45f));
-			sb.draw(Fx.ring(), ship.x - ring/2, ship.y - ring/2, ring, ring);
 		}
+		// absorbed orbs: ripples around the rim and the orb's light sinking in
+		drawRipples(sb, dt, full, a, r, g, b);
 		// shield switched: the new colour sweeps once around the rim with a fading trail, and a ring pushes out
 		if(forceFieldSelected == STATE_BLUE || forceFieldSelected == STATE_RED)
 			Fx.shieldSweep(sb, ship.x, ship.y, full, switchTime, r, g, b);
