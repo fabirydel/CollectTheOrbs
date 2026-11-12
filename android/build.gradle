@@ -64,8 +64,18 @@ android {
             manifestPlaceholders = [appLabel: 'Orbs (dev)', admobAppId: 'ca-app-pub-3940256099942544~3347511713']
             resValue 'string', 'admob_interstitial_id', 'ca-app-pub-3940256099942544/1033173712'
         }
+        // the debug app with the release build's code shrinking: for checking on a phone that shrinking breaks nothing
+        // (./gradlew :android:assembleShrunk, installs over "Orbs (dev)")
+        shrunk {
+            initWith debug
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            matchingFallbacks = ['debug']
+        }
         release {
-            minifyEnabled false
+            // R8 drops the unused parts of the Google ads, billing and Play Games SDKs (most of the app's code)
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (signingFile.exists()) signingConfig signingConfigs.upload
         }
     }
