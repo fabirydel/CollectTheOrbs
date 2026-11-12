@@ -1872,7 +1872,7 @@ public class PlayScreen implements Screen {
 	// They sit in a row just under the shield: slot 1 (the next one to use, or the one in use) at its lower right, the
 	// largest, and any others side by side to its left. Close to where the player is looking, and clear of the orbs,
 	// which arrive from above.
-	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f, PU_HINT = 1.1f;
+	private static final float PU_FLY = 0.75f, PU_LAND = 0.28f, PU_LABEL = 1.4f;
 	/** badge centres relative to the ship's centre, and badge sizes, all in shield radii */
 	private static final float[] PU_DX = { 0.85f, 0.05f, -0.63f }, PU_DY = { -1.45f, -1.45f, -1.45f }, PU_SIZE = { 0.7f, 0.56f, 0.56f };
 	private static final float[] PU_PURPLE = { 0.8f, 0.5f, 1f };
@@ -1880,11 +1880,11 @@ public class PlayScreen implements Screen {
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
 	private final float[] puFlyT = { 9f, 9f, 9f }, puLandT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3], puSwing = new float[3];
 	private final boolean[] puCaught = new boolean[3];
-	private float puLabelT = 9f, puHintT = 9f, puClock;
+	private float puLabelT = 9f, puClock;
 	private int puLabelType, puPrevSlot1 = -1;
 	private Sprite puTutBox;
 
-	/** a power-up orb was caught: its icon flies from the orb to its badge, its name pops up, and the tap area lights up */
+	/** a power-up orb was caught: its icon flies from the orb to its badge and its name pops up */
 	private void powerPickup(int slot, int type, Ball ball){
 		puFlyT[slot] = 0f;
 		puCaught[slot] = true;
@@ -1894,9 +1894,6 @@ public class PlayScreen implements Screen {
 		puSwing[slot] = (ball.getPosition().x >= shipCenterX() ? 1f : -1f)*MathUtils.random(1.6f, 2.3f);
 		puLabelT = 0f;
 		puLabelType = type;
-		if(slot == 0){
-			puHintT = 0f;
-		}
 	}
 
 	private float puDockX(int slot){ return shipCenterX() + PU_DX[slot]*ship.getRadius(); }
@@ -1925,23 +1922,8 @@ public class PlayScreen implements Screen {
 				puFromX[0] = puDockX(1);
 				puFromY[0] = puDockY(1);
 			}
-			puHintT = 0f;
 		}
 		puPrevSlot1 = object1;
-		// the tap area lights up, with its "use power-up" label: "tap here to use it"
-		if(puHintT < PU_HINT && object1 != -1 && !active && tutorial == null){
-			if(running) puHintT += dt;
-			float k = MathUtils.sin(Math.min(1f, puHintT/PU_HINT)*MathUtils.PI);
-			Sprite padS = english() ? padHorizontalUp : padHorizontalUpEsp;
-			float pr = padS.getColor().r, pg = padS.getColor().g, pb = padS.getColor().b, pa = padS.getColor().a;
-			Fx.additiveOn(game.batch);
-			padS.setColor(0.8f, 0.5f, 1f, 0.75f*k);
-			padS.draw(game.batch);
-			Fx.additiveOff(game.batch);
-			padS.setColor(pr, pg, pb, pa);
-			game.batch.setColor(1f, 1f, 1f, 1f);
-		}
-
 		for(int sl = 2; sl >= 0; sl--){
 			int ty = type[sl];
 			if(ty < 0 || ty >= icons[sl].length) continue;
