@@ -20,6 +20,12 @@ public class DevMain extends Main {
 		if (System.getenv("CTO_TUTORIAL") != null)
 			Main.setTutorial(true);		// dev driver: play the guided first run in the next game
 		harness.install();
+		if (System.getenv("CTO_ITEMS") != null) {		// dev driver: e.g. CTO_ITEMS=0,4,9 starts every game holding those power-ups
+			String[] parts = System.getenv("CTO_ITEMS").split(",");
+			int[] items = new int[parts.length];
+			for (int i = 0; i < parts.length; i++) items[i] = Integer.parseInt(parts[i].trim());
+			com.spaceship.main.PlayScreen.debugItems = items;
+		}
 		if (System.getenv("CTO_SHOTS") != null)
 			com.spaceship.handlers.Starfield.DEV_OFTEN = true;		// dev driver: constant shooting stars
 		if (System.getenv("CTO_NO_BLOOM") != null)

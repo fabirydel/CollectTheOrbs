@@ -784,6 +784,17 @@ public class PlayScreen implements Screen {
 				objectsSprites3[object3].setColor(1f, 1f, 1f, 1f); 
 			}else
 				object3 = -1;
+			if(debugItems != null && tutorial == null){
+				// dev driver: start holding these power-up types
+				int[] slots = { object1, object2, object3 };
+				Sprite[][] sp = { objectsSprites1, objectsSprites2, objectsSprites3 };
+				for(int k = 0; k < 3; k++){
+					if(slots[k] != -1) sp[k][slots[k]].setColor(1f, 1f, 1f, 0f);
+					slots[k] = k < debugItems.length ? debugItems[k] : -1;
+					if(slots[k] != -1) sp[k][slots[k]].setColor(1f, 1f, 1f, 1f);
+				}
+				object1 = slots[0]; object2 = slots[1]; object3 = slots[2];
+			}
 			ring1.setColor(1f, 1f, 1f, 1f);
 			ring2.setColor(1f, 1f, 1f, 1f);
 			ring3.setColor(1f, 1f, 1f, 1f);
@@ -1934,6 +1945,74 @@ public class PlayScreen implements Screen {
 	}
 	private float puDockY(int slot){ return shipCenterY() + PU_DY[slot]*ship.getRadius(); }
 
+	/**
+	 * A power-up's icon with a small animation that says what it does:
+	 *   0, 1    colour change: a spark travels from the first orb to the second, changing colour on the way
+	 *   2, 3    x2: the orbs beat twice, with two sparks circling          7, 8    x3: three beats, three sparks
+	 *   4       slow motion: the hourglass turns over, then sand trickles down
+	 *   5, 6, 9 shields: a glint runs around the shield's edge over a breathing halo
+	 * (cx, cy) is the centre, size the side of the icon's square, t a clock in seconds.
+	 */
+	private void drawPowerIcon(com.badlogic.gdx.graphics.g2d.TextureRegion icon, int type, float cx, float cy, float size, float a, float t){
+		float[] blue = HIT_COLORS[0], red = HIT_COLORS[1], gold = HIT_COLORS[2];
+		boolean multiplier = type == 2 || type == 3 || type == 7 || type == 8;
+		float rot = 0f, sc = 1f;
+		float turnCycle = t % 2.6f;
+		if(type == 4){
+			float k = Math.min(1f, turnCycle/0.5f);
+			k = k*k*(3f - 2f*k);
+			rot = 180f*((int)(t/2.6f) + k);
+		}else if(multiplier){
+			int beats = type <= 3 ? 2 : 3;
+			float bt = (t % 1.9f)/0.2f;
+			if(bt < beats) sc = 1f + 0.17f*MathUtils.sin((bt - (int)bt)*MathUtils.PI);
+		}
+		game.batch.setColor(1f, 1f, 1f, a);
+		game.batch.draw(icon, cx - size/2, cy - size/2, size/2, size/2, size, size, sc, sc, rot);
+		Fx.additiveOn(game.batch);
+		if(type == 0 || type == 1){
+			float[] from = type == 0 ? blue : red, to = type == 0 ? red : blue;
+			float p = (t*0.85f) % 1f, bell = MathUtils.sin(p*MathUtils.PI);
+			float gs = size*(0.10f + 0.10f*bell);
+			game.batch.setColor(from[0] + (to[0] - from[0])*p, from[1] + (to[1] - from[1])*p, from[2] + (to[2] - from[2])*p, a*bell);
+			game.batch.draw(Fx.glow(), cx + (-0.17f + 0.34f*p)*size - gs/2, cy - gs/2, gs, gs);
+			// the orb it leaves dims as the one it reaches lights up
+			float hs = size*0.30f;
+			game.batch.setColor(from[0], from[1], from[2], a*0.4f*(1f - p));
+			game.batch.draw(Fx.glow(), cx - 0.17f*size - hs/2, cy - hs/2, hs, hs);
+			game.batch.setColor(to[0], to[1], to[2], a*0.4f*p);
+			game.batch.draw(Fx.glow(), cx + 0.17f*size - hs/2, cy - hs/2, hs, hs);
+		}else if(multiplier){
+			float[] c = (type == 2 || type == 7) ? blue : red;
+			int n = type <= 3 ? 2 : 3;
+			float gs = size*0.085f;
+			for(int i = 0; i < n; i++){
+				float ang = t*150f + i*360f/n;
+				game.batch.setColor(c[0] + (1f - c[0])*0.5f, c[1] + (1f - c[1])*0.5f, c[2] + (1f - c[2])*0.5f, a*0.95f);
+				game.batch.draw(Fx.glow(), cx + MathUtils.cosDeg(ang)*size*0.27f - gs/2, cy + size*0.03f + MathUtils.sinDeg(ang)*size*0.23f - gs/2, gs, gs);
+			}
+		}else if(type == 4){
+			if(turnCycle > 0.55f){
+				// grains falling through the neck
+				float gs = size*0.045f;
+				for(int i = 0; i < 3; i++){
+					float q = ((turnCycle - 0.55f)*1.6f + i/3f) % 1f;
+					game.batch.setColor(1f, 0.95f, 0.8f, a*0.9f*(1f - q));
+					game.batch.draw(Fx.glow(), cx - gs/2, cy + size*(0.02f - 0.13f*q) - gs/2, gs, gs);
+				}
+			}
+		}else{
+			float[] c = type == 5 ? blue : type == 6 ? red : gold;
+			float hs = size*0.72f;
+			game.batch.setColor(c[0], c[1], c[2], a*(0.14f + 0.14f*MathUtils.sin(t*3f)));
+			game.batch.draw(Fx.glow(), cx - hs/2, cy - hs/2, hs, hs);
+			float ang = -t*170f, gs = size*0.12f;
+			game.batch.setColor(1f, 1f, 1f, a*0.9f);
+			game.batch.draw(Fx.glow(), cx + MathUtils.cosDeg(ang)*size*0.19f - gs/2, cy + MathUtils.sinDeg(ang)*size*0.22f - gs/2, gs, gs);
+		}
+		Fx.additiveOff(game.batch);
+	}
+
 	/** which held power-up's badge a new touch landed on (0 = the first), or -1 */
 	private int puTappedSlot(){
 		int[] type = { object1, object2, object3 };
@@ -2056,14 +2135,9 @@ public class PlayScreen implements Screen {
 			game.batch.draw(Fx.glow(), px - d*0.85f, py - d*0.85f, d*1.7f, d*1.7f);
 			game.batch.setColor(1f, 1f, 1f, 0.9f*a);
 			game.batch.draw(ring1, px - d*0.62f, py - d*0.62f, d*1.24f, d*1.24f);
-			// the icon turns slowly inside its ring, like a coin spinning on its vertical axis: it narrows to its edge and
-			// opens again (never mirrored, so "x2" stays readable), dimming a little as it turns away
-			float turn = Math.abs(MathUtils.cos(puClock*2.4f + sl*1.1f));
-			float lightK = 0.55f + 0.45f*turn;
-			game.batch.setColor(lightK, lightK, lightK, a);
-			// (the icon art has a wide empty margin: drawn larger so the picture fills the ring)
-			float iw = d*1.6f*Math.max(0.06f, turn);
-			game.batch.draw(icons[sl][ty], px - iw/2, py - d*0.8f, iw, d*1.6f);
+			// the icon, alive in its own way (see drawPowerIcon); the art has a wide empty margin, so it is drawn larger
+			// than the ring
+			drawPowerIcon(icons[sl][ty], ty, px, py, d*1.6f, a, puClock + sl*0.7f);
 			if(inUse){
 				// time left: a ring of lights around the badge going out one by one, turning red near the end
 				float total = 3f + 2f*upObjectsDuration();
@@ -2764,6 +2838,9 @@ public class PlayScreen implements Screen {
 	}
 
 	/** Test hook: start the charge-up now (dev driver). */
+	/** dev driver: power-up types to hold at the start of every game (null = normal) */
+	public static int[] debugItems;
+
 	/** dev driver: drop a power-up orb straight onto the ship */
 	public void debugItem(){
 		tutSpawn(Ball.B_OBJECT, shipCenterX() + fxy(60f), 520);
