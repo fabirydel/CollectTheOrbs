@@ -1869,10 +1869,12 @@ public class PlayScreen implements Screen {
 	}
 
 	// ---- held power-ups, shown as badges that travel with the ship ----
-	// Slot 1 (the next one to use, or the one in use) sits to the lower right of the shield, slot 2 to the lower left and
-	// slot 3 under the engines: close to where the player is looking, and clear of the orbs, which arrive from above.
+	// They circle the shield, a third of a turn apart, each trailing a short glowing tail; slot 1 (the next one to use,
+	// or the one in use) is the largest.
 	private static final float PU_FLY = 0.45f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
-	private static final float[] PU_ANGLE = { 300f, 240f, 270f }, PU_DIST = { 1.6f, 1.6f, 2.15f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
+	private static final float[] PU_ANGLE = { 300f, 180f, 60f }, PU_DIST = { 1.75f, 1.75f, 1.75f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
+	/** how fast the badges circle the shield, degrees per second (clockwise) */
+	private static final float PU_ORBIT = 48f;
 	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
 	private final float[] puFlyT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3];
@@ -1893,8 +1895,14 @@ public class PlayScreen implements Screen {
 		}
 	}
 
-	private float puDockX(int slot){ return shipCenterX() + MathUtils.cosDeg(PU_ANGLE[slot])*PU_DIST[slot]*ship.getRadius(); }
-	private float puDockY(int slot){ return shipCenterY() + MathUtils.sinDeg(PU_ANGLE[slot])*PU_DIST[slot]*ship.getRadius(); }
+	private float puAngle(int slot){ return PU_ANGLE[slot] - puClock*PU_ORBIT; }
+	/** where a slot's badge is on its circle around the ship right now (kept on screen when the ship hugs an edge) */
+	private float puDockX(int slot){ return puOrbitX(slot, puAngle(slot)); }
+	private float puDockY(int slot){ return shipCenterY() + MathUtils.sinDeg(puAngle(slot))*PU_DIST[slot]*ship.getRadius(); }
+	private float puOrbitX(int slot, float angle){
+		float m = PU_SIZE[slot]*ship.getRadius()*0.7f;
+		return MathUtils.clamp(shipCenterX() + MathUtils.cosDeg(angle)*PU_DIST[slot]*ship.getRadius(), m, Gdx.graphics.getWidth() - m);
+	}
 
 	private void drawPowerBadges(float dt){
 		if(puTutBox == null) puTutBox = new Sprite(ring1);
@@ -1966,6 +1974,22 @@ public class PlayScreen implements Screen {
 			if(sl == 0 && remind){
 				float ph = (puIdle % PU_REMIND)/0.9f;
 				d *= 1f + 0.28f*Math.abs(MathUtils.sin(ph*MathUtils.PI2));
+			}
+			if(puFlyT[sl] >= PU_FLY){
+				// a glowing tail along the circle behind the badge
+				Fx.additiveOn(game.batch);
+				for(int k = 1; k <= 7; k++){
+					float ta = puAngle(sl) + k*6.5f;
+					float tx = puOrbitX(sl, ta), tyy = shipCenterY() + MathUtils.sinDeg(ta)*PU_DIST[sl]*R;
+					float ts = d*(0.95f - 0.1f*k);
+					game.batch.setColor(0.8f, 0.5f, 1f, a*0.42f*(1f - k/8f));
+					game.batch.draw(Fx.glow(), tx - ts/2, tyy - ts/2, ts, ts);
+				}
+				// the badge itself glows, brighter in slow pulses
+				float gl = 0.5f + 0.5f*MathUtils.sin(puClock*3.2f + sl*2f);
+				game.batch.setColor(0.8f, 0.5f, 1f, a*(0.22f + 0.2f*gl));
+				game.batch.draw(Fx.glow(), px - d*1.05f, py - d*1.05f, d*2.1f, d*2.1f);
+				Fx.additiveOff(game.batch);
 			}
 			// a dark cushion so the icon reads over any galaxy, then its ring and the icon
 			game.batch.setColor(0f, 0f, 0f, 0.6f*a);
