@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.sql.DatabaseCursor;
 import com.badlogic.gdx.sql.SQLiteGdxException;
@@ -24,6 +25,11 @@ public class Splash implements Screen{
 	private Sprite[] progressSprites;
 	private Sprite splash;
 	private TextureRegion splashTop, splashBottom;
+	/** how far the screen reaches below and above the 720x1440 art, in art pixels */
+	private float padBottom, padTop;
+	/** height of the off-screen light and rain canvases: the art plus both gaps */
+	private int canvasH = 1440;
+	private TextureRegion[] glowTopRow, glowBottomRow;
 
 	// neon glow layers drawn additively over the unlit base art, in the order of splash_layers.txt
 	private static final String[] GLOW_NAMES = {"ring", "puffin", "beak", "name_a", "name_f", "games_a", "games_m", "frame"};
@@ -327,7 +333,8 @@ public class Splash implements Screen{
 			game.batch.begin();
 
 			// the art keeps its proportions (scaled to the screen width) and sits so its loading-bar slot lines up
-			// with the bar; whatever the screen shows above or below it is the art's own edge row stretched
+			// with the bar; on taller screens the wall continues above and below it as a mirror image of the art's own
+			// edge band (the wall's grain carries on, with no seam), and the light and the rain cover the whole screen
 			if(splash.getY() > 0) game.batch.draw(splashBottom, 0, 0, Gdx.graphics.getWidth(), splash.getY());
 			float splashTopY = splash.getY() + splash.getHeight();
 			if(splashTopY < Gdx.graphics.getHeight()) game.batch.draw(splashTop, 0, splashTopY, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - splashTopY);
@@ -354,8 +361,16 @@ public class Splash implements Screen{
 		splash.setSize(Gdx.graphics.getWidth(), splashTexture.getHeight()*splashScale);
 		// the loading bar slot is 2/3 of the way down the art (960 of 1440 px)
 		splash.setPosition(0, Gdx.graphics.getHeight()/3f - (splashTexture.getHeight() - 960)*splashScale);
-		splashTop = new TextureRegion(splashTexture, 0, 0, splashTexture.getWidth(), 2);
-		splashBottom = new TextureRegion(splashTexture, 0, splashTexture.getHeight() - 2, splashTexture.getWidth(), 2);
+		// how far the screen reaches below and above the art, in art pixels (0 when the art already covers it)
+		padBottom = Math.max(0f, splash.getY()/splashScale);
+		padTop = Math.max(0f, (Gdx.graphics.getHeight() - (splash.getY() + splash.getHeight()))/splashScale);
+		// the bands that fill those gaps: the art's own top and bottom bands, mirrored
+		int bandTop = Math.min(splashTexture.getHeight(), Math.max(1, MathUtils.ceil(padTop)));
+		int bandBottom = Math.min(splashTexture.getHeight(), Math.max(1, MathUtils.ceil(padBottom)));
+		splashTop = new TextureRegion(splashTexture, 0, 0, splashTexture.getWidth(), bandTop);
+		splashTop.flip(false, true);
+		splashBottom = new TextureRegion(splashTexture, 0, splashTexture.getHeight() - bandBottom, splashTexture.getWidth(), bandBottom);
+		splashBottom.flip(false, true);
 		loadGlow();
 		progressBar = game.assetManager.get("res/hud/progress_bar.png", Texture.class);
 		// the sheet holds 21 frames of 286x72 (2x of the 143x36 logical size) in a grid, read row by row
@@ -544,10 +559,31 @@ public class Splash implements Screen{
 		if(glowTextures == null) return;
 		updateGlow(delta);
 		if(fxBatch == null){
+			// the canvases cover the whole screen: the art (720x1440) plus the gaps below and above it
+			canvasH = 1440 + MathUtils.ceil(padBottom) + MathUtils.ceil(padTop);
 			fxBatch = new SpriteBatch();
-			fxBatch.getProjectionMatrix().setToOrtho2D(0, 0, 720, 1440);
-			fbRain = new FrameBuffer(Pixmap.Format.RGB888, 720, 1440, false);
-			fbLight = new FrameBuffer(Pixmap.Format.RGB888, 720, 1440, false);
+			fxBatch.setProjectionMatrix(new com.badlogic.gdx.math.Matrix4().setToOrtho2D(0, 0, 720, canvasH));
+			fbRain = new FrameBuffer(Pixmap.Format.RGB888, 720, canvasH, false);
+			fbLight = new FrameBuffer(Pixmap.Format.RGB888, 720, canvasH, false);
+			// a glow that reaches the art's top or bottom edge carries on into the gap as a mirror image of its own edge
+			// band, like the wall under it (stretching its edge row instead would smear its grain into streaks)
+			glowTopRow = new TextureRegion[glowTextures.length];
+			glowBottomRow = new TextureRegion[glowTextures.length];
+			for(int i = 0; i < glowTextures.length; i++){
+				if(glowBounds[i] == null) continue;
+				Texture t = glowTextures[i];
+				float rowsPerArtPixel = t.getHeight()/glowBounds[i][3];
+				if(glowBounds[i][1] <= 0.5f && padTop > 0){
+					int rows = Math.min(t.getHeight(), Math.max(1, Math.round(MathUtils.ceil(padTop)*rowsPerArtPixel)));
+					glowTopRow[i] = new TextureRegion(t, 0, 0, t.getWidth(), rows);
+					glowTopRow[i].flip(false, true);
+				}
+				if(glowBounds[i][1] + glowBounds[i][3] >= 1439.5f && padBottom > 0){
+					int rows = Math.min(t.getHeight(), Math.max(1, Math.round(MathUtils.ceil(padBottom)*rowsPerArtPixel)));
+					glowBottomRow[i] = new TextureRegion(t, 0, t.getHeight() - rows, t.getWidth(), rows);
+					glowBottomRow[i].flip(false, true);
+				}
+			}
 			rainRegion = new TextureRegion(fbRain.getColorBufferTexture());
 			rainRegion.flip(false, true);
 			lightRegion = new TextureRegion(fbLight.getColorBufferTexture());
@@ -562,7 +598,7 @@ public class Splash implements Screen{
 			float oy = (glowTime*RAIN_SPEEDS[i]) % 1440;
 			float ox = (oy*0.08f) % 720;
 			for(int tx = -1; tx <= 0; tx++){
-				for(int ty = -1; ty <= 0; ty++){
+				for(int ty = -2; ty <= 0; ty++){		// one more tile up: the canvas can be taller than one rain tile
 					fxBatch.draw(rainTextures[i], ox + tx*720, -(oy + ty*1440), 720, 1440);
 				}
 			}
@@ -579,12 +615,15 @@ public class Splash implements Screen{
 			if(a <= 0.01f) continue;
 			float[] b = glowBounds[i];
 			fxBatch.setColor(1, 1, 1, a);
-			fxBatch.draw(glowTextures[i], b[0], 1440 - (b[1] + b[3]), b[2], b[3]);
+			float pb = MathUtils.ceil(padBottom);
+			fxBatch.draw(glowTextures[i], b[0], pb + 1440 - (b[1] + b[3]), b[2], b[3]);
+			if(glowTopRow[i] != null && canvasH - (pb + 1440) > 0) fxBatch.draw(glowTopRow[i], b[0], pb + 1440, b[2], canvasH - (pb + 1440));
+			if(glowBottomRow[i] != null && pb > 0) fxBatch.draw(glowBottomRow[i], b[0], 0, b[2], pb);
 		}
 		fxBatch.setColor(1, 1, 1, 1);
 		fxBatch.flush();
 		fxBatch.setBlendFunction(GL20.GL_ZERO, GL20.GL_SRC_COLOR);
-		fxBatch.draw(rainRegion, 0, 0, 720, 1440);
+		fxBatch.draw(rainRegion, 0, 0, 720, canvasH);
 		fxBatch.end();
 		fbLight.end();
 	}
@@ -600,12 +639,18 @@ public class Splash implements Screen{
 			float[] b = glowBounds[i];
 			game.batch.setColor(1, 1, 1, a);
 			game.batch.draw(glowTextures[i], b[0]*s, splash.getY() + (1440 - (b[1] + b[3]))*s, b[2]*s, b[3]*s);
+			// the glow carries on into the gaps above and below the art
+			float artTop = splash.getY() + 1440*s;
+			if(glowTopRow[i] != null && Gdx.graphics.getHeight() > artTop) game.batch.draw(glowTopRow[i], b[0]*s, artTop, b[2]*s, Gdx.graphics.getHeight() - artTop);
+			if(glowBottomRow[i] != null && splash.getY() > 0) game.batch.draw(glowBottomRow[i], b[0]*s, 0, b[2]*s, splash.getY());
 		}
-		// lit rain, plus a faint ambient trace of the streaks so the rain reads between the tubes too
+		// lit rain, plus a faint ambient trace of the streaks so the rain reads between the tubes too (both canvases
+		// start below the art by the bottom gap and cover the whole screen)
+		float canvasY = splash.getY() - MathUtils.ceil(padBottom)*s;
 		game.batch.setColor(1, 1, 1, 1);
-		game.batch.draw(lightRegion, 0, splash.getY(), 720*s, 1440*s);
+		game.batch.draw(lightRegion, 0, canvasY, 720*s, canvasH*s);
 		game.batch.setColor(0.55f, 0.65f, 0.85f, RAIN_AMBIENT);
-		game.batch.draw(rainRegion, 0, splash.getY(), 720*s, 1440*s);
+		game.batch.draw(rainRegion, 0, canvasY, 720*s, canvasH*s);
 		game.batch.setColor(1, 1, 1, 1);
 		game.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 	}
