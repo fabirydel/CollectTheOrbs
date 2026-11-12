@@ -1872,7 +1872,7 @@ public class PlayScreen implements Screen {
 	// Slot 1 (the next one to use, or the one in use) sits to the lower right of the shield, slot 2 to the lower left and
 	// slot 3 under the engines: close to where the player is looking, and clear of the orbs, which arrive from above.
 	private static final float PU_FLY = 0.45f, PU_LABEL = 1.4f, PU_HINT = 1.1f, PU_REMIND = 6f;
-	private static final float[] PU_ANGLE = { 300f, 240f, 270f }, PU_DIST = { 1.7f, 1.7f, 2.35f }, PU_SIZE = { 1.0f, 0.8f, 0.8f };
+	private static final float[] PU_ANGLE = { 300f, 240f, 270f }, PU_DIST = { 1.6f, 1.6f, 2.15f }, PU_SIZE = { 0.8f, 0.64f, 0.64f };
 	private static final String[] PU_NAMES_EN = { "Blue to red", "Red to blue", "Blue x2", "Red x2", "Slow motion", "Blue shield", "Red shield", "Blue x3", "Red x3", "Gold shield" };
 	private static final String[] PU_NAMES_ES = { "Azul a rojo", "Rojo a azul", "Azul x2", "Rojo x2", "C\u00e1mara lenta", "Escudo azul", "Escudo rojo", "Azul x3", "Rojo x3", "Escudo dorado" };
 	private final float[] puFlyT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3];
@@ -1972,9 +1972,14 @@ public class PlayScreen implements Screen {
 			game.batch.draw(Fx.glow(), px - d*0.85f, py - d*0.85f, d*1.7f, d*1.7f);
 			game.batch.setColor(1f, 1f, 1f, 0.9f*a);
 			game.batch.draw(ring1, px - d*0.62f, py - d*0.62f, d*1.24f, d*1.24f);
-			game.batch.setColor(1f, 1f, 1f, a);
+			// the icon turns slowly inside its ring, like a coin spinning on its vertical axis: it narrows to its edge and
+			// opens again (never mirrored, so "x2" stays readable), dimming a little as it turns away
+			float turn = Math.abs(MathUtils.cos(puClock*2.4f + sl*1.1f));
+			float lightK = 0.55f + 0.45f*turn;
+			game.batch.setColor(lightK, lightK, lightK, a);
 			// (the icon art has a wide empty margin: drawn larger so the picture fills the ring)
-			game.batch.draw(icons[sl][ty], px - d*0.8f, py - d*0.8f, d*1.6f, d*1.6f);
+			float iw = d*1.6f*Math.max(0.06f, turn);
+			game.batch.draw(icons[sl][ty], px - iw/2, py - d*0.8f, iw, d*1.6f);
 			if(inUse){
 				// time left: a ring of lights around the badge going out one by one, turning red near the end
 				float total = 3f + 2f*game.getMMS().objectsDuration;
