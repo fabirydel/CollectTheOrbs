@@ -214,6 +214,119 @@ public class MainMenuScreen implements Screen {
 	private float menuHover;
 	private final com.spaceship.handlers.MechDoor mechDoor = new com.spaceship.handlers.MechDoor();
 
+	// ---- the Galaxies page comes alive ----
+	// Each owned galaxy's window twinkles, glows in the galaxy's own colour and has a shooting star cross it now and
+	// then; the selected one pulses brighter. A locked galaxy's price card glows faintly in that galaxy's colour.
+	private float cardClock;
+
+	/** a repeatable pseudo-random number in 0..1 for (a, b) */
+	private static float cardRand(int a, int b){
+		float v = MathUtils.sin(a*12.9898f + b*78.233f)*43758.547f;
+		return v - MathUtils.floor(v);
+	}
+
+	private void drawGalaxyCards(float delta){
+		com.badlogic.gdx.scenes.scene2d.Group root = stageGalaxies.getRoot();
+		// only while the page is on screen
+		if(root.getY() >= stageGalaxies.getHeight() - 1f || root.getColor().a <= 0.02f || scrollBgs == null) return;
+		cardClock += Math.min(delta, 0.05f);
+		float pageA = root.getColor().a;
+		Fx.init(game.assetManager);
+		// nothing may draw outside the scrolling list
+		com.badlogic.gdx.math.Vector2 o = scrollBgs.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(0f, 0f));
+		game.batch.begin();
+		game.batch.flush();
+		Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+		com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor((int)o.x, (int)o.y, (int)scrollBgs.getWidth(), (int)scrollBgs.getHeight());
+		Fx.additiveOn(game.batch);
+		com.badlogic.gdx.math.Vector2 p = new com.badlogic.gdx.math.Vector2();
+		float t = cardClock;
+		for(int k = 0; k < bgsBoughtImage.length; k++){
+			boolean owned = galaxiesBought[k] == 1;
+			Image card = owned ? bgsBoughtImage[k] : bgsPriceImage[k];
+			if(card == null || card.getStage() == null) continue;
+			float a = pageA*card.getColor().a;
+			if(a <= 0.02f) continue;
+			card.localToStageCoordinates(p.set(0f, 0f));
+			float w = card.getWidth(), h = card.getHeight();
+			if(p.y > o.y + scrollBgs.getHeight() || p.y + h < o.y) continue;
+			float cx = p.x + w/2, cy = p.y + h/2;
+			float[] c = com.spaceship.handlers.Starfield.tint(k);
+			if(!owned){
+				// locked: a hint of what is behind the price, a soft cloud in the galaxy's colour that breathes
+				// (the sky pictures of galaxies that are not owned are not loaded, so the picture itself cannot show)
+				float breathe = 0.5f + 0.5f*MathUtils.sin(t*1.1f + k*1.7f);
+				// a wide, faint cloud, cut off at the card's edges (and at the list's)
+				float in = 0.04f*Math.min(w, h);
+				float x0 = Math.max(p.x + in, o.x), y0 = Math.max(p.y + in, o.y);
+				float x1 = Math.min(p.x + w - in, o.x + scrollBgs.getWidth()), y1 = Math.min(p.y + h - in, o.y + scrollBgs.getHeight());
+				if(x1 > x0 && y1 > y0){
+					game.batch.flush();
+					com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor((int)x0, (int)y0, (int)(x1 - x0), (int)(y1 - y0));
+					float bw = w*1.9f, bh = h*1.5f;
+					game.batch.setColor(c[0], c[1], c[2], a*(0.10f + 0.10f*breathe));
+					game.batch.draw(Fx.glow(), cx - bw/2 + w*0.12f*MathUtils.sin(t*0.6f + k), cy - bh/2 + h*0.08f*MathUtils.cos(t*0.45f + k), bw, bh);
+					game.batch.flush();
+					com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor((int)o.x, (int)o.y, (int)scrollBgs.getWidth(), (int)scrollBgs.getHeight());
+				}
+				// a few faint stars
+				for(int i = 0; i < 5; i++){
+					float sx = p.x + w*(0.12f + 0.76f*cardRand(k, i)), sy = p.y + h*(0.10f + 0.80f*cardRand(k + 31, i));
+					float tw = 0.5f + 0.5f*MathUtils.sin(t*(1.2f + 2f*cardRand(k, i + 9)) + i*2.1f);
+					float ss = w*0.035f*(0.7f + 0.6f*cardRand(k + 7, i));
+					game.batch.setColor(c[0], c[1], c[2], a*0.55f*tw);
+					game.batch.draw(Fx.glow(), sx - ss/2, sy - ss/2, ss, ss);
+				}
+				continue;
+			}
+			// the window in the middle of an owned card (an upright ellipse)
+			float rx = 0.41f*w, ry = 0.41f*h;
+			boolean selected = k == galaxySelected;
+			float pulse = 0.5f + 0.5f*MathUtils.sin(t*(selected ? 3.4f : 1.6f) + k*1.3f);
+			// its rim glows in the galaxy's colour; the selected galaxy glows brighter, with a white edge
+			float gw = rx*2.24f, gh = ry*2.24f;
+			game.batch.setColor(c[0], c[1], c[2], a*(selected ? 0.45f + 0.3f*pulse : 0.22f + 0.18f*pulse));
+			game.batch.draw(Fx.ring(), cx - gw/2, cy - gh/2, gw, gh);
+			if(selected){
+				game.batch.setColor(1f, 1f, 1f, a*(0.12f + 0.2f*pulse));
+				game.batch.draw(Fx.ring(), cx - gw*0.49f, cy - gh*0.49f, gw*0.98f, gh*0.98f);
+			}
+			// twinkling stars inside the window
+			for(int i = 0; i < 8; i++){
+				float ang = cardRand(k, i)*MathUtils.PI2, rad = 0.82f*(float)Math.sqrt(cardRand(k + 17, i));
+				float sx = cx + MathUtils.cos(ang)*rad*rx, sy = cy + MathUtils.sin(ang)*rad*ry;
+				float tw = 0.5f + 0.5f*MathUtils.sin(t*(1.4f + 2.6f*cardRand(k, i + 5)) + i*1.7f);
+				float ss = w*0.05f*(0.6f + 0.7f*cardRand(k + 3, i));
+				game.batch.setColor(c[0] + (1f - c[0])*0.5f, c[1] + (1f - c[1])*0.5f, c[2] + (1f - c[2])*0.5f, a*0.9f*tw*tw);
+				game.batch.draw(Fx.glow(), sx - ss/2, sy - ss/2, ss, ss);
+			}
+			// a shooting star crosses the window every few seconds, each card on its own schedule
+			float period = 3.2f + 3.5f*cardRand(k, 40);
+			float local = (t + 9f*cardRand(k, 41)) % period;
+			float life = 0.55f;
+			if(local < life){
+				int n = (int)((t + 9f*cardRand(k, 41))/period);
+				float q = local/life;
+				float dir = cardRand(k + n, 42) < 0.5f ? 1f : -1f;
+				float ang = (20f + 30f*cardRand(k + n, 43))*MathUtils.degreesToRadians;
+				float dx = dir*MathUtils.cos(ang), dy = -MathUtils.sin(ang);
+				float sy0 = cy + ry*(0.1f + 0.45f*cardRand(k + n, 44));
+				float travel = (q - 0.5f)*rx*1.15f;
+				float sx = cx + dx*travel, sy = sy0 + dy*travel - ry*0.1f;
+				float sa = a*MathUtils.sin(q*MathUtils.PI);
+				float len = rx*0.55f;
+				Fx.tail(game.batch, false, sx, sy, -dx, -dy, len, w*0.035f, c[0], c[1], c[2], sa);
+				Fx.tail(game.batch, true, sx, sy, -dx, -dy, len*0.6f, w*0.017f, c[0] + (1f - c[0])*0.6f, c[1] + (1f - c[1])*0.6f, c[2] + (1f - c[2])*0.6f, sa);
+				float hs = w*0.06f;
+				game.batch.setColor(1f, 1f, 1f, sa);
+				game.batch.draw(Fx.glow(), sx - hs/2, sy - hs/2, hs, hs);
+			}
+		}
+		Fx.additiveOff(game.batch);
+		game.batch.end();
+		Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+	}
+
 	/** a menu page arrives: it glides down into place, decelerating, while it fades in */
 	private com.badlogic.gdx.scenes.scene2d.Action pageIn(){
 		return com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(
@@ -1472,6 +1585,7 @@ public class MainMenuScreen implements Screen {
 		stageShips.draw();
 		stageGalaxies.act(delta);
 		stageGalaxies.draw();
+		drawGalaxyCards(delta);
 		stageUpgrades.act(delta);
 		stageUpgrades.draw();
 		stageStats.act(delta);

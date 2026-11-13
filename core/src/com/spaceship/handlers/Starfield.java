@@ -60,6 +60,11 @@ public class Starfield {
 	/** dev driver only: a constant stream of shooting stars, for checking their colour against each galaxy */
 	public static boolean DEV_OFTEN;
 
+	/** The shooting-star colour that goes with a galaxy (its index in the Galaxies menu). */
+	public static float[] tint(int galaxy) {
+		return SHOT_TINT[galaxy >= 0 && galaxy < SHOT_TINT.length ? galaxy : 0];
+	}
+
 	/** Which galaxy is showing (its index in the Galaxies menu): sets the shooting stars' colour. */
 	public void setGalaxy(int galaxy) {
 		shotTint = SHOT_TINT[galaxy >= 0 && galaxy < SHOT_TINT.length ? galaxy : 0];
