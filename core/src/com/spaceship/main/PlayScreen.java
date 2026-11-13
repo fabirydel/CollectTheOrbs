@@ -1906,6 +1906,8 @@ public class PlayScreen implements Screen {
 	private final float[] puFlyT = { 9f, 9f, 9f }, puLandT = { 9f, 9f, 9f }, puFromX = new float[3], puFromY = new float[3], puSwing = new float[3];
 	private final boolean[] puCaught = new boolean[3];
 	private float puLabelT = 9f, puClock;
+	/** 0..1: how far the waiting badges have moved aside for the countdown lights */
+	private float puGap;
 	private int puLabelType, puPrevSlot1 = -1;
 	private Sprite puTutBox;
 
@@ -1926,8 +1928,10 @@ public class PlayScreen implements Screen {
 		// keep the whole row on screen: when the last held badge would cross the right edge, the row slides left
 		int last = object3 != -1 ? 2 : object2 != -1 ? 1 : 0;
 		float right = shipCenterX() + (PU_DX[last] + PU_SIZE[last]*0.7f)*R;
-		float slide = Math.min(0f, Gdx.graphics.getWidth() - fxy(6f) - right);
-		return shipCenterX() + PU_DX[slot]*R + slide;
+		// while a power-up is in use its countdown lights circle it: the waiting badges move over to make room
+		float gap = puGap*PU_SIZE[0]*0.34f*R;
+		float slide = Math.min(0f, Gdx.graphics.getWidth() - fxy(6f) - right - gap);
+		return shipCenterX() + PU_DX[slot]*R + slide + (slot > 0 ? gap : 0f);
 	}
 	private float puDockY(int slot){ return shipCenterY() + PU_DY[slot]*ship.getRadius(); }
 
@@ -1937,14 +1941,21 @@ public class PlayScreen implements Screen {
 	 *   2, 3    x2: the orbs beat twice, with two sparks circling          7, 8    x3: three beats, three sparks
 	 *   4       slow motion: the hourglass turns over, then sand trickles down
 	 *   5, 6, 9 shields: the shield spins once on its vertical axis every few seconds, over a breathing halo
-	 * (cx, cy) is the centre, size the side of the icon's square, t a clock in seconds.
+	 * (cx, cy) is the centre, size the side of the icon's square, t a clock in seconds; not animated = the plain icon.
 	 */
-	private void drawPowerIcon(com.badlogic.gdx.graphics.g2d.TextureRegion icon, int type, float cx, float cy, float size, float a, float t){
+	private void drawPowerIcon(com.badlogic.gdx.graphics.g2d.TextureRegion icon, int type, float cx, float cy, float size, float a, float t, boolean animated){
 		float[] blue = HIT_COLORS[0], red = HIT_COLORS[1], gold = HIT_COLORS[2];
 		boolean multiplier = type == 2 || type == 3 || type == 7 || type == 8;
 		float rot = 0f, sc = 1f, scX = 1f;
 		float turnCycle = t % 2.6f;
 		boolean shield = type == 5 || type == 6 || type == 9;
+		// the shield's point makes it look as if it sat high in its ring: it is drawn a little lower
+		if(shield) cy -= size*0.035f;
+		if(!animated){
+			game.batch.setColor(1f, 1f, 1f, a);
+			game.batch.draw(icon, cx - size/2, cy - size/2, size, size);
+			return;
+		}
 		if(type == 4){
 			float k = Math.min(1f, turnCycle/0.5f);
 			k = k*k*(3f - 2f*k);
@@ -2013,6 +2024,7 @@ public class PlayScreen implements Screen {
 		if(dt > 0.05f) dt = 0.05f;
 		if(running) puClock += dt;
 		boolean active = objectClockEnable;
+		puGap += ((active ? 1f : 0f) - puGap)*Math.min(1f, dt*10f);
 		int[] type = { active ? auxObj : object1, object2, object3 };
 		Sprite[][] icons = { objectsSprites1, objectsSprites2, objectsSprites3 };
 
@@ -2075,7 +2087,7 @@ public class PlayScreen implements Screen {
 				// the badge glows, brighter in slow pulses (and strongly while it flies in)
 				float gl = 0.5f + 0.5f*MathUtils.sin(puClock*3.2f + sl*2f);
 				Fx.additiveOn(game.batch);
-				game.batch.setColor(0.8f, 0.5f, 1f, a*(flying && puCaught[sl] ? 0.75f : 0.2f + 0.18f*gl));
+				game.batch.setColor(0.8f, 0.5f, 1f, a*(flying && puCaught[sl] ? 0.75f : sl == 0 ? 0.2f + 0.18f*gl : 0.14f));
 				game.batch.draw(Fx.glow(), px - d*1.05f, py - d*1.05f, d*2.1f, d*2.1f);
 				Fx.additiveOff(game.batch);
 			}
@@ -2086,18 +2098,19 @@ public class PlayScreen implements Screen {
 			game.batch.draw(ring1, px - d*0.62f, py - d*0.62f, d*1.24f, d*1.24f);
 			// the icon, alive in its own way (see drawPowerIcon); the art has a wide empty margin, so it is drawn larger
 			// than the ring
-			drawPowerIcon(icons[sl][ty], ty, px, py, d*1.6f, a, puClock + sl*0.7f);
+			// only the first badge (the one in use, or the next to be used) is animated; the others wait still
+			drawPowerIcon(icons[sl][ty], ty, px, py, d*1.6f, a, puClock, sl == 0);
 			if(inUse){
 				// time left: a ring of lights around the badge going out one by one, turning red near the end
 				float total = 3f + 2f*upObjectsDuration();
 				float left = MathUtils.clamp(1f - (TimeUtils.nanoTime() - objectClock)/1e9f/total, 0f, 1f);
 				int n = 26, lit = MathUtils.ceil(left*n);
 				boolean ending = left < 0.3f;
-				float ds = d*0.2f;
+				float ds = d*0.17f;
 				Fx.additiveOn(game.batch);
 				for(int i = 0; i < lit; i++){
 					float ang = 90f - i*360f/n;
-					float dx = MathUtils.cosDeg(ang)*d*0.74f, dy = MathUtils.sinDeg(ang)*d*0.74f;
+					float dx = MathUtils.cosDeg(ang)*d*0.72f, dy = MathUtils.sinDeg(ang)*d*0.72f;
 					if(ending) game.batch.setColor(1f, 0.3f, 0.3f, 0.95f);
 					else game.batch.setColor(0.85f, 0.6f, 1f, 0.95f);
 					game.batch.draw(Fx.glow(), px + dx - ds/2, py + dy - ds/2, ds, ds);

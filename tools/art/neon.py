@@ -437,7 +437,17 @@ def button(name, gname, size, slash=False):
     if slash:
         pen.line([(-0.95, -0.95), (0.95, 0.95)], w=w * U * 0.05)
     sw = w * U * 0.032
-    tube = tube_rgba(stroke.split()[3], TUBE_WHITE, sw, sig=(0.3, 0.8, 1.1), fade=6 * U)
+    tube = tube_rgba(stroke.split()[3], TUBE_WHITE, sw, sig=(0.3, 0.8, 1.1))
+    # the glow is wider than the margin around the ring: fade it out in a circle around the ring (full at the ring,
+    # gone at the canvas edge), so it never shows the picture's straight sides
+    n = tube.width
+    yy, xx = np.mgrid[0:n, 0:n]
+    r = np.hypot(xx - (n - 1) / 2, yy - (n - 1) / 2)
+    f = np.clip((n / 2 - 1.5 - r) / (n / 2 - 1.5 - R), 0, 1)
+    f = f * f * (3 - 2 * f)
+    arr = np.asarray(tube, np.float32)
+    arr[..., 3] *= f
+    tube = Image.fromarray((arr + 0.5).astype(np.uint8))
     out = Image.alpha_composite(base, tube)
     finish(out, w, w, 'gui/%s.png' % name)
 
