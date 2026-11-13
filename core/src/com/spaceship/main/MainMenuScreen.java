@@ -218,6 +218,7 @@ public class MainMenuScreen implements Screen {
 	// Each owned galaxy's window twinkles, glows in the galaxy's own colour and has a shooting star cross it now and
 	// then; the selected one pulses brighter. A locked galaxy's price card glows faintly in that galaxy's colour.
 	private float cardClock;
+	private Texture rimSoft;
 
 	/** a repeatable pseudo-random number in 0..1 for (a, b) */
 	private static float cardRand(int a, int b){
@@ -283,14 +284,15 @@ public class MainMenuScreen implements Screen {
 			float rx = 0.41f*w, ry = 0.41f*h;
 			boolean selected = k == galaxySelected;
 			float pulse = 0.5f + 0.5f*MathUtils.sin(t*(selected ? 3.4f : 1.6f) + k*1.3f);
-			// its rim glows in the galaxy's colour; the selected galaxy glows brighter, with a white edge
-			float gw = rx*2.24f, gh = ry*2.24f;
-			game.batch.setColor(c[0], c[1], c[2], a*(selected ? 0.45f + 0.3f*pulse : 0.22f + 0.18f*pulse));
-			game.batch.draw(Fx.ring(), cx - gw/2, cy - gh/2, gw, gh);
-			if(selected){
-				game.batch.setColor(1f, 1f, 1f, a*(0.12f + 0.2f*pulse));
-				game.batch.draw(Fx.ring(), cx - gw*0.49f, cy - gh*0.49f, gw*0.98f, gh*0.98f);
+			// the window glows in the galaxy's colour from its edge inward, melting into the sky so no ring shows; the
+			// selected galaxy glows brighter and faster
+			if(rimSoft == null){
+				rimSoft = new Texture(Gdx.files.internal("res/fx/rim_soft.png"));
+				rimSoft.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 			}
+			float gw = rx*2.02f, gh = ry*2.02f;
+			game.batch.setColor(c[0], c[1], c[2], a*(selected ? 0.5f + 0.4f*pulse : 0.2f + 0.2f*pulse));
+			game.batch.draw(rimSoft, cx - gw/2, cy - gh/2, gw, gh);
 			// twinkling stars inside the window
 			for(int i = 0; i < 8; i++){
 				float ang = cardRand(k, i)*MathUtils.PI2, rad = 0.82f*(float)Math.sqrt(cardRand(k + 17, i));

@@ -1373,22 +1373,8 @@ public class PlayScreen implements Screen {
 					ball.changeRed();
 				}	
 			}
-			// a held power-up can also be used by tapping its badge under the shield, whichever one it is: the tapped one
-			// jumps the queue
-			boolean badgeTap = false;
-			if(object1 != -1 && state == PLAY && !objectClockEnable && !clicked && Gdx.input.justTouched()){
-				int tapped = puTappedSlot();
-				if(tapped >= 0){
-					if(tapped > 0) puBringToFront(tapped);
-					badgeTap = true;
-					// the badges sit inside the "switch shield" area: this tap is not a switch
-					ship.shieldCan = false;
-					ship.shieldCan2 = false;
-					ship.shieldCan3 = false;
-				}
-			}
 			if(object1 != -1 && state == PLAY){
-				if(badgeTap || Gdx.input.justTouched() && (Gdx.input.getX() >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX() <= PlayScreen.padVerticalRight.getX() && 
+				if(Gdx.input.justTouched() && (Gdx.input.getX() >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX() <= PlayScreen.padVerticalRight.getX() && 
 						Gdx.graphics.getHeight() - Gdx.input.getY() > PlayScreen.padHorizontalDown.getY() + PlayScreen.padHorizontalDown.getHeight()) && 
 						Gdx.graphics.getHeight() - Gdx.input.getY() < PlayScreen.padHorizontalUp.getY() + PlayScreen.padHorizontalUp.getHeight() && !clicked 
 						|| (Gdx.input.getX(1) >= PlayScreen.padVerticalLeft.getX() + PlayScreen.padVerticalLeft.getWidth()) && (Gdx.input.getX(1) <= PlayScreen.padVerticalRight.getX() && 
@@ -1950,25 +1936,31 @@ public class PlayScreen implements Screen {
 	 *   0, 1    colour change: a spark travels from the first orb to the second, changing colour on the way
 	 *   2, 3    x2: the orbs beat twice, with two sparks circling          7, 8    x3: three beats, three sparks
 	 *   4       slow motion: the hourglass turns over, then sand trickles down
-	 *   5, 6, 9 shields: a glint runs around the shield's edge over a breathing halo
+	 *   5, 6, 9 shields: the shield spins once on its vertical axis every few seconds, over a breathing halo
 	 * (cx, cy) is the centre, size the side of the icon's square, t a clock in seconds.
 	 */
 	private void drawPowerIcon(com.badlogic.gdx.graphics.g2d.TextureRegion icon, int type, float cx, float cy, float size, float a, float t){
 		float[] blue = HIT_COLORS[0], red = HIT_COLORS[1], gold = HIT_COLORS[2];
 		boolean multiplier = type == 2 || type == 3 || type == 7 || type == 8;
-		float rot = 0f, sc = 1f;
+		float rot = 0f, sc = 1f, scX = 1f;
 		float turnCycle = t % 2.6f;
+		boolean shield = type == 5 || type == 6 || type == 9;
 		if(type == 4){
 			float k = Math.min(1f, turnCycle/0.5f);
 			k = k*k*(3f - 2f*k);
 			rot = 180f*((int)(t/2.6f) + k);
+		}else if(shield){
+			// one full turn, easing in and out, then a rest (the shield is symmetric, so its back looks like its front)
+			float k = Math.min(1f, turnCycle/0.8f);
+			k = k*k*(3f - 2f*k);
+			scX = MathUtils.cos(k*MathUtils.PI2);
 		}else if(multiplier){
 			int beats = type <= 3 ? 2 : 3;
 			float bt = (t % 1.9f)/0.2f;
 			if(bt < beats) sc = 1f + 0.17f*MathUtils.sin((bt - (int)bt)*MathUtils.PI);
 		}
 		game.batch.setColor(1f, 1f, 1f, a);
-		game.batch.draw(icon, cx - size/2, cy - size/2, size/2, size/2, size, size, sc, sc, rot);
+		game.batch.draw(icon, cx - size/2, cy - size/2, size/2, size/2, size, size, sc*scX, sc, rot);
 		Fx.additiveOn(game.batch);
 		if(type == 0 || type == 1){
 			float[] from = type == 0 ? blue : red, to = type == 0 ? red : blue;
@@ -2006,51 +1998,8 @@ public class PlayScreen implements Screen {
 			float hs = size*0.72f;
 			game.batch.setColor(c[0], c[1], c[2], a*(0.14f + 0.14f*MathUtils.sin(t*3f)));
 			game.batch.draw(Fx.glow(), cx - hs/2, cy - hs/2, hs, hs);
-			float ang = -t*170f, gs = size*0.12f;
-			game.batch.setColor(1f, 1f, 1f, a*0.9f);
-			game.batch.draw(Fx.glow(), cx + MathUtils.cosDeg(ang)*size*0.19f - gs/2, cy + MathUtils.sinDeg(ang)*size*0.22f - gs/2, gs, gs);
 		}
 		Fx.additiveOff(game.batch);
-	}
-
-	/** which held power-up's badge a new touch landed on (0 = the first), or -1 */
-	private int puTappedSlot(){
-		int[] type = { object1, object2, object3 };
-		float R = ship.getRadius();
-		int best = -1;
-		float bestD = Float.MAX_VALUE;
-		for(int p = 0; p < 2; p++){
-			if(!Gdx.input.isTouched(p)) continue;
-			float tx = Gdx.input.getX(p), ty = Gdx.graphics.getHeight() - Gdx.input.getY(p);
-			for(int sl = 0; sl < 3; sl++){
-				if(type[sl] < 0) continue;
-				// a forgiving target, at least a fingertip wide; the targets overlap, so the nearest badge wins
-				float reach = Math.max(PU_SIZE[sl]*R*0.95f, fxy(48f));
-				float dx = tx - puDockX(sl), dy = ty - puDockY(sl), d2 = dx*dx + dy*dy;
-				if(d2 <= reach*reach && d2 < bestD){
-					bestD = d2;
-					best = sl;
-				}
-			}
-		}
-		return best;
-	}
-
-	/** the power-up in a later slot swaps places with the first one, so it is the one used next */
-	private void puBringToFront(int slot){
-		Sprite[] from = slot == 1 ? objectsSprites2 : objectsSprites3;
-		int first = object1, picked = slot == 1 ? object2 : object3;
-		if(picked < 0) return;
-		objectsSprites1[first].setColor(1f, 1f, 1f, 0f);
-		from[picked].setColor(1f, 1f, 1f, 0f);
-		objectsSprites1[picked].setColor(1f, 1f, 1f, 1f);
-		from[first].setColor(1f, 1f, 1f, 1f);
-		object1 = picked;
-		if(slot == 1) object2 = first; else object3 = first;
-		// the two badges hop across to each other's place
-		float ax = puDockX(0), ay = puDockY(0), bx = puDockX(slot), by = puDockY(slot);
-		puFlyT[0] = PU_FLY*0.55f; puCaught[0] = false; puSwing[0] = 0f; puFromX[0] = bx; puFromY[0] = by;
-		puFlyT[slot] = PU_FLY*0.55f; puCaught[slot] = false; puSwing[slot] = 0f; puFromX[slot] = ax; puFromY[slot] = ay;
 	}
 
 	private void drawPowerBadges(float dt){
